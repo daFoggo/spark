@@ -31,7 +31,7 @@ export default function Page() {
         </div>
 
         <div className="font-mono text-xs text-muted-foreground">
-          Press <kbd className="rounded border bg-muted px-1.5 py-0.5 text-[10px]">d</kbd> to toggle dark mode
+          Press <kbd className="rounded border bg-muted px-1.5 py-0.5 text-xs">d</kbd> to toggle dark mode
         </div>
       </div>
     </main>

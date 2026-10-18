@@ -1,0 +1,1548 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Spark Design System</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@300..700&family=STIX+Two+Text:ital,wght@0,400..700;1,400..700&display=swap">
+<style>
+/* Layout:12-col shell, no column gap. Rail = cols 1-4 (sticky labels/TOC), content = cols 5-12.
+   Mirrors claude.dev: dark-first, zero radius, hairline lines, mono for chrome, sans for reading. */
+:root{
+  color-scheme:dark;
+  --bg:#141413; --bg-raised:#1a1a18; --bg-panel:#1e1d1b; --panel:#161514; --panel-2:#121110;
+  --ink:#faf9f5; --ink-2:#b0aea5; --ink-3:#87867f; --ink-4:#5e5d59;
+  --accent:#d97757; --accent-deep:#c15f3c; --accent-ink:#e08a6c;
+  --paper:#faf9f5; --paper-2:#e3dacc;
+  --line:#faf9f529; --line-soft:#faf9f517; --hover-row:#faf9f50b; --chip-fill:#faf9f50d;
+  --syn-purple:#c792ea; --syn-blue:#82aaff; --syn-green:#c3e88d; --syn-cyan:#89ddff;
+  --diff-add:#9ac29a; --diff-del:#c29a9a;
+  --sans:"Geist","Helvetica Neue",Arial,sans-serif;
+  --serif:"STIX Two Text","STIX Two",Georgia,"Times New Roman",serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --ease-out:cubic-bezier(0,0,.2,1); --ease-in-out:cubic-bezier(.4,0,.2,1); /* Tailwind defaults */
+  --gutter:2rem; --nav-h:80px;
+}
+@media (prefers-color-scheme:light){ :root:not([data-theme="dark"]){
+  color-scheme:light;
+  --bg:#faf9f5; --bg-raised:#f1efe8; --bg-panel:#ece9e0; --panel:#f2f0ea; --panel-2:#edeae2;
+  --ink:#141413; --ink-2:#4c4b45; --ink-3:#7b7a72; --ink-4:#a8a69d;
+  --accent:#c15f3c; --accent-deep:#a94e2f; --accent-ink:#a94e2f; --paper:#141413; --paper-2:#2a2927;
+  --line:#14141338; --line-soft:#1414131c; --hover-row:#1414130d; --chip-fill:#1414130a;
+  --syn-purple:#914dbe; --syn-blue:#3065d7; --syn-green:#567527; --syn-cyan:#16749a;
+  --diff-add:#3e7a3e; --diff-del:#a04545;
+}}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#faf9f5; --bg-raised:#f1efe8; --bg-panel:#ece9e0; --panel:#f2f0ea; --panel-2:#edeae2;
+  --ink:#141413; --ink-2:#4c4b45; --ink-3:#7b7a72; --ink-4:#a8a69d;
+  --accent:#c15f3c; --accent-deep:#a94e2f; --accent-ink:#a94e2f; --paper:#141413; --paper-2:#2a2927;
+  --line:#14141338; --line-soft:#1414131c; --hover-row:#1414130d; --chip-fill:#1414130a;
+  --syn-purple:#914dbe; --syn-blue:#3065d7; --syn-green:#567527; --syn-cyan:#16749a;
+  --diff-add:#3e7a3e; --diff-del:#a04545;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:var(--bg)}
+:focus-visible{outline:1px solid var(--ink);outline-offset:2px;border-radius:2px}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+[id]{scroll-margin-top:var(--nav-h)}
+.shell{max-width:1280px;margin:0 auto;padding-inline:calc(var(--gutter) - 16px)}
+
+/* ---------- Nav ---------- */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:32px;
+  height:var(--nav-h);background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line-soft)}
+.brand{flex:none;display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:1rem;text-decoration:none;white-space:nowrap}
+.pix{display:inline-grid;grid-template-columns:repeat(7,4px);grid-auto-rows:4px}
+.pix i{display:block}.pix i.on{background:var(--accent)}
+.nav-links{flex:1;min-width:0;display:flex;justify-content:center;gap:20px;font-family:var(--mono);font-size:.75rem;letter-spacing:.025em}
+.nav-links a{text-decoration:none;color:var(--ink-3);transition:color .15s;white-space:nowrap}
+.nav-links a .k{color:var(--ink-4);margin-right:6px}
+.nav-links a:hover,.nav-links a.on{color:var(--ink)}
+.nav-links a:hover .k,.nav-links a.on .k{color:var(--ink-2)}
+.nav-cta{flex:none;margin-left:auto;display:flex;align-items:center;gap:20px}
+.tgl{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);letter-spacing:.025em;transition:color .15s;white-space:nowrap}
+.tgl .k{color:var(--ink-4);margin-right:6px;transition:color .15s}
+.tgl:hover{color:var(--ink)}.tgl:hover .k{color:var(--ink-2)}
+html.theme-switching,html.theme-switching *{transition:background-color .5s,color .5s,border-color .5s,fill .5s!important}
+@media (max-width:1535px){.nav-links .k{display:none}}
+@media (max-width:1279px){.nav-links{display:none}}
+.burger{display:none;position:relative;width:36px;height:36px;flex:none}
+.burger i{position:absolute;left:8px;right:8px;height:2px;background:var(--ink);transition:transform .3s var(--ease-out),opacity .2s}
+.burger i:nth-child(1){top:12px}.burger i:nth-child(2){top:17px}.burger i:nth-child(3){top:22px}
+.burger[aria-expanded="true"] i:nth-child(1){transform:translateY(5px) rotate(45deg)}
+.burger[aria-expanded="true"] i:nth-child(2){opacity:0}
+.burger[aria-expanded="true"] i:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
+.nav-panel{position:absolute;left:0;right:0;top:100%;display:none;gap:24px;padding-block:8px 24px;background:var(--bg);border-bottom:1px solid var(--line-soft)}
+.nav-panel.open{display:grid}
+.nav-panel .grp{display:grid}
+.nav-panel .th{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);letter-spacing:.05em;text-transform:uppercase;padding-block:8px}
+.nav-panel a{display:flex;gap:8px;padding-block:10px;font-family:var(--mono);font-size:.875rem;letter-spacing:.025em;color:var(--ink-2);text-decoration:none;transition:color .15s}
+.nav-panel a .k{color:var(--ink-3)}
+.nav-panel a:hover,.nav-panel a.on{color:var(--ink)}
+.nav-panel a .ext{margin-left:auto;color:var(--ink-4)}
+@media (max-width:1279px){.burger{display:block}}
+@media (max-width:639px){.nav-cta .dd{display:none}}
+
+@media (max-width:1023px){:root{--nav-h:64px}}
+
+/* ---------- Generic primitives ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;background:var(--paper);color:var(--bg);font-size:.75rem;font-weight:500;white-space:nowrap;
+  transition:color .1s ease-in-out,background-color .2s ease-in-out}
+.btn:hover{background:color-mix(in srgb,var(--paper) 86%,var(--bg))}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--hover-row)}
+.chip{display:inline-flex;align-items:center;font-family:var(--mono);font-size:.875rem;padding:2px 8px;border:1px solid var(--line-soft);color:var(--ink-3)}
+.chip.fill{background:var(--paper);color:var(--bg);border-color:var(--paper)}
+code,.code{overflow-wrap:anywhere;font-family:var(--mono);font-size:.875rem;background:var(--chip-fill);border:1px solid var(--line-soft);padding:1px 4px;color:var(--ink)}
+.mlink{font-family:var(--mono);font-size:.75rem;color:var(--ink-2);text-underline-offset:4px;letter-spacing:.025em;transition:color .15s}
+.mlink:hover{color:var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:.875rem;color:var(--ink-3);letter-spacing:.025em}
+
+/* ---------- Section frame:rail + content ---------- */
+.sec{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));padding-block:80px;border-bottom:1px solid var(--line-soft)}
+.rail{grid-column:1/5;padding-right:40px}
+.rail-in{position:sticky;top:112px;display:grid;gap:14px}
+.rail h2{margin:0;font-family:var(--mono);font-weight:400;font-size:1.5rem;line-height:1.25}
+.rail p{margin:0;color:var(--ink-2);font-size:1rem;line-height:1.625;text-wrap:pretty}
+.body{grid-column:5/13;min-width:0;display:grid;gap:48px}
+.body>*,.rail-in>*{min-width:0}
+@media (max-width:1023px){.sec{grid-template-columns:1fr;gap:32px;padding-block:48px}.rail,.body{grid-column:1/-1;padding-right:0}.rail-in{position:static}}
+
+.h3{margin:0 0 16px;font-family:var(--mono);font-weight:500;font-size:1rem;letter-spacing:.025em;text-transform:uppercase}
+.lede{margin:0;color:var(--ink-2);font-size:1.125rem;line-height:1.625;max-width:42rem}
+
+/* ---------- Hero ---------- */
+.hero{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));padding-block:80px 56px;border-bottom:1px solid var(--line-soft)}
+.hero .rail h1{margin:0;font-family:var(--mono);font-weight:400;font-size:1.875rem;line-height:1}
+.caret{display:inline-block;width:.5em;height:1em;background:var(--ink);vertical-align:text-bottom;margin-left:4px;animation:caret 1s step-end infinite}
+@keyframes caret{50%{opacity:0}}
+.hero .body{gap:28px}
+.thesis{margin:0;font-weight:500;font-size:2.25rem;line-height:1.25;text-wrap:balance;max-width:48rem}
+.dna{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line-soft)}
+.dna div{padding:14px 16px 0 0;display:grid;gap:4px}
+.dna b{font-family:var(--mono);font-weight:400;font-size:.75rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.dna span{font-size:1rem;color:var(--ink-2);line-height:1.5}
+@media (max-width:1023px){.hero{grid-template-columns:1fr;gap:28px;padding-block:48px}.hero .rail,.hero .body{grid-column:1/-1}.dna{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:16px}}
+
+/* ---------- Page map (outside → in) ---------- */
+.layers{display:grid;gap:0;border-top:1px solid var(--line-soft)}
+.layer{display:grid;grid-template-columns:144px minmax(0,1fr);gap:24px;padding:20px 0;border-bottom:1px solid var(--line-soft)}
+.layer .lv{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);display:grid;gap:4px;align-content:start}
+.layer .lv b{color:var(--ink);font-weight:500;font-size:.875rem}
+.layer h4{margin:0 0 6px;font-weight:500;font-size:1.125rem}
+.layer ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.layer li{color:var(--ink-2);font-size:1rem;line-height:1.5;padding-left:20px;position:relative}
+.layer li::before{content:"└";position:absolute;left:0;color:var(--ink-4);font-family:var(--mono)}
+@media (max-width:639px){.layer{grid-template-columns:1fr;gap:8px}}
+
+/* wireframes */
+.wires{display:grid;grid-template-columns:repeat(auto-fit,minmax(224px,1fr));gap:16px}
+.wire{border:1px solid var(--line-soft);background:var(--bg-raised)}
+.wire .wbar{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.wire svg{display:block;width:100%;height:auto}
+.wire .wcap{padding:8px 10px;font-size:.75rem;color:var(--ink-2);border-top:1px solid var(--line-soft);line-height:1.5}
+
+/* ---------- Tokens ---------- */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(144px,1fr));gap:0;border-top:1px solid var(--line-soft);border-left:1px solid var(--line-soft)}
+.sw{border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);padding:12px;display:grid;gap:8px}
+.sw .chipc{height:48px;border:1px solid var(--line-soft)}
+.sw b{font-family:var(--mono);font-weight:400;font-size:.75rem}
+.sw span{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);line-height:1.5}
+.typetable{width:100%;border-collapse:collapse}
+.tscroll{overflow-x:auto}
+.typetable th{font-family:var(--mono);font-weight:400;font-size:.75rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:10px 16px 8px 0;border-bottom:1px solid var(--line-soft)}
+.typetable td{padding:12px 16px 12px 0;border-bottom:1px solid var(--line-soft);vertical-align:baseline;color:var(--ink-2);font-size:.875rem;font-variant-numeric:tabular-nums}
+.typetable td:first-child{color:var(--ink);min-width:224px}
+.typetable tr{transition:background .15s}
+.typetable tr:hover td{background:var(--hover-row)}
+.mono{font-family:var(--mono)}
+.pairs td{font-family:var(--mono);font-size:.75rem;white-space:nowrap}
+.pairs td:last-child{font-family:var(--sans);font-size:.875rem;white-space:normal;min-width:224px}
+.pairs i{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:6px;border:1px solid var(--line)}
+
+/* ---------- Components gallery ---------- */
+.cgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line-soft);border-left:1px solid var(--line-soft)}
+.cell{border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+.cell.wide{grid-column:1/-1}
+.cell .ch{display:flex;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:.75rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.cell .stage{padding:28px 20px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;min-width:0}
+.cell .spec{padding:10px 16px;border-top:1px solid var(--line-soft);font-family:var(--mono);font-size:.75rem;color:var(--ink-3);line-height:1.625}
+@media (max-width:767px){.cgrid{grid-template-columns:1fr}}
+
+/* tabs + search */
+.listtop{display:flex;justify-content:space-between;align-items:center;gap:16px;width:100%;border-bottom:1px solid var(--line-soft);padding-bottom:10px;flex-wrap:wrap}
+.tabs{display:flex;gap:20px;flex-wrap:wrap}
+.tabs button{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);text-transform:uppercase;padding:2px 0;transition:color .15s}
+.tabs button:hover{color:var(--ink-2)}.tabs button.on{color:var(--ink)}
+.search{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.75rem;color:var(--ink-2)}
+.search .sk{color:var(--ink-3)}
+.search input{width:0;opacity:0;padding:0;border:0;background:none;color:var(--ink);font-family:var(--sans);font-size:.875rem;outline:none;transition:width .3s var(--ease-out),opacity .3s ease}
+.search.open input{width:144px;opacity:1}
+.search input::placeholder{color:var(--ink-4)}
+
+/* post rows */
+.posts{width:100%}
+.post{display:grid;grid-template-columns:128px minmax(0,1fr) auto;align-items:center;gap:16px;padding:14px 8px;border-bottom:1px solid var(--line-soft);text-decoration:none;transition:opacity .3s,background .15s,color .15s;position:relative}
+.post .d,.post .t{font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.post .t{text-align:right;transition:transform .2s var(--ease-out)}
+.post .ti{font-size:1rem}
+.post::after{content:"→";position:absolute;right:8px;opacity:0;transform:translateX(-6px);transition:opacity .2s,transform .2s var(--ease-out);font-family:var(--mono);font-size:.875rem}
+@media (hover:hover){.posts:hover .post:not(:hover){opacity:.35}}
+.post:hover{background:var(--paper);color:var(--bg)}
+.post:hover .d,.post:hover .t{color:var(--bg)}
+.post:hover .t{transform:translateX(-28px)}
+.post:hover::after{opacity:.8;transform:none}
+@media (max-width:639px){.post{grid-template-columns:1fr auto}.post .d{display:none}}
+
+/* terminal window */
+.cli{width:100%;background:var(--bg-raised);border:1px solid var(--line-soft);font-family:var(--mono)}
+.cli-bar{display:grid;grid-template-columns:64px 1fr 64px;align-items:center;height:28px;padding:0 10px;border-bottom:1px solid var(--line-soft);font-size:.75rem;color:var(--ink-2)}
+.cli-bar .dots{display:flex;gap:6px}.cli-bar .dots i{width:10px;height:10px;border-radius:50%;background:var(--ink-4)}
+.cli-bar .ti{text-align:center}.cli-bar .act{text-align:right;color:var(--ink-3);text-transform:uppercase}
+.cli-out{padding:14px;font-size:.75rem;line-height:1.625;color:var(--ink-2);min-height:128px}
+.cli-out .kw{color:var(--syn-purple)}.cli-out .fn{color:var(--syn-blue)}.cli-out .st{color:var(--syn-green)}.cli-out .ar{color:var(--syn-cyan)}
+.cli-out .add{color:var(--diff-add)}.cli-out .del{color:var(--diff-del)}
+.cli-in{display:flex;gap:8px;padding:8px 14px;border-top:1px solid var(--line-soft);font-size:.75rem}
+.cli-in .u{color:var(--ink)} .cli-in .p{color:var(--ink-4)}
+.cli-hint{padding:4px 14px 8px;font-size:.75rem;color:var(--ink-3)}
+
+/* dl spec */
+.spec-dl{margin:0;display:grid;gap:12px}
+.spec-dl dt{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);margin-bottom:4px}
+.spec-dl dd{margin:0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:1rem}
+.spec-dl dd::before{content:"└";font-family:var(--mono);color:var(--ink-4)}
+
+/* dropdown */
+.dd{position:relative}
+.dd-caret{display:inline-block;transition:transform .3s var(--ease-out);font-size:.75rem}
+.dd.open .dd-caret{transform:rotate(180deg)}
+.dd-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:100%;background:var(--panel-2);border:1px solid var(--line-soft);padding:8px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .2s,transform .2s,visibility .2s;z-index:5}
+.dd.open .dd-menu{opacity:1;visibility:visible;transform:none}
+.dd-menu a{display:flex;gap:8px;padding:8px 12px;font-size:1rem;text-decoration:none;white-space:nowrap;transition:background-color .15s}
+.dd-menu a:hover{background:var(--hover-row)}
+.dd-menu a .ext{margin-left:auto;padding-left:14px;color:var(--ink-4)}
+
+/* toc tree */
+.tree{display:grid;gap:2px;font-family:var(--mono);font-size:.75rem}
+.tree .th{color:var(--ink-3);margin-bottom:8px}
+.tree a{color:var(--ink-2);text-decoration:none;padding:2px 0;display:flex;gap:8px;transition:color .15s,transform .3s var(--ease-out)}
+.tree a::before{content:"└";color:var(--ink-4)}
+.tree a:hover{color:var(--ink);transform:translateX(4px)}
+.tree a.on{color:var(--ink)}
+
+/* figure */
+.fig{width:100%;border:1px solid var(--line-soft);margin:0}
+.fig-head{display:flex;justify-content:space-between;padding:12px 16px 0;font-size:1rem;font-weight:500}
+.fig-head span{font-family:var(--mono);font-size:.75rem;font-weight:400;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.fig-body{padding:16px}
+.fig figcaption{padding:10px 16px;border-top:1px solid var(--line-soft);font-size:1rem;color:var(--ink-3);line-height:1.625}
+.fig figcaption b{font-family:var(--mono);font-style:normal;font-weight:400;font-size:.75rem;color:var(--ink-2);margin-right:8px}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:96px minmax(0,1fr) 40px;gap:10px;align-items:center;font-size:.75rem;font-family:var(--mono);color:var(--ink-3)}
+.bar i{display:block;height:10px;background:var(--ink-4)}
+.bar i.focal{background:var(--accent)}
+.bar em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+
+/* input newsletter */
+.fnl{display:flex;align-items:center;gap:8px;width:100%;max-width:384px;border-bottom:1px solid var(--line);transition:border-color .3s}
+.fnl:focus-within{border-color:var(--ink-3)}
+.fnl input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--ink);font:inherit;font-size:1rem;padding:8px 0}
+.fnl input::placeholder{color:var(--ink-4)}
+.fnl button{color:var(--ink-3);transition:color .15s,transform .2s var(--ease-out)}
+.fnl button:hover{color:var(--ink);transform:translateX(4px)}
+
+/* prose sample */
+.prose{max-width:672px;display:grid;gap:14px}
+.prose .pt{margin:0;font-weight:500;font-size:2.25rem;line-height:1.25;text-wrap:balance}
+.prose .sf{margin:0;color:var(--ink-2);line-height:1.625}
+.prose .metas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:10px}
+.prose .metas div{display:grid;gap:4px;font-size:.875rem}
+.prose .metas b{font-family:var(--mono);font-weight:400;font-size:.75rem;color:var(--ink-3)}
+.prose .metas span::before{content:"└ ";font-family:var(--mono);color:var(--ink-4)}
+.prose h5{margin:20px 0 0;font-family:var(--mono);font-weight:500;font-size:1rem;letter-spacing:.025em;text-transform:uppercase}
+.prose p{margin:0;color:var(--ink-2);line-height:1.625}
+.prose p code{font-size:.875rem}
+.prose p a{text-decoration-color:var(--ink-3);text-underline-offset:4px;transition:color .15s}
+.prose p a:hover{color:var(--ink)}
+.ptile{width:56px;height:56px;background:var(--accent);display:grid;place-items:center}
+
+/* ---------- Motion ---------- */
+.mlist{display:grid;border-top:1px solid var(--line-soft)}
+.mrow{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 192px;gap:20px;align-items:center;padding:20px 0;border-bottom:1px solid var(--line-soft)}
+.mrow h4{margin:0 0 4px;font-weight:500;font-size:1.125rem}
+.mrow p{margin:0;font-size:.875rem;color:var(--ink-2);line-height:1.5}
+.mrow .val{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);line-height:1.625}
+.mrow .val b{color:var(--ink);font-weight:400}
+.mdemo{height:64px;border:1px solid var(--line-soft);background:var(--bg-raised);position:relative;overflow:hidden;display:grid;place-items:center;cursor:pointer}
+@media (max-width:767px){.mrow{grid-template-columns:1fr}}
+.d-reveal{font-family:var(--mono);font-size:.875rem}
+.d-reveal.run{animation:reveal-up .7s var(--ease-out) backwards}
+@keyframes reveal-up{from{opacity:0;transform:translateY(14px)}}
+.d-stag{display:grid;gap:4px;width:70%}
+.d-stag i{display:block;height:6px;background:var(--ink-3)}
+.d-stag.run i{animation:stag-in .5s var(--ease-out) calc(var(--i)*.075s) backwards}
+@keyframes stag-in{from{opacity:0;transform:translateY(8px)}}
+.d-type{font-family:var(--mono);font-size:.875rem;white-space:nowrap}
+.d-type span{display:inline-block;overflow:hidden;vertical-align:bottom;width:10ch}
+.d-type.run span{animation:typing 1s steps(10) backwards}
+@keyframes typing{from{width:0}}
+.d-pop.run{animation:row-pop .5s var(--ease-out) backwards}
+@keyframes row-pop{from{opacity:0;transform:translateX(-6px)}}
+.d-float{width:20px;height:20px;background:var(--accent);animation:astro 7s ease-in-out infinite}
+@keyframes astro{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(3deg)}}
+.d-ticker{width:100%;overflow:hidden;font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.d-ticker div{display:inline-flex;gap:28px;white-space:nowrap;animation:ticker 14s linear infinite}
+.d-ticker:hover div{animation-play-state:paused}
+@keyframes ticker{to{transform:translateX(-50%)}}
+.curve{width:100%;height:56px}
+.curve path{fill:none;stroke:var(--accent);stroke-width:2}
+.curve line{stroke:var(--line);stroke-width:1}
+.curve text{fill:var(--ink-3);font-family:var(--mono);font-size:.75rem}
+
+/* intro replay (top hero) */
+.intro .stag{animation:stag-in .5s var(--ease-out) calc(.3s + var(--i,0)*.075s) backwards}
+
+/* ---------- UX patterns ---------- */
+/* spacing section */
+.ladder{display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:20px}
+.ladder div{display:grid;gap:6px;justify-items:start}
+.ladder i{display:block;height:12px;background:var(--accent)}
+.ladder span{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tiers td:first-child b{font-weight:500;color:var(--ink)}
+.tiers td:nth-child(3){white-space:nowrap}
+.tiers td:last-child{min-width:256px}
+.specimen{border:1px solid var(--line-soft);background:var(--bg-raised);padding:16px 24px 24px;max-width:672px}
+.gapm{position:relative;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,transparent) 0 1px,transparent 1px 6px);border-left:2px solid var(--accent)}
+.gapm span{position:absolute;right:0;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:.75rem;line-height:1;color:var(--accent-ink);background:var(--bg-raised);padding:2px 6px;white-space:nowrap}
+.sp-nav{display:flex;gap:24px;align-items:center;font-family:var(--mono);font-size:.75rem;color:var(--ink-3);padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+.pix-dot{width:16px;height:12px;background:var(--accent)}
+.sp-tile{width:40px;height:40px;background:var(--accent)}
+.sp-h1{font-size:1.5rem;font-weight:500;line-height:1.25}
+.sp-h2,.sp-h3{font-family:var(--mono);font-size:.75rem;font-weight:500;letter-spacing:.025em}
+.sp-h3{color:var(--ink-2)}
+.sp-p{height:8px;width:60%;background:var(--ink-4);margin-top:6px}
+.sp-p.wide{width:92%}
+.sp-p:first-child,.gapm+.sp-p{margin-top:0}
+.sp-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.sp-fig{border:1px solid var(--line);padding:16px;font-family:var(--mono);font-size:.75rem;color:var(--ink-3);height:80px}
+.sp-row{display:flex;justify-content:space-between;padding-block:16px;border-bottom:1px solid var(--line-soft)}
+.sp-row span{height:8px;width:56%;background:var(--ink-4)}.sp-row span+span{width:12%}
+.dodont td{white-space:normal;min-width:224px}
+.dodont td:first-child::before{content:"✓ ";color:var(--diff-add)}
+.dodont td:last-child::before{content:"✕ ";color:var(--diff-del)}
+@media (max-width:639px){.gapm span{font-size:.75rem;padding:2px 4px}.specimen{padding:16px}}
+/* responsive section */
+.bpbar{display:grid;gap:8px;margin-bottom:24px}
+.bp-track{position:relative;height:12px;background:var(--bg-raised);border:1px solid var(--line-soft)}
+.bp-track i{position:absolute;top:0;bottom:0;border-right:1px solid var(--bg)}
+.bp-track i:nth-child(1){background:color-mix(in srgb,var(--accent) 20%,transparent)}
+.bp-track i:nth-child(2){background:color-mix(in srgb,var(--accent) 35%,transparent)}
+.bp-track i:nth-child(3){background:color-mix(in srgb,var(--accent) 50%,transparent)}
+.bp-track i:nth-child(4){background:color-mix(in srgb,var(--accent) 70%,transparent)}
+.bp-track i:nth-child(5){background:var(--accent)}
+.bp-ticks,.bp-src{position:relative;height:16px}
+.bp-ticks span{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:.75rem;color:var(--ink-2);white-space:nowrap}
+.bp-ticks span:last-child{transform:translateX(-100%)}
+.bp-src span{position:absolute;top:4px;width:2px;height:8px;background:var(--ink-3)}
+.bp-legend{display:flex;gap:24px;font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.bp-legend i{display:inline-block;width:12px;height:8px;margin-right:6px;vertical-align:0}
+.bp-legend .lg-tw{background:var(--accent)}.bp-legend .lg-src{width:2px;background:var(--ink-3)}
+.bpn{white-space:nowrap}
+.matrix td{min-width:144px}
+.matrix td:first-child{min-width:128px;color:var(--ink)}
+.bp-ticks em{font-style:normal}
+@media (max-width:639px){.bp-ticks em{display:none}}
+/* dashboard demo: container queries mirror sm/lg/xl on the demo's own width */
+.dash-ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.dash-ctrl button{font-family:var(--mono);font-size:.75rem;letter-spacing:.025em;color:var(--ink-3);padding-block:4px;border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
+.dash-ctrl button:hover{color:var(--ink-2)}
+.dash-ctrl button.on{color:var(--ink);border-color:var(--ink)}
+.dash-scroll{min-width:0;overflow:hidden;border:1px solid var(--line);background:var(--bg)}
+.sec-dash{row-gap:48px}
+.sec-dash .dash-wide{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+.sec-dash>.body{grid-row:3}
+.dash-scale{margin-left:auto;font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.dash-hold{position:relative;overflow:hidden}
+.dash-hold .dash{transform-origin:0 0}
+@media (max-width:1023px){.sec-dash .dash-wide,.sec-dash>.body{grid-row:auto}}
+
+.dash{container-type:inline-size;position:relative;height:800px;display:flex;background:var(--bg)}
+.col-h{flex:none;height:56px;display:flex;align-items:center;gap:16px;padding-inline:16px;border-bottom:1px solid var(--line-soft)}
+.col-b{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}
+.col-b::-webkit-scrollbar{display:none}
+.dside{flex:none;width:256px;display:flex;flex-direction:column;border-right:1px solid var(--line-soft);background:var(--bg)}
+.dside .col-h{gap:8px;font-family:var(--mono);font-size:.875rem}
+.ws-sw{margin-left:auto;color:var(--ink-3)}
+.dside .col-b{display:flex;flex-direction:column;gap:32px;padding:24px 16px}
+.dcol{flex:1;min-width:0;display:flex;flex-direction:column}
+.dh-logo{display:none}
+.dmain{display:flex;flex-direction:column;gap:32px;padding:40px 32px 56px}
+.dpanel{flex:none;width:320px;display:flex;flex-direction:column;border-left:1px solid var(--line-soft);background:var(--bg)}
+.dpanel .col-h{justify-content:space-between;padding-inline:24px}
+.dpanel .col-b{display:flex;flex-direction:column;gap:32px;padding:24px}
+.dp-t{margin:0;font-size:1.125rem;font-weight:500;line-height:1.375}
+.dash .th{display:block;font-family:var(--mono);font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);padding-bottom:8px}
+.dash .gl{color:var(--ink-4);transition:color .15s;flex:none}
+.dh-burger{display:none;position:relative;width:32px;height:32px;margin-left:-6px;flex:none}
+.dh-burger i{position:absolute;left:6px;right:6px;height:2px;background:var(--ink)}
+.dh-burger i:nth-child(1){top:10px}.dh-burger i:nth-child(2){top:15px}.dh-burger i:nth-child(3){top:20px}
+.crumbs{display:flex;align-items:center;gap:8px;min-width:0;font-family:var(--mono);font-size:.875rem;color:var(--ink-3);white-space:nowrap}
+.crumbs b{font-weight:400;color:var(--ink-4)}
+.crumbs .cur{color:var(--ink);overflow:hidden;text-overflow:ellipsis}
+.dh-r{margin-left:auto;display:flex;align-items:center;gap:16px;flex:none}
+.dh-k{font-family:var(--mono);font-size:.75rem;letter-spacing:.025em;color:var(--ink-2);white-space:nowrap;transition:color .15s}
+.dh-k .k{color:var(--ink-3);margin-right:6px}
+.dh-k:hover,.dh-k[aria-pressed="true"]{color:var(--ink)}
+.btn-sm{height:28px;padding:0 10px;gap:4px}
+.dscrim{display:none;position:absolute;inset:0;z-index:2;background:color-mix(in srgb,var(--bg) 60%,transparent)}
+.dtree ul{list-style:none;margin:0;padding:0}
+.dtree ul ul{padding-left:16px}
+.dtree a,.dtree .tg,.dgrp a{display:flex;align-items:center;gap:8px;width:calc(100% + 16px);margin-inline:-8px;padding:6px 8px;font-family:var(--mono);font-size:.875rem;color:var(--ink-2);text-decoration:none;text-align:left;transition:color .15s,background-color .15s}
+.dtree a:hover,.dtree .tg:hover,.dgrp a:hover{color:var(--ink);background:var(--hover-row)}
+.dtree a:hover .gl,.dgrp a:hover .gl{color:var(--ink-3)}
+.dtree a.on{color:var(--ink);font-weight:500}
+.dtree a.on .gl{color:var(--accent)}
+.dtree .ct{margin-left:auto;font-size:.75rem;color:var(--ink-3);font-weight:400;font-variant-numeric:tabular-nums}
+.dtree .car{margin-left:auto;font-size:.75rem;color:var(--ink-3);transition:transform .2s var(--ease-out)}
+.dtree li[aria-expanded="false"]>.tg .car{transform:rotate(-90deg)}
+.dtree li[aria-expanded="false"]>ul{display:none}
+.dgrp{display:grid}
+.dgrp .add{color:var(--ink-3)}
+.dfoot{margin-top:auto;display:grid;gap:20px}
+.usage{display:grid;gap:8px}
+.meter{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:.75rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.dither{position:relative;flex:1;height:12px;background:repeating-conic-gradient(var(--ink-4) 0 25%,transparent 0 50%) 0 0/2px 2px}
+.dither i{position:absolute;top:0;bottom:0;left:0;background:var(--ink)}
+.usage .sub{font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.me{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.875rem;color:var(--ink-2)}
+.me .k{margin-left:auto;font-size:.75rem;color:var(--ink-3)}
+.phead{display:grid;gap:12px}
+.ptitle{margin:0;font-size:1.5rem;font-weight:500;line-height:1.25}
+.psub{margin:0;font-size:1rem;color:var(--ink-2)}
+.metrics{margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.metrics div{display:grid;gap:6px}
+.metrics dt{font-family:var(--mono);font-size:.75rem;letter-spacing:.05em;color:var(--ink-3)}
+.metrics dd{margin:0;font-size:1.5rem;font-weight:500;line-height:1.25;font-variant-numeric:tabular-nums}
+.dlist{display:grid}
+.dtabs{display:flex;flex-wrap:wrap;gap:16px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+.dtabs button{font-family:var(--mono);font-size:.75rem;letter-spacing:.025em;text-transform:uppercase;color:var(--ink-3);transition:color .15s}
+.dtabs button:hover{color:var(--ink-2)}.dtabs button.on{color:var(--ink)}
+.drow{display:grid;grid-template-columns:48px minmax(0,1fr) 128px 40px;align-items:center;gap:16px;width:100%;padding:16px 8px;border-bottom:1px solid var(--line-soft);text-align:left;transition:background-color .15s,color .15s}
+.drow:hover{background:var(--hover-row)}
+.drow .id,.drow .tm{font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.drow .tm{text-align:right}
+.drow .ti{font-size:.875rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.75rem;color:var(--ink-2);white-space:nowrap}
+.st::before{content:"";width:6px;height:6px;flex:none;background:var(--ink-4)}
+.st.review::before{background:var(--ink)}
+.st.blocked::before{background:var(--diff-del)}
+.drow.on{background:var(--paper);color:var(--bg)}
+.drow.on .id,.drow.on .tm,.drow.on .st{color:var(--bg)}
+.drow.on .st.review::before{background:currentColor}
+.dash:not(.panel-open) .dpanel{display:none}
+.activity ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.activity li{display:flex;align-items:baseline;gap:8px;font-size:.875rem;color:var(--ink-2)}
+.activity b{font-weight:500;color:var(--ink)}
+.activity time{margin-left:auto;font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+.dp-act{margin-top:auto;display:flex;flex-wrap:wrap;gap:8px}
+@container (min-width:1280px){.dside{width:288px}}
+@container (max-width:1279px){
+  .dpanel{position:absolute;top:0;right:0;bottom:0;z-index:3}
+  .dash.panel-open .dscrim{display:block}
+}
+@container (max-width:1023px){
+  .dh-burger{display:block}
+  .dh-logo{display:block}
+  .dside{position:absolute;top:0;left:0;bottom:0;z-index:3;visibility:hidden;transform:translateX(-100%);transition:transform .3s var(--ease-out),visibility .3s}
+  .dash.side-open .dside{visibility:visible;transform:none}
+  .dash.side-open .dscrim{display:block}
+  .dh-k .lbl{display:none}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .drow{grid-template-columns:auto minmax(0,1fr) auto;row-gap:8px}
+  .drow .ti{grid-column:1/-1;order:-1;white-space:normal}
+}
+@container (max-width:639px){
+  .dmain{padding:40px 16px 56px}
+  .dpanel{width:100%;border-left:0}
+  .dpanel .col-h,.dpanel .col-b{padding-inline:16px}
+  .dh{gap:12px}
+  .dh-r{gap:12px}
+}
+.ux{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid var(--line-soft)}
+.ux div{padding:20px 20px 20px 0;border-bottom:1px solid var(--line-soft);display:grid;gap:6px;align-content:start}
+.ux h4{margin:0;font-weight:500;font-size:1.125rem}
+.ux p{margin:0;color:var(--ink-2);font-size:.875rem;line-height:1.5}
+kbd{font-family:var(--mono);font-size:.75rem;color:var(--ink-2);border:1px solid var(--line);padding:0 6px}
+@media (max-width:767px){.ux{grid-template-columns:1fr}}
+
+/* ---------- Code block ---------- */
+.codeblock{border:1px solid var(--line-soft);background:var(--bg-raised);width:100%}
+.codeblock .cb-h{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:.75rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.codeblock .cb-h button{font-family:var(--mono);font-size:.75rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em;transition:color .15s}
+.codeblock .cb-h button:hover{color:var(--ink)}
+.codeblock pre{margin:0;padding:14px;overflow-x:auto;font-family:var(--mono);font-size:.75rem;line-height:1.625;color:var(--ink-2)}
+.codeblock pre .c{color:var(--ink-3)} .codeblock pre .k{color:var(--syn-purple)} .codeblock pre .v{color:var(--syn-green)} .codeblock pre .p{color:var(--syn-blue)}
+
+.steps{display:grid;gap:0;border-top:1px solid var(--line-soft);counter-reset:s}
+.step{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+.step::before{counter-increment:s;content:"0" counter(s);font-family:var(--mono);font-size:.75rem;color:var(--accent-ink);padding-top:4px}
+.step h4{margin:0 0 4px;font-weight:500;font-size:1.125rem}
+.step p{margin:0;color:var(--ink-2);font-size:.875rem;line-height:1.625}
+.warn{border:1px solid var(--line);padding:14px 16px;font-size:.875rem;color:var(--ink-2);line-height:1.625}
+.warn b{color:var(--ink);font-weight:500}
+
+footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
+
+@media (max-width:639px){:root{--gutter:1.5rem} .thesis,.prose .pt{font-size:1.875rem} .nav{gap:16px} .nav-cta{gap:12px} .tgl .k{display:none} .prose .metas{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="shell">
+
+<nav class="nav" aria-label="Chính">
+  <a class="brand" href="#top" aria-label="Spark Design System">
+    <span class="pix" id="logo" aria-hidden="true"></span><span>spark.ds</span>
+  </a>
+  <div class="nav-links">
+    <a href="#map" class="on"><span class="k">[A]</span>CẤU TRÚC</a>
+    <a href="#tokens"><span class="k">[T]</span>TOKENS</a>
+    <a href="#spacing"><span class="k">[P]</span>SPACING</a>
+    <a href="#responsive"><span class="k">[R]</span>RESPONSIVE</a>
+    <a href="#components"><span class="k">[C]</span>COMPONENTS</a>
+    <a href="#dashboard"><span class="k">[D]</span>DASHBOARD</a>
+    <a href="#motion"><span class="k">[M]</span>MOTION</a>
+    <a href="#impl"><span class="k">[I]</span>TRIỂN KHAI</a>
+  </div>
+  <div class="nav-cta">
+  <button class="tgl" id="tgl" type="button" aria-label="Đổi theme"><span class="k">[L]</span><span id="tgl-l">LIGHT</span></button>
+  <div class="dd" id="dd1">
+    <button class="btn" aria-haspopup="true" aria-expanded="false" id="ddbtn">Tham chiếu <span class="dd-caret">▾</span></button>
+    <div class="dd-menu" role="menu">
+      <a href="https://claude.dev/" role="menuitem">Home <span class="ext">↗</span></a>
+      <a href="https://claude.dev/mods/" role="menuitem">Mods <span class="ext">↗</span></a>
+      <a href="https://claude.dev/terminal/" role="menuitem">Terminal <span class="ext">↗</span></a>
+      <a href="https://claude.dev/blog/solving-code-review-at-anthropic/" role="menuitem">Blog detail <span class="ext">↗</span></a>
+    </div>
+  </div>
+  <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="navpanel" aria-label="Mở menu"><i></i><i></i><i></i></button>
+  </div>
+  <div class="nav-panel" id="navpanel">
+    <div class="grp"><span class="th">Mục lục</span>
+    <a href="#map"><span class="k">[A]</span>CẤU TRÚC</a>
+    <a href="#tokens"><span class="k">[T]</span>TOKENS</a>
+    <a href="#spacing"><span class="k">[P]</span>SPACING</a>
+    <a href="#responsive"><span class="k">[R]</span>RESPONSIVE</a>
+    <a href="#components"><span class="k">[C]</span>COMPONENTS</a>
+    <a href="#dashboard"><span class="k">[D]</span>DASHBOARD</a>
+    <a href="#motion"><span class="k">[M]</span>MOTION</a>
+    <a href="#impl"><span class="k">[I]</span>TRIỂN KHAI</a>
+    </div>
+    <div class="grp"><span class="th">Tham chiếu</span>
+      <a href="https://claude.dev/">claude.dev <span class="ext">↗</span></a>
+      <a href="https://claude.dev/mods/">Mods <span class="ext">↗</span></a>
+      <a href="https://claude.dev/blog/solving-code-review-at-anthropic/">Blog detail <span class="ext">↗</span></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero intro" id="top">
+  <div class="rail"><div class="rail-in">
+    <h1 class="stag" style="--i:0">spark.ds<span class="caret"></span></h1>
+    <p class="stag" style="--i:1">Phân tích UI/UX của claude.dev, quét từ khung trang ngoài cùng vào tới từng component, rồi chuyển thành theme cho <code>packages/ui</code>.</p>
+  </div></div>
+  <div class="body">
+    <p class="thesis stag" style="--i:2">Một cái terminal được dàn trang như tạp chí. Mono lo phần chrome, sans lo phần đọc, góc vuông tuyệt đối, và màu cam chỉ xuất hiện ở những điểm cần nhấn.</p>
+    <div class="dna stag" style="--i:3">
+      <div><b>Bề mặt</b><span>Nền ấm gần đen #141413, nâng cấp bằng 3 bậc panel, không dùng shadow</span></div>
+      <div><b>Đường kẻ</b><span>Hairline 1px bằng ink alpha 9% / 16%. Radius = 0 ở mọi nơi</span></div>
+      <div><b>Chữ</b><span>Geist cho UI và nội dung · Geist Mono cho chrome · serif để sẵn trong theme</span></div>
+      <div><b>Tương tác</b><span>Keyboard-first [H] [M] [S], hover thì đảo màu, motion ngắn dùng ease-out</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= PAGE MAP ================= -->
+<section class="sec" id="map">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">01 · CẤU TRÚC</span>
+    <h2>Từ ngoài vào trong</h2>
+    <p>Toàn site dùng chung một khung: nav, rồi lưới 12 cột với rail 4 cột bên trái và nội dung 8 cột bên phải, cuối cùng là footer. Mỗi trang chỉ thay đổi phần nằm trong khung đó.</p>
+  </div></div>
+  <div class="body">
+    <div class="wires">
+      <div class="wire"><div class="wbar"><span>HOME</span><span>/</span></div>
+        <svg viewBox="0 0 220 140" aria-hidden="true"><rect x="10" y="8" width="14" height="8" fill="var(--accent)"/><g fill="var(--ink-4)"><rect x="70" y="10" width="20" height="3"/><rect x="100" y="10" width="20" height="3"/><rect x="130" y="10" width="20" height="3"/></g><rect x="180" y="7" width="32" height="9" fill="var(--ink)"/><rect x="10" y="30" width="40" height="5" fill="var(--ink)"/><rect x="10" y="40" width="55" height="3" fill="var(--ink-3)"/><rect x="10" y="46" width="45" height="3" fill="var(--ink-3)"/><g fill="var(--ink-3)"><rect x="80" y="30" width="80" height="2"/></g><rect x="80" y="38" width="24" height="24" fill="var(--accent)"/><rect x="112" y="42" width="80" height="6" fill="var(--ink)"/><rect x="112" y="52" width="60" height="6" fill="var(--ink)"/><g fill="var(--line)"><rect x="80" y="70" width="132" height="1"/><rect x="80" y="84" width="132" height="1"/><rect x="80" y="98" width="132" height="1"/><rect x="80" y="112" width="132" height="1"/><rect x="80" y="126" width="132" height="1"/></g><g fill="var(--ink-2)"><rect x="112" y="76" width="70" height="3"/><rect x="112" y="90" width="60" height="3"/><rect x="112" y="104" width="76" height="3"/><rect x="112" y="118" width="54" height="3"/></g></svg>
+        <div class="wcap">Rail: tên site + tagline. Bên phải: filter tabs, bài featured, danh sách bài.</div></div>
+      <div class="wire"><div class="wbar"><span>MODS</span><span>/mods</span></div>
+        <svg viewBox="0 0 220 140" aria-hidden="true"><rect x="10" y="30" width="30" height="5" fill="var(--ink)"/><g fill="var(--ink-3)"><rect x="10" y="40" width="50" height="3"/><rect x="10" y="46" width="44" height="3"/></g><g fill="var(--ink-2)"><rect x="10" y="60" width="34" height="2"/><rect x="10" y="66" width="28" height="2"/></g><rect x="80" y="28" width="80" height="62" fill="var(--bg-panel)" stroke="var(--line)"/><rect x="80" y="28" width="80" height="7" fill="none" stroke="var(--line)"/><rect x="170" y="30" width="44" height="6" fill="var(--ink)"/><g fill="var(--ink-3)"><rect x="170" y="42" width="40" height="3"/><rect x="170" y="48" width="36" height="3"/></g><rect x="170" y="58" width="22" height="5" fill="var(--line)"/><rect x="80" y="100" width="134" height="1" fill="var(--line)"/><rect x="80" y="108" width="80" height="30" fill="var(--bg-panel)" stroke="var(--line)"/></svg>
+        <div class="wcap">Mỗi mod là một cửa sổ terminal chạy demo thật, bên cạnh là bảng spec HOOKS / DRAWS.</div></div>
+      <div class="wire"><div class="wbar"><span>TERMINAL</span><span>/terminal</span></div>
+        <svg viewBox="0 0 220 140" aria-hidden="true"><rect x="0" y="0" width="50" height="140" fill="var(--panel-2)"/><rect x="50" y="0" width="1" height="140" fill="var(--line)"/><rect x="8" y="8" width="14" height="8" fill="var(--accent)"/><g fill="var(--ink-3)"><rect x="8" y="90" width="28" height="2"/><rect x="8" y="97" width="24" height="2"/><rect x="8" y="104" width="30" height="2"/></g><rect x="8" y="118" width="32" height="8" fill="var(--ink)"/><g fill="var(--ink)"><rect x="62" y="10" width="90" height="14"/></g><rect x="160" y="8" width="54" height="34" fill="none" stroke="var(--line)"/><g fill="var(--ink-2)"><rect x="62" y="70" width="140" height="2"/><rect x="62" y="77" width="120" height="2"/><rect x="62" y="84" width="134" height="2"/></g><rect x="62" y="122" width="150" height="1" fill="var(--line)"/><rect x="62" y="128" width="50" height="3" fill="var(--ink)"/></svg>
+        <div class="wcap">App shell full-screen: menu ở sidebar, wordmark ASCII, prompt nằm dưới đáy, toast thông báo ở góc.</div></div>
+      <div class="wire"><div class="wbar"><span>BLOG DETAIL</span><span>/blog/:slug</span></div>
+        <svg viewBox="0 0 220 140" aria-hidden="true"><rect x="80" y="10" width="16" height="16" fill="var(--accent)"/><rect x="80" y="32" width="90" height="7" fill="var(--ink)"/><rect x="80" y="42" width="70" height="7" fill="var(--ink)"/><g fill="var(--ink-3)"><rect x="80" y="54" width="120" height="3"/><rect x="80" y="60" width="100" height="3"/></g><g fill="var(--ink-4)"><rect x="80" y="70" width="20" height="2"/><rect x="120" y="70" width="20" height="2"/><rect x="160" y="70" width="20" height="2"/></g><rect x="0" y="84" width="220" height="1" fill="var(--line)"/><g fill="var(--ink-3)"><rect x="10" y="94" width="14" height="2"/><rect x="10" y="100" width="50" height="2"/><rect x="10" y="106" width="44" height="2"/><rect x="10" y="112" width="52" height="2"/></g><rect x="10" y="100" width="50" height="2" fill="var(--ink)"/><g fill="var(--ink-2)"><rect x="80" y="94" width="124" height="3"/><rect x="80" y="100" width="118" height="3"/><rect x="80" y="106" width="124" height="3"/></g><rect x="80" y="116" width="124" height="22" fill="none" stroke="var(--line)"/></svg>
+        <div class="wcap">Header bài canh vào cột nội dung. Rail chứa TREE (TOC) sticky. Prose rộng tối đa 660px.</div></div>
+    </div>
+
+    <div class="layers">
+      <div class="layer"><div class="lv"><b>L0 · Global</b>mọi trang</div><div>
+        <h4>Khung chung</h4><ul>
+          <li>Nav sticky cao 95px (73px trên mobile), nền <code>bg/86%</code> có blur. Logo pixel màu cam, link mono 12–13.5px có phím tắt <code>[H]</code>, CTA nền paper kèm dropdown.</li>
+          <li>Lưới 12 cột không có gap, gutter 2rem (1.5rem ở ≤640px). Rail = cột 1–4, nội dung = cột 5–12.</li>
+          <li>Footer: wordmark, nhóm link RESOURCES và CONNECT, form newsletter dạng một đường gạch chân. Bên dưới là cảnh pixel-space có mascot trôi lơ lửng (chu kỳ 7s).</li>
+          <li>Kbd-hint cố định ở góc dưới phải, hiện ra sau 1.2s. Banner consent trượt lên 6px.</li>
+        </ul></div></div>
+      <div class="layer"><div class="lv"><b>L1 · Home</b>danh sách</div><div>
+        <h4>Rail + feed</h4><ul>
+          <li>Intro: gõ chữ "claude.dev" với caret nhấp nháy trong ~1.57s, sau đó các khối <code>.stag</code> hiện dần theo <code>--i × 70ms</code>.</li>
+          <li>List-top: tabs mono VIẾT HOA (ink-3 → ink khi active) cộng ô <code>[S] SEARCH</code> mở rộng ra 180px.</li>
+          <li>Bài featured: tile pixel nền cam, chip "Featured" nền paper, chip category viền hairline, tiêu đề 34px weight 500.</li>
+          <li>Dòng bài viết: icon pixel 32px, ngày mono, tiêu đề sans, thời lượng mono canh phải. Khi hover một dòng, các dòng còn lại mờ xuống 35%.</li>
+        </ul></div></div>
+      <div class="layer"><div class="lv"><b>L1 · Mods</b>showcase</div><div>
+        <h4>Demo cạnh spec</h4><ul>
+          <li>Rail: H1 mono 31.5px, mô tả, link mono 12px gạch chân offset 4px kèm mũi tên →/↗.</li>
+          <li>Cửa sổ <code>.cli</code>: nền bg-raised, title bar 28px có 3 chấm ink-4, nút PAUSE/PLAY, prompt và dòng gợi ý ở dưới.</li>
+          <li>Spec dạng <code>&lt;dl&gt;</code>: nhãn mono ink-3, giá trị có tiền tố └, hook dùng chip code nền ink 5%.</li>
+        </ul></div></div>
+      <div class="layer"><div class="lv"><b>L1 · Terminal</b>app</div><div>
+        <h4>Trang web dạng CLI</h4><ul>
+          <li>Sidebar trái chứa menu phím tắt (có thêm [C] CHANGELOG), CTA ở đáy. Wordmark là chữ pixel khối lớn.</li>
+          <li>Prompt <code>guest@claude.dev &gt; /help</code>. Output là các dòng mono có ghost suggestion, bảng bài viết với thời lượng kiểu <code>14m 09s</code>.</li>
+          <li>Card thông báo ở góc trên phải: viền hairline, hàng nút DISMISS / READ MORE ngăn bằng đường kẻ.</li>
+        </ul></div></div>
+      <div class="layer"><div class="lv"><b>L1 · Blog</b>chi tiết</div><div>
+        <h4>Bài viết</h4><ul>
+          <li>Header: tile pixel cam, H1 34px/1.2 weight 500, đoạn standfirst màu ink-2 line-height 1.6, meta 3 cột AUTHOR / CATEGORY / PUBLISHED.</li>
+          <li>Rail chứa TREE sticky (top 36px): các mục └ màu ink-2, mục đang đọc chuyển sang ink, hover dịch phải 3px.</li>
+          <li>Prose: p 18px/1.7 màu ink-2. H2/H3 là <b>mono uppercase</b> 15.75px weight 500. Link gạch chân màu ink-3 offset 0.2em.</li>
+          <li>Figure: viền hairline, phần head có tiêu đề cùng loại file, caption "FIG A" có đường kẻ trên. Bảng: th mono 12px uppercase, hover dòng thì phủ <code>hover-row</code>.</li>
+        </ul></div></div>
+      <div class="layer"><div class="lv"><b>L2 · Atoms</b>chi tiết</div><div>
+        <h4>Những thứ nhỏ làm nên chất riêng</h4><ul>
+          <li>Ký tự └ dùng để thể hiện quan hệ cha–con (TOC, meta, spec), đóng vai trò thay cho bullet.</li>
+          <li>Ngoặc phím tắt <code>[X]</code> đặt trước mọi điều hướng chính.</li>
+          <li>Pixelgram (32 / 48 / 64 / 96px) thay cho ảnh thumbnail.</li>
+          <li><code>::selection</code> dùng nền accent và chữ màu bg. Focus là outline 1px ink, offset 2px.</li>
+        </ul></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TOKENS ================= -->
+<section class="sec" id="tokens">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">02 · TOKENS</span>
+    <h2>Màu, chữ, nhịp</h2>
+    <p>Màu lấy trực tiếp từ <code>:root</code> của claude.dev. Mọi giá trị số khác (size, weight, spacing, viền, bo góc, duration) đều snap về scale mặc định của Tailwind, nhỏ nhất là <code>text-xs</code>. Swatch bên phải đổi theo theme bạn đang xem: mặc định là dark, light được kích hoạt qua <code>prefers-color-scheme</code>.</p>
+  </div></div>
+  <div class="body">
+    <div>
+      <h3 class="h3">Bề mặt &amp; mực</h3>
+      <div class="swatches" id="sw"></div>
+    </div>
+    <div>
+      <h3 class="h3">Dark ↔ Light: cặp giá trị, không đảo ngược</h3>
+      <p class="lede" style="margin-bottom:16px">Light theme không phải dark lộn ngược. Mỗi token có giá trị riêng được chỉnh lại cho đúng độ tương phản trên nền giấy. Bấm <kbd>L</kbd> để so sánh trực tiếp.</p>
+      <div class="tscroll"><table class="typetable pairs">
+        <thead><tr><th>Token</th><th>Dark</th><th>Light</th><th>Quy tắc</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">--bg / --ink</td><td><i style="background:#141413"></i>#141413 / <i style="background:#faf9f5"></i>#faf9f5</td><td><i style="background:#faf9f5"></i>#faf9f5 / <i style="background:#141413"></i>#141413</td><td>Hoán đổi nền và chữ, cùng một tông ấm</td></tr>
+          <tr><td class="mono">--ink-2 (prose)</td><td><i style="background:#b0aea5"></i>#b0aea5</td><td><i style="background:#4c4b45"></i>#4c4b45</td><td>Ở light phải đậm hơn hẳn để STIX nét mảnh vẫn đọc tốt</td></tr>
+          <tr><td class="mono">--ink-3 (meta)</td><td><i style="background:#87867f"></i>#87867f</td><td><i style="background:#7b7a72"></i>#7b7a72</td><td>Nhãn mono nhỏ, giữ tương phản ≥ 4:1</td></tr>
+          <tr><td class="mono">--ink-4 (└, dots)</td><td><i style="background:#5e5d59"></i>#5e5d59</td><td><i style="background:#a8a69d"></i>#a8a69d</td><td>Chỉ dùng cho trang trí, không chứa chữ cần đọc</td></tr>
+          <tr><td class="mono">--accent</td><td><i style="background:#d97757"></i>#d97757</td><td><i style="background:#c15f3c"></i>#c15f3c</td><td>Dùng cho nền tile, focal mark, selection</td></tr>
+          <tr><td class="mono">--accent-ink</td><td><i style="background:#e08a6c"></i>#e08a6c</td><td><i style="background:#a94e2f"></i>#a94e2f</td><td>Khi màu cam dùng làm <b>chữ</b> nhỏ thì phải dùng token này</td></tr>
+          <tr><td class="mono">--line-soft</td><td><i style="background:#faf9f517"></i>ink 9%</td><td><i style="background:#1414131c"></i>ink 11%</td><td>Hairline ở light cần alpha cao hơn một chút</td></tr>
+          <tr><td class="mono">--panel / --panel-2</td><td><i style="background:#161514"></i>#161514 / #121110</td><td><i style="background:#f2f0ea"></i>#f2f0ea / #edeae2</td><td>Ở dark thì panel tối hơn nền, ở light thì panel đậm hơn nền</td></tr>
+          <tr><td class="mono">--syn-* (code)</td><td><i style="background:#c792ea"></i>pastel</td><td><i style="background:#914dbe"></i>saturated</td><td>Màu syntax có bộ riêng cho light, đạt AA trên #faf9f5</td></tr>
+          <tr><td class="mono">--paper (hover/CTA)</td><td><i style="background:#faf9f5"></i>#faf9f5</td><td><i style="background:#141413"></i>#141413</td><td>"Paper" là màu tương phản tối đa, nên đổi theo theme</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div>
+      <h3 class="h3">Chữ: chỉ dùng scale của Tailwind</h3>
+      <div class="dna" style="margin-bottom:20px">
+        <div><b>Geist · font-sans</b><span>UI, tiêu đề, nút, dòng bài, prose</span></div>
+        <div><b>Geist Mono · font-mono</b><span>Nav, tab, nhãn, ngày, meta, code, heading trong bài</span></div>
+        <div><b>STIX Two Text · font-serif</b><span>Có trong theme nhưng không component nào dùng mặc định. Bật khi cần</span></div>
+        <div><b>Giới hạn</b><span>Nhỏ nhất là text-xs. Chỉ dùng font-normal và font-medium</span></div>
+      </div>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Mẫu</th><th>Vai trò</th><th>Tailwind</th><th>Gốc claude.dev</th></tr></thead>
+        <tbody>
+          <tr><td style="font-size:2.25rem;font-weight:500;line-height:1.25">Tiêu đề bài</td><td>h1, featured</td><td class="mono">text-3xl md:text-4xl font-medium leading-tight</td><td class="mono">34px / 500</td></tr>
+          <tr><td class="mono" style="font-size:1.875rem;line-height:1">mods</td><td>Tên trang ở rail</td><td class="mono">font-mono text-3xl leading-none</td><td class="mono">31.5px</td></tr>
+          <tr><td class="mono" style="font-size:1.5rem;line-height:1.25">Chuyển động</td><td>Tiêu đề section ở rail</td><td class="mono">font-mono text-2xl leading-tight</td><td class="mono">—</td></tr>
+          <tr><td style="font-size:1.125rem;color:var(--ink-2);line-height:1.625">Standfirst và prose</td><td>đoạn đọc dài</td><td class="mono">text-lg leading-relaxed text-ink-2</td><td class="mono">18px / 1.6–1.7</td></tr>
+          <tr><td style="font-size:1rem">Dòng bài, body UI</td><td>row title, mô tả</td><td class="mono">text-base</td><td class="mono">18px</td></tr>
+          <tr><td class="mono" style="font-size:.875rem;font-weight:500;text-transform:uppercase;letter-spacing:.025em">Section heading</td><td>h2/h3 trong bài</td><td class="mono">font-mono text-sm font-medium uppercase tracking-wide</td><td class="mono">15.75px / 500</td></tr>
+          <tr><td class="mono" style="font-size:.875rem;color:var(--ink-3)">[M] MODS · Oct 08, 2026</td><td>nav, tab, ngày, thời lượng</td><td class="mono">font-mono text-sm text-ink-3</td><td class="mono">13.5px</td></tr>
+          <tr><td class="mono" style="font-size:.75rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em">FIG A · PNG · AUTHOR</td><td>nhãn, th, chip, link mono</td><td class="mono">font-mono text-xs uppercase tracking-wider</td><td class="mono">10.7–12px</td></tr>
+          <tr><td style="font-family:var(--serif);font-size:1.125rem;line-height:1.625;color:var(--ink-2)">Mẫu serif khi cần</td><td>opt-in, không mặc định</td><td class="mono">font-serif text-lg leading-relaxed</td><td class="mono">không có</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div>
+      <h3 class="h3">Nhịp và hình: chỉ dùng scale của Tailwind</h3>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Thành phần</th><th>Tailwind</th><th>Gốc claude.dev</th></tr></thead>
+        <tbody>
+          <tr><td>Lưới khung</td><td class="mono">grid grid-cols-12 · rail col-span-4 · nội dung col-span-8</td><td class="mono">12 cột, gap 0</td></tr>
+          <tr><td>Lề khung</td><td class="mono">px-8 max-sm:px-6</td><td class="mono">2rem / 1.5rem</td></tr>
+          <tr><td>Nav</td><td class="mono">h-24 max-sm:h-18 · sticky top-0</td><td class="mono">95px / 73px</td></tr>
+          <tr><td>Dòng bài, dòng bảng</td><td class="mono">py-4 border-b border-line-soft</td><td class="mono">16px 0</td></tr>
+          <tr><td>Button</td><td class="mono">&lt;Button size="lg"&gt; · không override</td><td class="mono">36px</td></tr>
+          <tr><td>Chip</td><td class="mono">&lt;Badge variant="outline"&gt; · không override</td><td class="mono">2px 8px</td></tr>
+          <tr><td>Figure</td><td class="mono">my-8 · p-4 · caption py-2.5 px-4</td><td class="mono">32 / 16 / 10px</td></tr>
+          <tr><td>Cột prose</td><td class="mono">max-w-2xl</td><td class="mono">660px</td></tr>
+          <tr><td>Pixelgram</td><td class="mono">size-8 · size-12 · size-16 · size-24</td><td class="mono">32 / 48 / 64 / 96px</td></tr>
+          <tr><td>Viền</td><td class="mono">border (1px) · không dùng border-2 trở lên</td><td class="mono">1px</td></tr>
+          <tr><td>Bo góc</td><td class="mono">rounded-none · focus ring rounded-xs</td><td class="mono">0 · 2px</td></tr>
+          <tr><td>Focus</td><td class="mono">outline outline-offset-2</td><td class="mono">1px, offset 2px</td></tr>
+          <tr><td>Breakpoint</td><td class="mono">sm 640 · md 768 · lg 1024 (mặc định)</td><td class="mono">640 / 900</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SPACING ================= -->
+<section class="sec" id="spacing">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">03 · SPACING</span>
+    <h2>Nhịp và khoảng trắng</h2>
+    <p>Cảm giác thoáng của claude.dev đến từ một thang khoảng cách rõ ràng: phần tử càng liên quan thì càng sát nhau, và mỗi tầng rộng hơn tầng dưới khoảng 1.5–2.5 lần. Số liệu đo trên Home, Mods và Blog detail ở 1440px, rồi snap về scale Tailwind.</p>
+    <p>Không tạo token spacing mới. Mỗi tầng là một <b>vai trò</b> gắn với đúng một class Tailwind.</p>
+  </div></div>
+  <div class="body">
+    <div>
+      <h3 class="h3">Bảy tầng, từ trong ra ngoài</h3>
+      <div class="ladder" aria-hidden="true">
+        <div><i style="width:6px"></i><span>6</span></div><div><i style="width:14px"></i><span>14</span></div><div><i style="width:20px"></i><span>20</span></div><div><i style="width:32px"></i><span>32</span></div><div><i style="width:56px"></i><span>56</span></div><div><i style="width:80px"></i><span>80</span></div><div><i style="width:112px"></i><span>112</span></div>
+      </div>
+      <div class="tscroll"><table class="typetable tiers">
+        <thead><tr><th>Tầng</th><th>Tailwind</th><th>Gốc → px</th><th>Dùng cho</th></tr></thead>
+        <tbody>
+          <tr><td><b>T1 · Glyph</b></td><td class="mono">gap-1.5 · gap-2</td><td class="mono">6 · 7 → 6–8</td><td>Các li trong list, dt → dd, icon ↔ chữ, ký tự └ ↔ nhãn</td></tr>
+          <tr><td><b>T2 · Nhóm</b></td><td class="mono">gap-3 · gap-3.5</td><td class="mono">12 · 13.5 · 14 → 12–14</td><td>Đoạn văn liền nhau, meta → tiêu đề → tác giả, link trong footer, list-top pb-3</td></tr>
+          <tr><td><b>T3 · Đầu mục</b></td><td class="mono">gap-5</td><td class="mono">18 · 20 → 20</td><td>Heading → nội dung đầu tiên của nó, h1 → standfirst</td></tr>
+          <tr><td><b>T4 · Khối</b></td><td class="mono">gap-8 · my-8 · (mt-9 trước H3)</td><td class="mono">30 · 32 · 36 → 32 · 36</td><td>Figure, bảng, meta bài, link rail. Các khối trong cùng một section</td></tr>
+          <tr><td><b>T5 · Section</b></td><td class="mono">gap-14</td><td class="mono">54 → 56</td><td>Giữa các section của bài viết hoặc của một trang tài liệu</td></tr>
+          <tr><td><b>T6 · Vùng trang</b></td><td class="mono">pt-20 · mt-20</td><td class="mono">72 · 80 → 80</td><td>Nav → nội dung, hero → body, nội dung → footer</td></tr>
+          <tr><td><b>T7 · Ngắt lớn</b></td><td class="mono">mt-28</td><td class="mono">110 → 112</td><td>Kết thúc phần chính → khối khác hẳn (bài liên quan, CTA)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Mẫu: một trang bài viết</h3>
+      <p class="lede" style="margin-bottom:20px">Vùng sọc là khoảng trắng thật theo đúng tỉ lệ. Hãy để ý khoảng phía trên heading luôn lớn hơn khoảng bên dưới nó, vì vậy heading được đọc là thuộc về đoạn nội dung bên dưới.</p>
+      <div class="specimen">
+        <div class="sp-nav"><span class="pix-dot"></span><span>[H] HOME</span><span>[M] MODS</span></div>
+        <div class="gapm" style="height:80px"><span>T6 · pt-20 · 80</span></div>
+        <div class="sp-tile"></div>
+        <div class="gapm" style="height:32px"><span>T4 · gap-8 · 32</span></div>
+        <div class="sp-h1">How the team does code review</div>
+        <div class="gapm" style="height:20px"><span>T3 · gap-5 · 20</span></div>
+        <div class="sp-p wide"></div><div class="sp-p"></div>
+        <div class="gapm" style="height:32px"><span>T4 · gap-8 · 32</span></div>
+        <div class="sp-meta"><span>AUTHOR</span><span>CATEGORY</span><span>PUBLISHED</span></div>
+        <div class="gapm" style="height:80px"><span>T6 · pt-20 · 80</span></div>
+        <div class="sp-h2">RETHINKING THE PURPOSE</div>
+        <div class="gapm" style="height:20px"><span>T3 · gap-5 · 20</span></div>
+        <div class="sp-p wide"></div><div class="sp-p wide"></div><div class="sp-p"></div>
+        <div class="gapm" style="height:14px"><span>T2 · gap-3.5 · 14</span></div>
+        <div class="sp-p wide"></div><div class="sp-p"></div>
+        <div class="gapm" style="height:32px"><span>T4 · my-8 · 32</span></div>
+        <div class="sp-fig">FIGURE · p-4</div>
+        <div class="gapm" style="height:36px"><span>T4 · mt-9 · 36 (trước H3)</span></div>
+        <div class="sp-h3">1. THE WORK IS VERIFIED</div>
+        <div class="gapm" style="height:20px"><span>T3 · gap-5 · 20</span></div>
+        <div class="sp-p wide"></div><div class="sp-p"></div>
+        <div class="gapm" style="height:56px"><span>T5 · gap-14 · 56</span></div>
+        <div class="sp-h2">THE SCARCE RESOURCE</div>
+        <div class="gapm" style="height:20px"><span>T3 · gap-5 · 20</span></div>
+        <div class="sp-p wide"></div><div class="sp-p"></div>
+        <div class="gapm" style="height:112px"><span>T7 · mt-28 · 112</span></div>
+        <div class="sp-h2">RELATED</div>
+        <div class="gapm" style="height:12px"><span>T2 · pb-3 · 12</span></div>
+        <div class="sp-row"><span></span><span></span></div><div class="sp-row"><span></span><span></span></div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="h3">Chiều ngang</h3>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Vai trò</th><th>Tailwind</th><th>Gốc</th><th>Ghi chú</th></tr></thead>
+        <tbody>
+          <tr><td>Lề trang</td><td class="mono">px-9 · max-sm:px-6</td><td class="mono">36 · 24</td><td>Đặt một lần ở shell, không lặp lại trong section</td></tr>
+          <tr><td>Lưới</td><td class="mono">grid-cols-12 gap-x-0</td><td class="mono">12 cột, gap 0</td><td>Rail col-span-4, nội dung col-span-8</td></tr>
+          <tr><td>Rail → nội dung</td><td class="mono">rail pr-10 · nội dung pl-8</td><td class="mono">40 · 32</td><td>Khoảng trống nằm trong cột, không dùng gap của grid</td></tr>
+          <tr><td>Bề rộng chữ</td><td class="mono">max-w-2xl</td><td class="mono">660</td><td>Prose và standfirst. Phần bên phải còn trống là có chủ đích</td></tr>
+          <tr><td>Cột meta</td><td class="mono">grid-cols-3</td><td class="mono">3 × 225</td><td>Author / Category / Published, căn theo cột của lưới</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Padding bên trong component</h3>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Component</th><th>Tailwind</th><th>Gốc</th><th>Quy tắc</th></tr></thead>
+        <tbody>
+          <tr><td>Dòng trong list</td><td class="mono">py-4 · gap-0 · border-b</td><td class="mono">16 · 0</td><td>Padding nằm trong row, giữa các row không có gap, nên hover phủ kín cả dòng</td></tr>
+          <tr><td>Bài featured</td><td class="mono">py-4 · nội dung gap-3</td><td class="mono">16 · 12</td><td>Chip, tiêu đề, tác giả là một nhóm T2</td></tr>
+          <tr><td>Mục lớn (mod)</td><td class="mono">py-9 · border-b · thân pl-9</td><td class="mono">36</td><td>Item có media thì dùng T4 làm padding</td></tr>
+          <tr><td>Figure</td><td class="mono">my-8 · p-4 · caption py-2.5 px-4</td><td class="mono">32 · 16 · 10</td><td>Khung border bao media; caption ngăn bằng border-t</td></tr>
+          <tr><td>Terminal</td><td class="mono">bar h-7 · màn hình px-4 pb-2.5</td><td class="mono">28 · 16 · 10</td><td>Chrome nhỏ gọn, nội dung có lề như figure</td></tr>
+          <tr><td>Footer</td><td class="mono">pt-11 pb-14 · link gap-3</td><td class="mono">44 · 54 · 12</td><td>Đáy rộng hơn đỉnh, tạo khoảng nghỉ trước cảnh pixel</td></tr>
+          <tr><td>Button · Badge · Tabs</td><td class="mono">prop size / variant</td><td class="mono">—</td><td>Không thêm padding. Chọn size có sẵn của component</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Quy tắc</h3>
+      <div class="ux">
+        <div><h4>Khoảng cách thể hiện quan hệ</h4><p>Cùng nhóm thì sát, khác nhóm thì xa. Mỗi lần nhảy tầng thì khoảng cách phải tăng rõ rệt (≥ 1.5×). Đừng dùng hai giá trị sát nhau như 16 và 20 cho hai quan hệ khác nhau.</p></div>
+        <div><h4>Heading thuộc về phần bên dưới</h4><p>Khoảng phía trên heading luôn lớn hơn khoảng bên dưới: H3 có mt-9 (36) phía trên và gap-5 (20) phía dưới. H2 mở section bằng T5 phía trên.</p></div>
+        <div><h4>Tách bằng khoảng trắng trước, đường kẻ sau</h4><p>Section tách nhau chỉ bằng khoảng trắng. Danh sách dùng border-b. Khung border bao quanh chỉ dành cho media object: figure, terminal, card.</p></div>
+        <div><h4>Một trục trái duy nhất</h4><p>Header bài, prose, list, related đều bắt đầu ở cột 5. Rail không bao giờ lấn sang. Mắt luôn biết nội dung bắt đầu ở đâu.</p></div>
+        <div><h4>Container giữ khoảng cách, con thì không</h4><p>Dùng flex/grid với gap hoặc space-y ở cha. Tránh đặt margin rời trên từng phần tử con, vì dễ bị cộng dồn hoặc collapse.</p></div>
+        <div><h4>Mobile: co tầng ngoài, giữ tầng trong</h4><p>T1–T4 giữ nguyên. Dưới sm: T5 56 → 40 (gap-10), T6 80 → 48 (pt-12), T7 112 → 64 (mt-16). Lề trang px-6.</p></div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="h3">Nên và không nên</h3>
+      <div class="tscroll"><table class="typetable dodont">
+        <thead><tr><th>Nên</th><th>Không nên</th></tr></thead>
+        <tbody>
+          <tr><td>Section mới → <span class="mono">gap-14</span> ở container cha</td><td><span class="mono">mt-[54px]</span> hoặc mt-13 tự đặt</td></tr>
+          <tr><td>Heading + nội dung bọc trong <span class="mono">flex flex-col gap-5</span></td><td>h2 có mb-4, p lại có mt-1</td></tr>
+          <tr><td>List row <span class="mono">py-4 border-b</span>, list <span class="mono">gap-0</span></td><td>Card bo góc cho từng row, có gap giữa các row</td></tr>
+          <tr><td><span class="mono">&lt;Button size="sm"&gt;</span></td><td><span class="mono">&lt;Button className="h-7 px-3"&gt;</span></td></tr>
+          <tr><td>Bọc figure trong khung border</td><td>Bọc cả section trong card có nền và shadow</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-h"><span>Công thức · trang bài viết</span><button data-copy="recipe">Copy</button></div>
+<pre id="recipe"><span class="k">&lt;main</span> className=<span class="v">"px-9 max-sm:px-6"</span><span class="k">&gt;</span>
+  <span class="c">{/* T6: nav → nội dung */}</span>
+  <span class="k">&lt;header</span> className=<span class="v">"grid grid-cols-12 pt-20 max-sm:pt-12"</span><span class="k">&gt;</span>
+    <span class="k">&lt;div</span> className=<span class="v">"col-span-8 col-start-5 flex flex-col gap-8 max-lg:col-span-12 max-lg:col-start-1"</span><span class="k">&gt;</span>
+      <span class="k">&lt;PixelTile /&gt;</span>
+      <span class="k">&lt;div</span> className=<span class="v">"flex max-w-2xl flex-col gap-5"</span><span class="k">&gt;</span>   <span class="c">{/* T3 */}</span>
+        <span class="k">&lt;h1</span> className=<span class="v">"text-3xl font-medium leading-tight md:text-4xl"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;p</span> className=<span class="v">"text-lg leading-relaxed text-ink-2"</span><span class="k">/&gt;</span>
+      <span class="k">&lt;/div&gt;</span>
+      <span class="k">&lt;ArticleMeta</span> className=<span class="v">"grid grid-cols-3"</span><span class="k"> /&gt;</span>
+    <span class="k">&lt;/div&gt;</span>
+  <span class="k">&lt;/header&gt;</span>
+
+  <span class="k">&lt;div</span> className=<span class="v">"grid grid-cols-12 pt-20 max-sm:pt-12"</span><span class="k">&gt;</span>
+    <span class="k">&lt;aside</span> className=<span class="v">"col-span-4 pr-10 max-lg:hidden"</span><span class="k">&gt;</span><span class="k">&lt;Toc /&gt;</span><span class="k">&lt;/aside&gt;</span>
+    <span class="k">&lt;article</span> className=<span class="v">"col-span-8 flex max-w-2xl flex-col gap-14 pl-8 max-lg:col-span-12 max-lg:pl-0 max-sm:gap-10"</span><span class="k">&gt;</span>
+      <span class="k">&lt;section</span> className=<span class="v">"flex flex-col gap-5"</span><span class="k">&gt;</span>          <span class="c">{/* T5 giữa các section, T3 trong section */}</span>
+        <span class="k">&lt;h2</span> className=<span class="v">"font-mono text-sm font-medium uppercase tracking-wide"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;div</span> className=<span class="v">"flex flex-col gap-3.5"</span><span class="k">&gt;</span>…<span class="k">&lt;/div&gt;</span>   <span class="c">{/* T2 */}</span>
+      <span class="k">&lt;/section&gt;</span>
+    <span class="k">&lt;/article&gt;</span>
+  <span class="k">&lt;/div&gt;</span>
+
+  <span class="k">&lt;RelatedPosts</span> className=<span class="v">"mt-28 max-sm:mt-16"</span><span class="k"> /&gt;</span>                  <span class="c">{/* T7 */}</span>
+<span class="k">&lt;/main&gt;</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESPONSIVE ================= -->
+<section class="sec" id="responsive">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">04 · RESPONSIVE</span>
+    <h2>Co giãn</h2>
+    <p>claude.dev có khoảng 10 mốc media query, nhưng chỉ <b>một</b> mốc đổi bố cục thật sự (900–1000px). Ở mốc đó rail chuyển lên đầu, TOC ẩn, nav thành burger. Các mốc khác chỉ ẩn dần thông tin phụ hoặc giảm lề.</p>
+    <p>Spark gom các mốc đó về 4 breakpoint mặc định của Tailwind và viết theo kiểu mobile-first.</p>
+  </div></div>
+  <div class="body">
+    <div>
+      <h3 class="h3">Bản đồ breakpoint</h3>
+      <div class="bpbar" aria-hidden="true">
+        <div class="bp-track"><i style="left:0;width:calc(640/1440*100%)"></i><i style="left:calc(640/1440*100%);width:calc(128/1440*100%)"></i><i style="left:calc(768/1440*100%);width:calc(256/1440*100%)"></i><i style="left:calc(1024/1440*100%);width:calc(256/1440*100%)"></i><i style="left:calc(1280/1440*100%);width:calc(160/1440*100%)"></i></div>
+        <div class="bp-ticks"><span style="left:calc(640/1440*100%)">sm<em> 640</em></span><span style="left:calc(768/1440*100%)">md<em> 768</em></span><span style="left:calc(1024/1440*100%)">lg<em> 1024</em></span><span style="left:calc(1280/1440*100%)">xl<em> 1280</em></span></div>
+        <div class="bp-src"><span style="left:calc(440/1440*100%)"></span><span style="left:calc(600/1440*100%)"></span><span style="left:calc(640/1440*100%)"></span><span style="left:calc(800/1440*100%)"></span><span style="left:calc(860/1440*100%)"></span><span style="left:calc(900/1440*100%)"></span><span style="left:calc(1000/1440*100%)"></span><span style="left:calc(1100/1440*100%)"></span><span style="left:calc(1200/1440*100%)"></span><span style="left:calc(1280/1440*100%)"></span></div>
+        <div class="bp-legend"><span><i class="lg-tw"></i>Tailwind</span><span><i class="lg-src"></i>mốc gốc của claude.dev</span></div>
+      </div>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Tailwind</th><th>Mốc gốc</th><th>Loại thay đổi</th><th>Điều xảy ra</th></tr></thead>
+        <tbody>
+          <tr><td class="mono bpn">xl · 1280</td><td class="mono bpn">1200 · 1280</td><td>Tinh chỉnh</td><td>Màn rộng nhất: rail đủ 4 cột, dòng bài 3 cột (ngày · tiêu đề · thời lượng)</td></tr>
+          <tr><td class="mono bpn">lg · 1024</td><td class="mono bpn">900 · 1000 · 1100</td><td><b>Đổi bố cục</b></td><td>Dưới lg: nav thành burger, rail lên đầu và bỏ sticky, TOC ẩn, dòng bài tách 2 hàng, featured xếp dọc, mod chuyển media trên và thân dưới</td></tr>
+          <tr><td class="mono bpn">md · 768</td><td class="mono bpn">800 · 860</td><td>Ẩn thông tin phụ</td><td>Dưới md: ẩn kbd-hint và cột category, tabs được xuống dòng, newsletter 1 cột</td></tr>
+          <tr><td class="mono bpn">sm · 640</td><td class="mono bpn">440 · 600 · 640</td><td>Lề và nhịp</td><td>Dưới sm: lề px-6, nav h-18, prose text-base, footer 2 cột, terminal vuông, co các tầng spacing ngoài</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Ma trận component × breakpoint</h3>
+      <div class="tscroll"><table class="typetable matrix">
+        <thead><tr><th>Component</th><th>&lt; sm</th><th>sm → md</th><th>md → lg</th><th>≥ lg</th></tr></thead>
+        <tbody>
+          <tr><td>Nav</td><td>h-18 · burger</td><td>h-24 · burger</td><td>h-24 · burger</td><td>h-24 · link [X] đầy đủ</td></tr>
+          <tr><td>Lề trang</td><td>px-6</td><td>px-9</td><td>px-9</td><td>px-9</td></tr>
+          <tr><td>Rail / nội dung</td><td colspan="3">Xếp dọc: rail thành khối header (static), nội dung bên dưới</td><td>4 / 8 cột, rail sticky</td></tr>
+          <tr><td>TOC bài viết</td><td colspan="3">Ẩn (chỉ giữ link share)</td><td>Sticky ở rail</td></tr>
+          <tr><td>Dòng bài</td><td>2 hàng · ẩn ngày</td><td>2 hàng · tiêu đề / ngày + thời lượng</td><td>2 hàng</td><td>1 hàng: ngày · tiêu đề · thời lượng</td></tr>
+          <tr><td>Bài featured</td><td colspan="3">Tile trên, chip góc phải, tiêu đề bên dưới</td><td>Tile trái 2 cột, nội dung phải</td></tr>
+          <tr><td>Meta bài</td><td>grid-cols-2</td><td>grid-cols-3</td><td>grid-cols-3</td><td>grid-cols-3, căn cột lưới</td></tr>
+          <tr><td>Mod / media item</td><td>Media vuông, thân xếp dọc</td><td colspan="2">Media trên, thân 2 cột (tiêu đề + CTA | mô tả + spec)</td><td>Media 2/3 trái, thân 1/3 phải</td></tr>
+          <tr><td>Footer</td><td>grid-cols-2, brand và newsletter full</td><td colspan="2">grid-cols-3 (cột 4/4/4)</td><td>brand + 2 cột link + newsletter</td></tr>
+          <tr><td>Chữ</td><td>prose text-base · h1 text-3xl</td><td colspan="2">prose text-lg · h1 text-3xl</td><td>prose text-lg · h1 text-4xl</td></tr>
+          <tr><td>Spacing T5 · T6 · T7</td><td>gap-10 · pt-12 · mt-16</td><td colspan="3">gap-14 · pt-20 · mt-28 (T1–T4 không đổi ở mọi mốc)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Nguyên tắc</h3>
+      <div class="ux">
+        <div><h4>Một mốc đổi bố cục, còn lại là tinh chỉnh</h4><p>Chỉ <span class="mono">lg</span> được phép đổi cấu trúc trang. sm, md, xl chỉ chỉnh lề, ẩn thông tin phụ hoặc điều chỉnh tỉ lệ cột. Nhờ vậy giao diện không "nhảy" liên tục khi kéo cửa sổ.</p></div>
+        <div><h4>Reflow, không thu nhỏ</h4><p>Cỡ chữ gần như giữ nguyên. Khi hẹp lại, dòng bài tách thành 2 hàng thay vì cắt chữ hay giảm font. Tiêu đề luôn đứng một mình ở hàng đầu.</p></div>
+        <div><h4>Ẩn dần từ ít quan trọng nhất</h4><p>Thứ tự ẩn: kbd-hint → category → tile và TOC → ngày. Tiêu đề, thời lượng và CTA không bao giờ bị ẩn.</p></div>
+        <div><h4>Rail thành header</h4><p>Dưới lg, rail bỏ sticky và nằm phía trên nội dung như một khối giới thiệu. Trục trái vẫn là một đường thẳng duy nhất.</p></div>
+        <div><h4>Hover chỉ dành cho thiết bị có chuột</h4><p>Các hiệu ứng làm mờ dòng khác chỉ chạy khi có <span class="mono">(hover: hover)</span>. Tailwind v4 đã gắn sẵn điều kiện này cho <span class="mono">hover:</span>. Trên màn cảm ứng, dòng vừa chạm đảm nhận vai trò đó.</p></div>
+        <div><h4>Co tầng ngoài, giữ tầng trong</h4><p>Chỉ lề trang và T5–T7 co lại dưới sm. Khoảng cách giữa label và giá trị, giữa các đoạn văn giữ nguyên, nên nhóm thông tin vẫn đọc như trên desktop.</p></div>
+      </div>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-h"><span>Mobile-first · shell và dòng bài</span><button data-copy="rwd">Copy</button></div>
+<pre id="rwd"><span class="c">{/* Shell: rail xếp trên ở mobile, 4/8 từ lg */}</span>
+<span class="k">&lt;div</span> className=<span class="v">"grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-0"</span><span class="k">&gt;</span>
+  <span class="k">&lt;aside</span> className=<span class="v">"lg:col-span-4 lg:sticky lg:top-24 lg:self-start lg:pr-10"</span><span class="k">/&gt;</span>
+  <span class="k">&lt;main</span> className=<span class="v">"min-w-0 lg:col-span-8"</span><span class="k">/&gt;</span>
+<span class="k">&lt;/div&gt;</span>
+
+<span class="c">{/* Dòng bài: tiêu đề ở hàng 1, ngày + thời lượng ở hàng 2; từ lg gộp thành 1 hàng */}</span>
+<span class="k">&lt;a</span> className=<span class="v">"flex items-start gap-4 border-b py-4 lg:items-center"</span><span class="k">&gt;</span>
+  <span class="k">&lt;PixelIcon</span> className=<span class="v">"size-8 shrink-0"</span><span class="k">/&gt;</span>
+  <span class="k">&lt;div</span> className=<span class="v">"flex min-w-0 flex-1 flex-col gap-2 lg:grid lg:grid-cols-8 lg:items-center lg:gap-0"</span><span class="k">&gt;</span>
+    <span class="k">&lt;span</span> className=<span class="v">"text-base lg:order-2 lg:col-span-5"</span><span class="k">&gt;</span>{title}<span class="k">&lt;/span&gt;</span>
+    <span class="k">&lt;span</span> className=<span class="v">"flex gap-4 font-mono text-sm text-ink-3 lg:contents"</span><span class="k">&gt;</span>
+      <span class="k">&lt;time</span> className=<span class="v">"max-sm:hidden lg:order-1 lg:col-span-2"</span><span class="k">/&gt;</span>
+      <span class="k">&lt;span</span> className=<span class="v">"lg:order-3 lg:col-span-1 lg:text-right"</span><span class="k">&gt;</span>{minutes}<span class="k">&lt;/span&gt;</span>
+    <span class="k">&lt;/span&gt;</span>
+  <span class="k">&lt;/div&gt;</span>
+<span class="k">&lt;/a&gt;</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMPONENTS ================= -->
+<section class="sec" id="components">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">05 · COMPONENTS</span>
+    <h2>Gallery tương tác</h2>
+    <p>Mỗi ô là một component dựng lại bằng chính các token ở trên. Bạn có thể hover, click hoặc gõ thử. Dòng spec ở chân mỗi ô ghi các giá trị đo được trên site gốc.</p>
+    <div class="tree" style="margin-top:12px">
+      <span class="th">TREE</span>
+      <a href="#c-nav" class="on">Button &amp; chip</a>
+      <a href="#c-list">Tabs, search, dòng bài</a>
+      <a href="#c-cli">Terminal window</a>
+      <a href="#c-prose">Prose &amp; figure</a>
+    </div>
+  </div></div>
+  <div class="body">
+    <div class="cgrid">
+      <div class="cell" id="c-nav"><div class="ch"><span>Button</span><span>.btn</span></div>
+        <div class="stage"><button class="btn">Try Claude Code <span>▾</span></button><button class="btn ghost">Ghost</button></div>
+        <div class="spec">&lt;Button size="lg"&gt; (h-9) cho CTA · size="default" (h-8) trong form · variant default / outline · không override h, padding, text</div></div>
+      <div class="cell"><div class="ch"><span>Chip / Badge</span><span>.chip</span></div>
+        <div class="stage"><span class="chip fill">Featured</span><span class="chip">Engineering</span><code>turn.complete</code><code>ui.render</code></div>
+        <div class="spec">&lt;Badge variant="default"&gt; = Featured · variant="outline" = category · size do component quyết định · code inline là style của prose</div></div>
+
+      <div class="cell wide" id="c-list"><div class="ch"><span>List-top + Post rows</span><span>Home feed</span></div>
+        <div class="stage" style="display:grid;gap:0">
+          <div class="listtop">
+            <div class="tabs" id="tabs" role="tablist">
+              <button class="on" role="tab">All</button><button role="tab">Agents</button><button role="tab">Engineering</button><button role="tab">Playbooks</button><button role="tab">Skills</button>
+            </div>
+            <div class="search" id="search"><input id="q" placeholder="Tìm bài…" aria-label="Tìm bài"><button id="stog"><span class="sk">[S]</span> SEARCH</button></div>
+          </div>
+          <div class="posts">
+            <a class="post" href="#c-list"><span class="d">Oct 08, 2026</span><span class="ti">Building effective agent automations</span><span class="t">9 minutes</span></a>
+            <a class="post" href="#c-list"><span class="d">Oct 06, 2026</span><span class="ti">A field guide to cloud sessions</span><span class="t">18 minutes</span></a>
+            <a class="post" href="#c-list"><span class="d">Oct 01, 2026</span><span class="ti">Getting started with mods</span><span class="t">11 minutes</span></a>
+            <a class="post" href="#c-list"><span class="d">Sep 28, 2026</span><span class="ti">Automating eval design and hillclimbing</span><span class="t">12 minutes</span></a>
+          </div>
+        </div>
+        <div class="spec">&lt;Tabs&gt; variant="line" cho filter · hover row: bg-primary text-primary-foreground · thời lượng -translate-x-6 · mũi tên hiện ra (duration-200 ease-out) · dòng khác opacity-35 · search: w-0 → w-44, duration-300</div></div>
+
+      <div class="cell" id="c-cli"><div class="ch"><span>Terminal window</span><span>.cli</span></div>
+        <div class="stage">
+          <div class="cli">
+            <div class="cli-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ti">Token weather</span><span class="act">PAUSE</span></div>
+            <div class="cli-out" id="cliout"><span class="kw">export</span> <span class="kw">default</span> <span class="fn">mod</span>({<br>&nbsp;&nbsp;on: <span class="st">"turn.complete"</span>,<br>&nbsp;&nbsp;draw: <span class="ar">()</span> <span class="ar">=&gt;</span> band(<span class="st">"62% · clear"</span>)<br>})<br><span class="add">+ 1 band above prompt</span> <span class="del">− 0 removed</span></div>
+            <div class="cli-in"><span class="u">guest@spark</span><span class="p">&gt;</span><span>/help</span><span class="caret" style="width:.45em"></span></div>
+            <div class="cli-hint">manual mode on · + for agents</div>
+          </div>
+        </div>
+        <div class="spec">bg-card · bar h-7 · chấm size-2.5 bg-ink-4 · font-mono text-xs · màu syntax: purple/blue/green/cyan</div></div>
+      <div class="cell"><div class="ch"><span>Spec list + Dropdown</span><span>dl / .dd</span></div>
+        <div class="stage" style="align-items:start;justify-content:space-between">
+          <dl class="spec-dl"><div><dt>HOOKS</dt><dd><code>tool.call</code><code>ui.render</code></dd></div><div><dt>DRAWS</dt><dd>Một band phía trên prompt</dd></div></dl>
+          <div class="dd" id="dd2"><button class="btn ghost" aria-expanded="false">Menu <span class="dd-caret">▾</span></button>
+            <div class="dd-menu"><a href="#c-cli">Desktop</a><a href="#c-cli">VS Code <span class="ext">↗</span></a><a href="#c-cli">JetBrains <span class="ext">↗</span></a></div></div>
+        </div>
+        <div class="spec">dt font-mono text-xs text-ink-3 · dd └ · menu bg-popover p-2, item px-3 py-2 · caret rotate-180 duration-300</div></div>
+
+      <div class="cell wide" id="c-prose"><div class="ch"><span>Blog detail</span><span>header · prose · figure</span></div>
+        <div class="stage" style="display:grid;gap:24px">
+          <div class="prose">
+            <div class="ptile"><span class="pix" id="tile" aria-hidden="true"></span></div>
+            <p class="pt">How the team does code review</p>
+            <p class="sf">Tối ưu cho lượng thời gian review ít nhất của con người mà không làm tăng revert hay sự cố.</p>
+            <div class="metas"><div><b>AUTHOR</b><span>Ba người</span></div><div><b>CATEGORY</b><span>Engineering</span></div><div><b>PUBLISHED</b><span>Oct 15, 2026</span></div></div>
+            <h5>Rethinking the purpose of review</h5>
+            <p>Phần chữ chính dùng màu ink-2 để giảm độ chói. <a href="#c-prose">Link</a> có gạch chân ink-3, và inline <code>/code-review</code> đặt trong chip hairline.</p>
+          </div>
+          <figure class="fig">
+            <div class="fig-head">Thời gian review theo mức rủi ro<span>CHART</span></div>
+            <div class="fig-body"><div class="bars">
+              <div class="bar">Low<i style="width:18%"></i><em>4m</em></div>
+              <div class="bar">Medium<i style="width:46%"></i><em>11m</em></div>
+              <div class="bar">High<i class="focal" style="width:92%"></i><em>22m</em></div>
+            </div></div>
+            <figcaption><b>FIG A</b>Một mark được tô accent làm focal, phần còn lại để ink-4. Số căn phải, dùng tabular-nums.</figcaption>
+          </figure>
+        </div>
+        <div class="spec">prose max-w-2xl · h2 font-mono text-sm font-medium uppercase · figure border, caption py-2.5 px-4 · focal = brand</div></div>
+
+      <div class="cell"><div class="ch"><span>Input (newsletter)</span><span>.fnl</span></div>
+        <div class="stage"><form class="fnl" id="nl"><input id="nl-email" type="email" placeholder="Nhập email" aria-label="Email"><button type="submit" aria-label="Gửi">→</button></form></div>
+        <div class="spec">chỉ có border-b · focus-within:border-ink-3 duration-300 · hover mũi tên translate-x-1</div></div>
+      <div class="cell"><div class="ch"><span>Tree / TOC</span><span>.toc</span></div>
+        <div class="stage"><div class="tree"><span class="th">TREE</span><a href="#c-prose" class="on">Rethinking the purpose</a><a href="#c-prose">The scarce resource</a><a href="#c-prose">Layer by layer</a></div></div>
+        <div class="spec">font-mono text-xs · └ ink-4 · active = ink · hover translate-x-1 duration-300 · sticky top-10</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="sec sec-dash" id="dashboard">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">06 · DASHBOARD</span>
+    <h2>App shell</h2>
+    <p>Mở rộng design system cho giao diện làm việc. Cây <b>TREE</b> trong bài viết của claude.dev được phóng to thành sidebar, ký tự └ thể hiện cấp bậc, mục đang mở dùng màu cam. Header gọn như một dòng lệnh, panel phải dùng lại bảng spec └ của trang Mods.</p>
+    <p>Bấm vào mục trong cây, dòng trong danh sách, và đổi độ rộng để xem shell co giãn.</p>
+  </div></div>
+  <div class="dash-wide">
+    <div class="dash-ctrl" role="group" aria-label="Độ rộng demo">
+      <span class="eyebrow">Độ rộng</span>
+      <button type="button" data-w="1280" class="on">xl · 1280</button>
+      <button type="button" data-w="1100">lg · 1100</button>
+      <button type="button" data-w="820">md · 820</button>
+      <button type="button" data-w="390">sm · 390</button>
+      <span class="dash-scale" id="dash-scale"></span>
+    </div>
+    <div class="dash-scroll" id="dash-scroll"><div class="dash-hold" id="dash-hold">
+      <div class="dash panel-open" id="dash" style="width:1280px">
+        <div class="dscrim" data-act="close"></div>
+        <aside class="dside" aria-label="Điều hướng">
+          <div class="col-h"><span class="pix-dot"></span><span class="ws-n">spark</span><span class="ws-sw">▾</span></div>
+          <div class="col-b">
+            <nav class="dtree" aria-label="Tree">
+              <span class="th">Tree</span>
+              <ul role="tree" id="tree">
+                <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="overview"><span class="gl">└</span>Overview</a></li>
+                <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="inbox"><span class="gl">└</span>Inbox<span class="ct">12</span></a></li>
+                <li role="treeitem" aria-expanded="true" class="grp">
+                  <button type="button" class="tg"><span class="gl">└</span>Cases<span class="car">▾</span></button>
+                  <ul role="group">
+                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="all cases"><span class="gl">└</span>All cases<span class="ct">86</span></a></li>
+                    <li role="treeitem" aria-selected="true"><a href="#dashboard" data-sec="cases" data-page="assigned to me" class="on"><span class="gl">└</span>Assigned to me<span class="ct">4</span></a></li>
+                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="waiting"><span class="gl">└</span>Waiting<span class="ct">7</span></a></li>
+                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="closed"><span class="gl">└</span>Closed</a></li>
+                  </ul>
+                </li>
+                <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="annotations"><span class="gl">└</span>Annotations</a></li>
+                <li role="treeitem" aria-expanded="false" class="grp">
+                  <button type="button" class="tg"><span class="gl">└</span>Reports<span class="car">▾</span></button>
+                  <ul role="group">
+                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="reports" data-page="weekly"><span class="gl">└</span>Weekly</a></li>
+                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="reports" data-page="quality"><span class="gl">└</span>Quality</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </nav>
+            <div class="dgrp">
+              <span class="th">Projects</span>
+              <a href="#dashboard" class="pj"><span class="gl">└</span>Spark core</a>
+              <a href="#dashboard" class="pj"><span class="gl">└</span>Labeling v2</a>
+              <a href="#dashboard" class="pj add"><span class="gl">└</span>New project</a>
+            </div>
+            <div class="dfoot">
+              <div class="usage">
+                <span class="th">Usage</span>
+                <div class="meter"><div class="dither" role="img" aria-label="34% đã dùng"><i style="width:34%"></i></div><span>34%</span></div>
+                <span class="sub">1,204 / 3,500 tasks · reset Nov 01</span>
+              </div>
+              <div class="me"><span class="gl">└</span>Giang N.<span class="k">[,]</span></div>
+            </div>
+          </div>
+        </aside>
+        <div class="dcol">
+          <header class="col-h dh">
+            <button class="dh-burger" type="button" aria-label="Mở sidebar" aria-expanded="false" data-act="side"><i></i><i></i><i></i></button>
+            <span class="pix-dot dh-logo"></span>
+            <nav class="crumbs" aria-label="Breadcrumb"><span>spark</span><b>/</b><span id="cr-sec">cases</span><b>/</b><span class="cur" id="cr-page">assigned to me</span></nav>
+            <div class="dh-r">
+              <button type="button" class="dh-k" data-act="search"><span class="k">[/]</span><span class="lbl">SEARCH</span></button>
+              <button type="button" class="dh-k" data-act="panel" aria-pressed="true"><span class="k">[I]</span><span class="lbl">INSPECTOR</span></button>
+              <button type="button" class="btn btn-sm">New case</button>
+            </div>
+          </header>
+          <main class="col-b dmain">
+            <div class="phead">
+              <span class="eyebrow" id="ph-eb">CASES</span>
+              <h3 class="ptitle" id="ph-t">Assigned to me</h3>
+              <p class="psub">Các case đang chờ bạn review, sắp theo hạn xử lý.</p>
+            </div>
+            <dl class="metrics">
+              <div><dt>OPEN</dt><dd>24</dd></div>
+              <div><dt>DUE TODAY</dt><dd>5</dd></div>
+              <div><dt>AVG REVIEW</dt><dd>11m</dd></div>
+              <div><dt>REVERTS · 7D</dt><dd>0</dd></div>
+            </dl>
+            <div class="dlist">
+              <div class="dtabs" role="tablist"><button class="on" role="tab">All</button><button role="tab">Needs review</button><button role="tab">Blocked</button><button role="tab">Done</button></div>
+              <div class="rows" id="rows">
+                <button type="button" class="drow on" data-id="CASE-1042" data-t="Mislabeled entities in batch 17" data-who="Giang N." data-due="Today"><span class="id">1042</span><span class="ti">Mislabeled entities in batch 17</span><span class="st review">Needs review</span><span class="tm">2h</span></button>
+                <button type="button" class="drow" data-id="CASE-1039" data-t="Annotator disagreement on intent tags" data-who="Minh T." data-due="Oct 21"><span class="id">1039</span><span class="ti">Annotator disagreement on intent tags</span><span class="st blocked">Blocked</span><span class="tm">5h</span></button>
+                <button type="button" class="drow" data-id="CASE-1031" data-t="Schema change for address fields" data-who="Giang N." data-due="Oct 22"><span class="id">1031</span><span class="ti">Schema change for address fields</span><span class="st review">Needs review</span><span class="tm">1d</span></button>
+                <button type="button" class="drow" data-id="CASE-1024" data-t="Export fails for archived projects" data-who="An P." data-due="Oct 18"><span class="id">1024</span><span class="ti">Export fails for archived projects</span><span class="st done">Done</span><span class="tm">2d</span></button>
+              </div>
+            </div>
+          </main>
+        </div>
+        <aside class="dpanel" aria-label="Inspector">
+          <div class="col-h"><span class="eyebrow" id="dp-id">CASE-1042</span><button type="button" class="dh-k dp-x" data-act="panel-close"><span class="k">[ESC]</span></button></div>
+          <div class="col-b">
+            <h4 class="dp-t" id="dp-t">Mislabeled entities in batch 17</h4>
+            <dl class="spec-dl">
+              <div><dt>STATUS</dt><dd id="dp-s">Needs review</dd></div>
+              <div><dt>ASSIGNEE</dt><dd id="dp-w">Giang N.</dd></div>
+              <div><dt>DUE</dt><dd id="dp-d">Today</dd></div>
+              <div><dt>LABELS</dt><dd><code>ner</code><code>batch-17</code></dd></div>
+            </dl>
+            <div class="activity">
+              <span class="th">Activity</span>
+              <ol>
+                <li><span class="gl">└</span><span>Opened by <b>An P.</b></span><time>2h</time></li>
+                <li><span class="gl">└</span><span>12 spans relabeled</span><time>1h</time></li>
+                <li><span class="gl">└</span><span>Review requested</span><time>20m</time></li>
+              </ol>
+            </div>
+            <div class="dp-act"><button type="button" class="btn btn-sm">Approve</button><button type="button" class="btn btn-sm ghost">Request changes</button></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+    </div>
+  </div>
+  <div class="body">
+    <div>
+      <h3 class="h3">Giải phẫu</h3>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Vùng</th><th>Tailwind / component</th><th>Nội dung</th></tr></thead>
+        <tbody>
+          <tr><td>Shell</td><td class="mono">flex h-dvh · mỗi cột flex flex-col</td><td>Ba cột cao hết màn hình. Mỗi cột gồm một ô header và một vùng thân tự cuộn (ẩn thanh cuộn)</td></tr>
+          <tr><td>Hàng header</td><td class="mono">&lt;ColumnHeader&gt; · h-14 border-b px-4 · dùng chung cho mọi cột</td><td>Sidebar: logo + workspace. Main: breadcrumb, lệnh <span class="mono">[/]</span> <span class="mono">[I]</span>, <span class="mono">&lt;Button size="sm"&gt;</span>. Panel: id + <span class="mono">[ESC]</span>. Hairline chạy liền một đường</td></tr>
+          <tr><td>Sidebar</td><td class="mono">shadcn &lt;Sidebar&gt; · w-64 → xl:w-72 · thân px-4 py-6 gap-8</td><td>Header là logo. Thân gồm TREE, Projects, cuối cùng là Usage và tài khoản</td></tr>
+          <tr><td>Main</td><td class="mono">px-4 sm:px-8 pt-10 pb-14 · max-w-5xl</td><td>Page head (gap-3) → metrics → tabs + list, các khối cách nhau gap-8</td></tr>
+          <tr><td>Panel phải</td><td class="mono">w-80 border-l · thân p-6 gap-8 · &lt;xl: shadcn &lt;Sheet side="right"&gt;</td><td>Header là id của bản ghi. Thân gồm tiêu đề, spec └, activity └, hành động size="sm". Thêm panel mới thì thêm một cột có ColumnHeader</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Tree item: phiên bản lớn của TOC</h3>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Trạng thái</th><th>Hiển thị</th><th>Tailwind</th></tr></thead>
+        <tbody>
+          <tr><td>Mặc định</td><td>└ ink-4 · chữ ink-2</td><td class="mono">font-mono text-sm py-1.5 text-ink-2</td></tr>
+          <tr><td>Hover</td><td>Chữ ink, nền hover-row, dịch phải 4px</td><td class="mono">hover:bg-accent hover:text-foreground · translate-x-1 duration-200</td></tr>
+          <tr><td>Đang mở</td><td><b>└ chuyển sang màu cam</b>, chữ ink, font-medium</td><td class="mono">aria-current="page" · text-foreground font-medium · glyph text-brand</td></tr>
+          <tr><td>Nhóm</td><td>Mũi tên ▾ xoay khi đóng, con thụt vào pl-4</td><td class="mono">aria-expanded · rotate-0 / -rotate-90 duration-200</td></tr>
+          <tr><td>Bộ đếm</td><td>Mono, căn phải, tabular</td><td class="mono">ml-auto text-xs text-ink-3 tabular-nums</td></tr>
+          <tr><td>Focus</td><td>Outline 1px</td><td class="mono">focus-visible:outline outline-offset-2</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Responsive của shell</h3>
+      <div class="tscroll"><table class="typetable matrix">
+        <thead><tr><th>Vùng</th><th>&lt; lg</th><th>lg → xl</th><th>≥ xl</th></tr></thead>
+        <tbody>
+          <tr><td>Sidebar</td><td>Ẩn; burger ở header mở Sheet trái (offcanvas)</td><td>Cố định w-64</td><td>Cố định w-72</td></tr>
+          <tr><td>Panel phải</td><td>Sheet phải, full width dưới sm</td><td>Sheet phải w-80, mở bằng [I] hoặc khi chọn dòng</td><td>Cột cố định w-80, đóng/mở bằng [I]</td></tr>
+          <tr><td>Dòng danh sách</td><td>2 hàng: tiêu đề / id · trạng thái · thời gian</td><td colspan="2">1 hàng: id · tiêu đề · trạng thái · thời gian</td></tr>
+          <tr><td>Metrics</td><td>grid-cols-2</td><td colspan="2">grid-cols-4</td></tr>
+          <tr><td>Header</td><td>Logo chuyển sang header chính cạnh burger; ẩn nhãn, giữ [/] [I]</td><td colspan="2">Logo ở header của sidebar, đầy đủ nhãn</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Nguyên tắc cho dashboard</h3>
+      <div class="ux">
+        <div><h4>Dày hơn một tầng, không chật hơn</h4><p>App dùng chung T1–T4. Ở vòng ngoài thì mỗi tầng hạ một bậc: vùng trang pt-10 thay cho pt-20, giữa các section gap-10 thay cho gap-14. Vẫn thoáng, nhưng hợp để thao tác lâu.</p></div>
+        <div><h4>Cây là bản đồ, không phải menu</h4><p>Tree hiển thị đúng cấu trúc dữ liệu (workspace → nhóm → view) bằng └ và thụt lề. Không dùng icon trang trí; chỉ có bộ đếm là thông tin thêm.</p></div>
+        <div><h4>Cam chỉ có một chỗ</h4><p>Trên toàn màn hình, màu brand chỉ xuất hiện ở glyph của mục đang mở và ở mark quan trọng nhất trong biểu đồ. Trạng thái dùng chấm nhỏ, không tô nền.</p></div>
+        <div><h4>Không có thẻ số to</h4><p>Metrics là một dòng dl: nhãn mono xs, giá trị text-2xl. Ngăn cách bằng khoảng trắng, không đóng khung.</p></div>
+        <div><h4>Panel là ngữ cảnh, không phải trang</h4><p>Chọn một dòng thì panel cập nhật mà không đổi route. Trên màn hẹp panel thành Sheet, đóng bằng Esc hoặc [I].</p></div>
+        <div><h4>Mọi thứ có phím tắt</h4><p>Đưa ngoặc phím từ nav của claude.dev vào app: [/] tìm, [I] inspector, [,] cài đặt, mũi tên để đi trong tree, ←/→ để thu/mở nhóm.</p></div>
+      </div>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-h"><span>Công thức · shell với shadcn Sidebar + Sheet</span><button data-copy="dash-code">Copy</button></div>
+<pre id="dash-code"><span class="c">// pnpm dlx shadcn@latest add sidebar sheet badge tabs   (chạy trong apps/web)</span>
+<span class="k">&lt;SidebarProvider&gt;</span>
+  <span class="k">&lt;Sidebar</span> collapsible=<span class="v">"offcanvas"</span><span class="k">&gt;</span>                 <span class="c">{/* &lt; lg tự thành Sheet trái */}</span>
+    <span class="k">&lt;ColumnHeader&gt;</span>&lt;Logo /&gt;&lt;WorkspaceSwitcher /&gt;<span class="k">&lt;/ColumnHeader&gt;</span>   <span class="c">{/* cùng h-14 với 2 cột kia */}</span>
+    <span class="k">&lt;SidebarContent</span> className=<span class="v">"gap-8"</span><span class="k">&gt;</span>               <span class="c">{/* T4 giữa các nhóm */}</span>
+      <span class="k">&lt;SidebarGroup&gt;</span>
+        <span class="k">&lt;SidebarGroupLabel</span> className=<span class="v">"font-mono uppercase tracking-wider"</span><span class="k">&gt;</span>Tree<span class="k">&lt;/SidebarGroupLabel&gt;</span>
+        <span class="k">&lt;SidebarMenu&gt;</span>
+          <span class="k">&lt;SidebarMenuItem&gt;</span>
+            <span class="k">&lt;SidebarMenuButton</span> size=<span class="v">"default"</span> isActive render={<span class="k">&lt;Link</span> href=<span class="v">"/cases/mine"</span> <span class="k">/&gt;</span>}<span class="k">&gt;</span>
+              <span class="k">&lt;TreeGlyph /&gt;</span>Assigned to me                    <span class="c">{/* └ đổi sang text-brand khi active */}</span>
+            <span class="k">&lt;/SidebarMenuButton&gt;</span>
+            <span class="k">&lt;SidebarMenuBadge&gt;</span>4<span class="k">&lt;/SidebarMenuBadge&gt;</span>
+          <span class="k">&lt;/SidebarMenuItem&gt;</span>
+        <span class="k">&lt;/SidebarMenu&gt;</span>
+      <span class="k">&lt;/SidebarGroup&gt;</span>
+    <span class="k">&lt;/SidebarContent&gt;</span>
+    <span class="k">&lt;SidebarFooter&gt;</span>&lt;UsageMeter /&gt;<span class="k">&lt;/SidebarFooter&gt;</span>
+  <span class="k">&lt;/Sidebar&gt;</span>
+  <span class="k">&lt;SidebarInset</span> className=<span class="v">"flex h-dvh flex-row"</span><span class="k">&gt;</span>
+    <span class="k">&lt;div</span> className=<span class="v">"flex min-w-0 flex-1 flex-col"</span><span class="k">&gt;</span>
+      <span class="k">&lt;ColumnHeader&gt;</span>
+        <span class="k">&lt;SidebarTrigger</span> className=<span class="v">"lg:hidden"</span> <span class="k">/&gt;</span><span class="k">&lt;Logo</span> className=<span class="v">"lg:hidden"</span> <span class="k">/&gt;</span><span class="k">&lt;Breadcrumbs /&gt;</span><span class="k">&lt;HeaderCommands /&gt;</span>
+      <span class="k">&lt;/ColumnHeader&gt;</span>
+      <span class="k">&lt;main</span> className=<span class="v">"no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pt-10 pb-14 sm:px-8"</span><span class="k">/&gt;</span>
+    <span class="k">&lt;/div&gt;</span>
+    <span class="k">&lt;aside</span> className=<span class="v">"hidden w-80 shrink-0 flex-col border-l xl:flex"</span><span class="k">&gt;</span>
+      <span class="k">&lt;ColumnHeader&gt;</span>CASE-1042 [ESC]<span class="k">&lt;/ColumnHeader&gt;</span>
+      <span class="k">&lt;div</span> className=<span class="v">"no-scrollbar flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto p-6"</span><span class="k">/&gt;</span>
+    <span class="k">&lt;/aside&gt;</span>                                        <span class="c">{/* &lt; xl: cùng nội dung trong &lt;Sheet side="right"&gt; */}</span>
+  <span class="k">&lt;/SidebarInset&gt;</span>
+
+<span class="c">// một component, một chiều cao: mọi header luôn thẳng hàng</span>
+<span class="k">function</span> <span class="p">ColumnHeader</span>({ children }) {
+  <span class="k">return</span> <span class="k">&lt;div</span> className=<span class="v">"flex h-14 shrink-0 items-center gap-4 border-b px-4"</span><span class="k">&gt;</span>{children}<span class="k">&lt;/div&gt;</span>
+}
+<span class="c">/* globals.css: @utility no-scrollbar { scrollbar-width: none; &amp;::-webkit-scrollbar { display: none } } */</span>
+<span class="k">&lt;/SidebarProvider&gt;</span></pre>
+    </div>
+
+    <div class="warn"><b>Câu hỏi còn mở:</b> (0) Thanh cuộn bị ẩn bằng utility <code>no-scrollbar</code>, nhưng vùng thân vẫn cuộn bằng chuột, phím và cảm ứng. (1) Shadcn Sidebar mặc định rộng 16rem (w-64). Muốn w-72 ở xl thì phải đổi biến <code>--sidebar-width</code> trong theme, chứ không override bằng className. (2) Tree sâu hơn 2 cấp có nên cho phép không? Đề xuất tối đa 2 cấp, sâu hơn thì đưa vào trang con. (3) Bộ chọn workspace: dropdown hay chuyển hẳn sang trang riêng?</div>
+  </div>
+</section>
+
+<!-- ================= MOTION ================= -->
+<section class="sec" id="motion">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">07 · MOTION</span>
+    <h2>Chuyển động</h2>
+    <p>Chỉ dùng duration và easing có sẵn trong Tailwind: <code>ease-out</code> cho đi vào, <code>ease-in-out</code> cho đi ra. Transition màu ngắn (<code>duration-150</code>), transform dùng <code>duration-200</code>/<code>300</code>. Site gốc dùng expo-out, mình đã thay bằng ease-out mặc định. Khi người dùng bật <code>prefers-reduced-motion</code> thì tắt hết animation.</p>
+    <svg class="curve" viewBox="0 0 200 56" aria-label="Đường cong ease-out">
+      <line x1="10" y1="48" x2="190" y2="48"/><line x1="10" y1="6" x2="10" y2="48"/>
+      <path d="M10 48 C 10 48, 46 6, 190 6"/>
+      
+    </svg>
+  </div></div>
+  <div class="body">
+    <p class="eyebrow" style="margin:0">Click vào ô demo bên phải để chạy lại animation.</p>
+    <div class="mlist">
+      <div class="mrow"><div><h4>Intro gõ chữ</h4><p>Wordmark được gõ từng ký tự theo steps, caret nhấp nháy, rồi một lớp veil mờ đi để lộ trang.</p></div>
+        <div class="val">chữ gõ <b>duration-1000 steps</b> · caret <b>1000ms</b> · veil <b>duration-500</b></div>
+        <div class="mdemo" data-run="d-type"><div class="d-type" id="d-type"><span>claude.dev</span><i class="caret" style="width:.45em"></i></div></div></div>
+      <div class="mrow"><div><h4>Stagger vào trang</h4><p>Các khối <code>.stag</code> trượt lên rồi hiện ra theo thứ tự. Độ trễ = <code>--stag-at + --i × 75ms</code>.</p></div>
+        <div class="val"><b>duration-500 ease-out</b> · bước <b>delay-75</b> × i</div>
+        <div class="mdemo" data-run="d-stag"><div class="d-stag" id="d-stag"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i></div></div></div>
+      <div class="mrow"><div><h4>Reveal khi cuộn</h4><p>Các phần tử có <code>[data-reveal]</code> chạy reveal-up 14px. Ngoài ra có các biến thể fade, left và right với biên độ 18px.</p></div>
+        <div class="val"><b>duration-700 ease-out</b> · <b>translate-y-3.5</b></div>
+        <div class="mdemo" data-run="d-reveal"><div class="d-reveal" id="d-reveal">FIG A · reveal-up</div></div></div>
+      <div class="mrow"><div><h4>Kết quả lọc hiện ra</h4><p>Khi đổi tab, các dòng mới bật ra từ trái 6px.</p></div>
+        <div class="val"><b>-translate-x-1.5</b> · <b>duration-500</b></div>
+        <div class="mdemo" data-run="d-pop"><div class="d-pop mono" id="d-pop" style="font-size:.875rem">Oct 08 · Agents</div></div></div>
+      <div class="mrow"><div><h4>Hover dòng bài</h4><p>Nền chuyển sang paper, thời lượng dịch trái, mũi tên trượt vào, các dòng còn lại mờ xuống 35%. Xem demo ở mục Components.</p></div>
+        <div class="val">bg <b>duration-150</b> · shift <b>duration-200</b> · dòng khác <b>duration-300</b></div>
+        <div class="mdemo"><a class="post" href="#motion" style="width:100%;border:0"><span class="ti" style="font-size:.875rem">Hover vào tôi</span><span class="t">9m</span></a></div></div>
+      <div class="mrow"><div><h4>Ambient</h4><p>Mascot trôi trong footer (7s). Ticker chạy tuyến tính 28s và dừng lại khi hover.</p></div>
+        <div class="val">float <b>7s ease-in-out ∞</b> · ticker <b>linear</b> (keyframe riêng)</div>
+        <div class="mdemo" style="grid-template-columns:40px 1fr;gap:12px;padding:0 12px;cursor:default"><div class="d-float"></div><div class="d-ticker"><div><span>/help · /posts · /read · /mods · /changelog ·</span><span>/help · /posts · /read · /mods · /changelog ·</span></div></div></div></div>
+      <div class="mrow"><div><h4>Micro-interaction</h4><p>Nav và tab: đổi màu .15s. TOC dịch 3px. Card related nhích lên 3px. Đổi theme: chuyển màu .45s. Kbd-hint hiện sau 1.2s.</p></div>
+        <div class="val">màu <b>duration-150</b> · transform <b>duration-200/300</b> · theme <b>duration-500</b></div>
+        <div class="mdemo" style="cursor:default"><div class="tree"><a href="#motion">Hover: dịch 3px</a></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= UX ================= -->
+<section class="sec" id="ux">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">08 · UX</span>
+    <h2>Hành vi</h2>
+    <p>Những quy tắc tương tác lặp lại trên mọi trang, nên đưa vào component để không phải nhớ.</p>
+  </div></div>
+  <div class="body"><div class="ux">
+    <div><h4>Keyboard-first</h4><p>Mỗi mục nav đều có phím tắt: <kbd>H</kbd> <kbd>M</kbd> <kbd>D</kbd> <kbd>T</kbd>, cộng <kbd>S</kbd> để tìm kiếm. Trang Terminal có command palette. Trang này cũng hỗ trợ: <kbd>A</kbd> <kbd>T</kbd> <kbd>P</kbd> <kbd>R</kbd> <kbd>C</kbd> <kbd>D</kbd> <kbd>M</kbd> <kbd>I</kbd>, và <kbd>L</kbd> để đổi theme.</p></div>
+    <div><h4>Focus-in-context</h4><p>Hover một dòng thì các dòng khác mờ đi. Trên thiết bị cảm ứng (<code>hover:none</code>), dòng vừa chạm (<code>.tap</code>) sẽ thay vai trò đó.</p></div>
+    <div><h4>Đảo màu thay cho shadow</h4><p>Trạng thái nổi bật được thể hiện bằng nền paper và chữ bg, không dùng elevation. Nhờ vậy giữ được tinh thần 2D của terminal.</p></div>
+    <div><h4>Đọc lâu</h4><p>Prose dùng ink-2 để giảm độ chói. Line-height 1.65–1.7, cột 660px. TOC sticky giúp người đọc biết mình đang ở đâu.</p></div>
+    <div><h4>Thông tin có cấu trúc</h4><p>Ký tự └ cho quan hệ cha–con, nhãn mono VIẾT HOA cho metadata, tabular-nums cho số. Không dùng icon trang trí.</p></div>
+    <div><h4>Tôn trọng người dùng</h4><p>Có <code>prefers-reduced-motion</code>, focus-visible 1px, consent mặc định không chọn thêm. Dark là mặc định, light có palette riêng chứ không chỉ đảo ngược màu.</p></div>
+  </div></div>
+</section>
+
+<!-- ================= IMPLEMENTATION ================= -->
+<section class="sec" id="impl">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">09 · TRIỂN KHAI</span>
+    <h2>Áp vào spark</h2>
+    <p>Map sang biến của shadcn trong <code>packages/ui/src/styles/globals.css</code>. Style <code>base-lyra</code> vốn đã vuông và gọn, rất hợp với ngôn ngữ thiết kế này.</p>
+  </div></div>
+  <div class="body">
+    <div class="warn"><b>Phát hiện trong repo:</b> <code>packages/ui/components.json</code> đã chuyển sang <code>base-lyra</code>, nhưng <code>apps/web/components.json</code> vẫn đang là <code>base-nova</code>. Hai file phải khớp nhau thì CLI mới sinh đúng style. Ngoài ra 8 component đang bị xoá trong working tree mà app vẫn import (button ×6, input, label, alert, spinner, input-group, skeleton).</div>
+    <div class="warn"><b>Font:</b> Geist, Geist Mono và STIX Two Text đều có trong <code>next/font/google</code> và có subset <code>vietnamese</code>. Đổi Inter sang Geist. STIX Two Text chỉ đăng ký vào <code>--font-serif</code> để có sẵn class <code>font-serif</code>, không gán cho component nào.</div>
+    <div class="warn"><b>Dark-first nhưng light phải đủ:</b> shadcn dùng class <code>.dark</code> (next-themes). Đặt <code>defaultTheme="dark"</code> và giữ <code>enableSystem</code>. Cả <code>:root</code> (light) lẫn <code>.dark</code> đều phải có đủ bộ token, không token nào được chỉ có ở một bên. Khi màu cam dùng làm chữ thì dùng <code>--brand-ink</code>.</div>
+    <div class="warn"><b>Xung đột tên:</b> trong shadcn, <code>--accent</code> là màu nền khi hover, không phải màu thương hiệu. Vì vậy màu cam được đặt tên là <code>--brand</code>, còn <code>--accent</code> của shadcn trỏ tới hover-row.</div>
+
+    <div class="steps">
+      <div class="step"><div><h4>Đồng bộ components.json</h4><p>Đổi <code>"style"</code> trong <code>apps/web/components.json</code> thành <code>base-lyra</code>.</p></div></div>
+      <div class="step"><div><h4>Cài lại component</h4><p>Chạy từ <code>apps/web</code>: CLI sẽ đặt file vào <code>packages/ui</code> nhờ alias <code>ui</code>. Dùng <code>--overwrite</code> nếu cần.</p></div></div>
+      <div class="step"><div><h4>Thay theme</h4><p>Dán khối token bên dưới vào <code>globals.css</code>, đặt <code>--radius: 0</code>, thêm <code>--font-mono</code> vào <code>@theme</code>.</p></div></div>
+      <div class="step"><div><h4>Font + theme provider</h4><p>Trong <code>apps/web/app/layout.tsx</code>: load Geist, Geist_Mono và STIX_Two_Text, rồi đặt <code>defaultTheme="dark"</code>. Giữ root 16px để scale rem của Tailwind không bị lệch.</p></div></div>
+      <div class="step"><div><h4>Kiểm chứng</h4><p>Chạy <code>pnpm check</code> và <code>pnpm build</code>, sau đó mở app ở cả hai theme. Với light, kiểm tra riêng ba chỗ: prose STIX trên nền giấy, chữ mono ink-3 cỡ nhỏ, và trạng thái hover đảo màu sang paper.</p></div></div>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-h"><span>terminal · apps/web</span><button data-copy="cmd">Copy</button></div>
+<pre id="cmd"><span class="c"># sau khi sửa style → base-lyra trong apps/web/components.json</span>
+pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea input-group --overwrite</pre>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-h"><span>apps/web/app/layout.tsx</span><button data-copy="tsx">Copy</button></div>
+<pre id="tsx"><span class="k">import</span> { Geist, Geist_Mono, STIX_Two_Text } <span class="k">from</span> <span class="v">"next/font/google"</span>
+
+<span class="k">const</span> fontSans = <span class="p">Geist</span>({ subsets: [<span class="v">"latin"</span>, <span class="v">"vietnamese"</span>], variable: <span class="v">"--font-sans"</span> })
+<span class="k">const</span> fontMono = <span class="p">Geist_Mono</span>({ subsets: [<span class="v">"latin"</span>, <span class="v">"vietnamese"</span>], variable: <span class="v">"--font-mono"</span> })
+<span class="k">const</span> fontSerif = <span class="p">STIX_Two_Text</span>({
+  subsets: [<span class="v">"latin"</span>, <span class="v">"vietnamese"</span>],
+  style: [<span class="v">"normal"</span>, <span class="v">"italic"</span>],
+  variable: <span class="v">"--font-serif"</span>,
+})
+
+<span class="c">// &lt;html className={cn("antialiased font-sans", fontSans.variable, fontMono.variable, fontSerif.variable)}&gt;</span>
+<span class="c">// &lt;ThemeProvider defaultTheme="dark"&gt;  ← dark-first, vẫn giữ enableSystem</span>
+<span class="c">// Lưu ý: hotkey "d" đổi theme đang trùng với [D] DOCS nếu làm keyboard nav kiểu claude.dev</span></pre>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-h"><span>packages/ui/src/styles/globals.css</span><button data-copy="css">Copy</button></div>
+<pre id="css"><span class="c">/* light: paper #faf9f5 · dark: #141413. --brand = cam Claude */</span>
+<span class="k">:root</span> {
+  --background: <span class="v">#faf9f5</span>;  --foreground: <span class="v">#141413</span>;
+  --card: <span class="v">#f1efe8</span>;        --card-foreground: <span class="v">#141413</span>;
+  --popover: <span class="v">#edeae2</span>;     --popover-foreground: <span class="v">#141413</span>;
+  --primary: <span class="v">#141413</span>;     --primary-foreground: <span class="v">#faf9f5</span>;
+  --secondary: <span class="v">#ece9e0</span>;   --secondary-foreground: <span class="v">#141413</span>;
+  --muted: <span class="v">#f1efe8</span>;       --muted-foreground: <span class="v">#7b7a72</span>;
+  --accent: <span class="v">#1414130d</span>;    --accent-foreground: <span class="v">#141413</span>;
+  --destructive: <span class="v">#a04545</span>;
+  --border: <span class="v">#1414131c</span>;    --input: <span class="v">#14141338</span>;  --ring: <span class="v">#141413</span>;
+  --brand: <span class="v">#c15f3c</span>;       --brand-deep: <span class="v">#a94e2f</span>;  --brand-ink: <span class="v">#a94e2f</span>;
+  --ink-2: <span class="v">#4c4b45</span>;       --ink-3: <span class="v">#7b7a72</span>;  --ink-4: <span class="v">#a8a69d</span>;
+  --chart-1: <span class="v">#c15f3c</span>; --chart-2: <span class="v">#4c4b45</span>; --chart-3: <span class="v">#7b7a72</span>;
+  --chart-4: <span class="v">#a8a69d</span>; --chart-5: <span class="v">#d2cdbf</span>;
+  --radius: <span class="v">0</span>;
+  <span class="c">/* số (size, spacing, duration, ease…) dùng scale mặc định của Tailwind, không khai báo thêm */</span>
+}
+<span class="k">.dark</span> {
+  --background: <span class="v">#141413</span>;  --foreground: <span class="v">#faf9f5</span>;
+  --card: <span class="v">#1a1a18</span>;        --card-foreground: <span class="v">#faf9f5</span>;
+  --popover: <span class="v">#121110</span>;     --popover-foreground: <span class="v">#faf9f5</span>;
+  --primary: <span class="v">#faf9f5</span>;     --primary-foreground: <span class="v">#141413</span>;
+  --secondary: <span class="v">#1e1d1b</span>;   --secondary-foreground: <span class="v">#faf9f5</span>;
+  --muted: <span class="v">#1a1a18</span>;       --muted-foreground: <span class="v">#87867f</span>;
+  --accent: <span class="v">#faf9f50b</span>;    --accent-foreground: <span class="v">#faf9f5</span>;
+  --destructive: <span class="v">#c29a9a</span>;
+  --border: <span class="v">#faf9f517</span>;    --input: <span class="v">#faf9f529</span>;  --ring: <span class="v">#faf9f5</span>;
+  --brand: <span class="v">#d97757</span>;       --brand-deep: <span class="v">#c15f3c</span>;  --brand-ink: <span class="v">#e08a6c</span>;
+  --ink-2: <span class="v">#b0aea5</span>;       --ink-3: <span class="v">#87867f</span>;  --ink-4: <span class="v">#5e5d59</span>;
+  --chart-1: <span class="v">#d97757</span>; --chart-2: <span class="v">#b0aea5</span>; --chart-3: <span class="v">#87867f</span>;
+  --chart-4: <span class="v">#5e5d59</span>; --chart-5: <span class="v">#3a3936</span>;
+}
+<span class="k">@theme inline</span> {
+  --color-brand: var(--brand);  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);  --color-ink-4: var(--ink-4);
+  --color-brand-ink: var(--brand-ink);
+  --font-mono: var(--font-mono);  --font-serif: var(--font-serif);
+}
+<span class="k">::selection</span> { background: var(--brand); color: var(--background); }</pre>
+    </div>
+  </div>
+</section>
+
+<footer class="foot"><span>spark.ds · tham chiếu claude.dev, đo ngày 19/10/2026</span><span>Geist · Geist Mono · STIX Two Text</span></footer>
+</div>
+
+<script>
+(function(){
+  // pixel logo (own 7x5 glyph)
+  const glyph=["0111110","1101011","1111111","0101010","1010101"];
+  function draw(el,scale){ if(!el) return; el.innerHTML=glyph.join("").split("").map(c=>'<i class="'+(c==="1"?"on":"")+'"></i>').join(""); if(scale){el.style.gridTemplateColumns="repeat(7,"+scale+"px)";el.style.gridAutoRows=scale+"px";el.querySelectorAll("i.on").forEach(i=>i.style.background="var(--bg)")} }
+  draw(document.getElementById("logo")); draw(document.getElementById("tile"),6);
+
+  // swatches read live tokens
+  const toks=[["--bg","nền trang"],["--bg-raised","cli, card"],["--bg-panel","panel 3"],["--panel-2","dropdown"],["--ink","chữ chính"],["--ink-2","prose, mô tả"],["--ink-3","meta, nhãn"],["--ink-4","└, dots"],["--accent","brand · cam"],["--accent-deep","pressed"],["--paper","nút, hover"],["--line","viền mạnh"],["--line-soft","hairline"],["--hover-row","hover nền"],["--syn-purple","code kw"],["--diff-add","diff +"]];
+  const sw=document.getElementById("sw");
+  function paint(){ const cs=getComputedStyle(document.documentElement); sw.innerHTML=toks.map(([t,u])=>'<div class="sw"><div class="chipc" style="background:var('+t+')"></div><b>'+t+'</b><span>'+cs.getPropertyValue(t).trim()+' · '+u+'</span></div>').join(""); }
+  paint(); try{ matchMedia("(prefers-color-scheme: light)").addEventListener("change",paint) }catch(e){}
+  new MutationObserver(paint).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+  // dropdowns
+  document.querySelectorAll(".dd").forEach(dd=>{ const b=dd.querySelector("button"); b.addEventListener("click",e=>{e.stopPropagation(); const o=dd.classList.toggle("open"); b.setAttribute("aria-expanded",o)}) });
+  document.addEventListener("click",()=>document.querySelectorAll(".dd.open").forEach(d=>{d.classList.remove("open");d.querySelector("button").setAttribute("aria-expanded","false")}));
+
+  // tabs
+  document.querySelectorAll("#tabs button").forEach(b=>b.addEventListener("click",()=>{ document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    document.querySelectorAll(".posts .post").forEach((p,i)=>{p.style.animation="none";p.offsetWidth;p.style.animation="row-pop .5s var(--ease-out) "+(i*75)+"ms backwards"}) }));
+
+  // search
+  const s=document.getElementById("search"), q=document.getElementById("q");
+  document.getElementById("stog").addEventListener("click",()=>{ s.classList.toggle("open"); if(s.classList.contains("open")) q.focus() });
+  document.getElementById("nl").addEventListener("submit",e=>{e.preventDefault(); const i=document.getElementById("nl-email"); i.value=""; i.placeholder="Demo: form không gửi đi đâu"});
+
+  // motion demos
+  document.querySelectorAll(".mdemo[data-run]").forEach(m=>{ const run=()=>{ const el=document.getElementById(m.dataset.run); el.classList.remove("run"); void el.offsetWidth; el.classList.add("run") }; m.addEventListener("click",run); run() });
+
+  // theme toggle: explicit data-theme wins over system, mirrored CSS handles both directions
+  const root=document.documentElement, tl=document.getElementById("tgl-l");
+  const isLight=()=>{ const t=root.getAttribute("data-theme"); return t? t==="light" : matchMedia("(prefers-color-scheme: light)").matches };
+  const label=()=>{ tl.textContent=isLight()?"DARK":"LIGHT" };
+  try{ const saved=localStorage.getItem("spark-ds-theme"); if(saved) root.setAttribute("data-theme",saved) }catch(e){}
+  label();
+  function toggleTheme(){ const next=isLight()?"dark":"light"; root.classList.add("theme-switching"); root.setAttribute("data-theme",next); label();
+    try{ localStorage.setItem("spark-ds-theme",next) }catch(e){} setTimeout(()=>root.classList.remove("theme-switching"),500) }
+  document.getElementById("tgl").addEventListener("click",toggleTheme);
+  try{ matchMedia("(prefers-color-scheme: light)").addEventListener("change",label) }catch(e){}
+
+  // dashboard demo
+  (function(){
+    const dash=document.getElementById("dash"); if(!dash) return;
+    const q=s=>dash.querySelector(s), qa=s=>[...dash.querySelectorAll(s)];
+    const panelBtn=q('[data-act="panel"]'), sideBtn=q('[data-act="side"]');
+    const wide=()=>dash.getBoundingClientRect().width>=1280;
+    function setPanel(open){ dash.classList.toggle("panel-open",open); panelBtn.setAttribute("aria-pressed",open) }
+    function setSide(open){ dash.classList.toggle("side-open",open); sideBtn.setAttribute("aria-expanded",open) }
+    document.querySelectorAll(".dash-ctrl button").forEach(b=>b.addEventListener("click",()=>{
+      document.querySelectorAll(".dash-ctrl button").forEach(x=>x.classList.toggle("on",x===b));
+      dash.style.width=b.dataset.w+"px"; setSide(false); setPanel(+b.dataset.w>=1280); fit() }));
+    const hold=document.getElementById("dash-hold"), scroller=document.getElementById("dash-scroll"), scaleLbl=document.getElementById("dash-scale");
+    function fit(){ const w=parseFloat(dash.style.width)||1280, avail=scroller.clientWidth, k=Math.min(1,avail/w);
+      dash.style.transform=k<1?"scale("+k+")":""; hold.style.height=Math.round(800*k)+"px"; hold.style.width=Math.round(w*k)+"px";
+      scaleLbl.textContent=k<1?"thu nhỏ "+Math.round(k*100)+"%":"" }
+    if(scroller.clientWidth<640){ const sm=document.querySelector('.dash-ctrl button[data-w="390"]'); document.querySelectorAll(".dash-ctrl button").forEach(x=>x.classList.toggle("on",x===sm)); dash.style.width="390px"; setPanel(false) }
+    try{ new ResizeObserver(fit).observe(scroller) }catch(e){}
+    addEventListener("resize",fit);
+    fit();
+    dash.addEventListener("click",e=>{
+      const act=e.target.closest("[data-act]")?.dataset.act;
+      if(act==="side") setSide(!dash.classList.contains("side-open"));
+      if(act==="panel") setPanel(!dash.classList.contains("panel-open"));
+      if(act==="panel-close"||act==="close"){ setPanel(false); setSide(false) }
+      const a=e.target.closest(".dtree a, .dgrp a");
+      if(a){ e.preventDefault(); if(a.dataset.page){
+        qa(".dtree a").forEach(x=>{ x.classList.toggle("on",x===a); x.closest("li").setAttribute("aria-selected",x===a) });
+        q("#cr-sec").textContent=a.dataset.sec; q("#cr-page").textContent=a.dataset.page;
+        q("#ph-eb").textContent=a.dataset.sec.toUpperCase(); q("#ph-t").textContent=a.dataset.page.charAt(0).toUpperCase()+a.dataset.page.slice(1) }
+        setSide(false) }
+      const tg=e.target.closest(".tg");
+      if(tg){ const li=tg.closest("li"); li.setAttribute("aria-expanded",li.getAttribute("aria-expanded")!=="true") }
+      const row=e.target.closest(".drow");
+      if(row){ qa(".drow").forEach(x=>x.classList.toggle("on",x===row));
+        q("#dp-id").textContent=row.dataset.id; q("#dp-t").textContent=row.dataset.t;
+        q("#dp-s").textContent=row.querySelector(".st").textContent; q("#dp-w").textContent=row.dataset.who; q("#dp-d").textContent=row.dataset.due;
+        setPanel(true) }
+      const tab=e.target.closest(".dtabs button");
+      if(tab) qa(".dtabs button").forEach(x=>x.classList.toggle("on",x===tab));
+    });
+    dash.addEventListener("keydown",e=>{
+      if(/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+      const items=qa(".dtree a, .dtree .tg").filter(x=>x.offsetParent);
+      const i=items.indexOf(document.activeElement);
+      if(i>-1&&(e.key==="ArrowDown"||e.key==="ArrowUp")){ e.preventDefault(); items[(i+(e.key==="ArrowDown"?1:-1)+items.length)%items.length].focus() }
+      else if(document.activeElement.classList.contains("tg")&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){ e.preventDefault(); document.activeElement.closest("li").setAttribute("aria-expanded",e.key==="ArrowRight") }
+      else if(e.key==="i"||e.key==="I"){ setPanel(!dash.classList.contains("panel-open")) }
+      else if(e.key==="Escape"){ setPanel(false); setSide(false) }
+      else return;
+      e.stopPropagation();
+    });
+  })();
+
+  // burger: below xl the section links move into a panel under the sticky nav
+  const burger=document.getElementById("burger"), panel=document.getElementById("navpanel");
+  function setPanel(open){ panel.classList.toggle("open",open); burger.setAttribute("aria-expanded",open); burger.setAttribute("aria-label",open?"Đóng menu":"Mở menu") }
+  burger.addEventListener("click",e=>{ e.stopPropagation(); setPanel(!panel.classList.contains("open")) });
+  panel.addEventListener("click",e=>e.stopPropagation());
+  document.addEventListener("click",()=>setPanel(false));
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&panel.classList.contains("open")){ setPanel(false); burger.focus() } });
+  matchMedia("(min-width: 1280px)").addEventListener("change",m=>{ if(m.matches) setPanel(false) });
+
+  // in-page navigation: offset by the sticky nav, logo always returns to the very top
+  const motion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth";
+  const navH=()=>document.querySelector(".nav").getBoundingClientRect().height;
+  function go(target){ const top=target==="#top"?0:Math.max(0,document.querySelector(target).getBoundingClientRect().top+scrollY-navH());
+    setPanel(false); scrollTo({top,behavior:motion()}); try{ history.replaceState(null,"",target==="#top"?location.pathname+location.search:target) }catch(e){} }
+  document.querySelectorAll('.nav a[href^="#"]').forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); go(a.getAttribute("href")) }));
+
+  // keyboard nav like claude.dev
+  const map={a:"#map",t:"#tokens",p:"#spacing",r:"#responsive",c:"#components",d:"#dashboard",m:"#motion",i:"#impl"};
+  document.addEventListener("keydown",e=>{ if(e.metaKey||e.ctrlKey||e.altKey||/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if(e.key==="l"||e.key==="L"){ toggleTheme(); return }
+    if(e.key==="s"||e.key==="S"){ e.preventDefault(); go("#components"); s.classList.add("open"); setTimeout(()=>q.focus(),300); return }
+    const h=map[e.key.toLowerCase()]; if(h){ go(h) } });
+
+  // active nav on scroll
+  const links=[...document.querySelectorAll('.nav-links a, .nav-panel a[href^="#"]')];
+  const io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ links.forEach(l=>l.classList.toggle("on",l.getAttribute("href")==="#"+en.target.id)) } }),{rootMargin:"-40% 0px -55% 0px"});
+  ["map","tokens","spacing","responsive","components","dashboard","motion","impl"].forEach(id=>io.observe(document.getElementById(id)));
+
+  // copy
+  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ const t=document.getElementById(b.dataset.copy).innerText;
+    const done=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1400)};
+    try{ navigator.clipboard.writeText(t).then(done,()=>{ const r=document.createRange(); r.selectNodeContents(document.getElementById(b.dataset.copy)); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); b.textContent="Đã chọn, nhấn Ctrl+C" }) }catch(e){} }));
+})();
+</script>
+
+</body>
+</html>

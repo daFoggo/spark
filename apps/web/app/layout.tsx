@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Geist_Mono, Inter } from "next/font/google"
+import { Geist, Geist_Mono, STIX_Two_Text } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -13,11 +13,22 @@ export const metadata: Metadata = {
   description: "Next.js 16.4 + React 19 Monorepo Base",
 }
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const fontSans = Geist({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-sans",
+})
 
 const fontMono = Geist_Mono({
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   variable: "--font-mono",
+})
+
+// Registered for `font-serif` only; no component uses it by default.
+const fontSerif = STIX_Two_Text({
+  subsets: ["latin", "vietnamese"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  preload: false,
 })
 
 export default function RootLayout({
@@ -33,7 +44,8 @@ export default function RootLayout({
         "antialiased",
         fontMono.variable,
         "font-sans",
-        inter.variable
+        fontSans.variable,
+        fontSerif.variable
       )}
     >
       <body>

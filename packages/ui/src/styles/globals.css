@@ -40,6 +40,12 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
+    --color-brand: var(--brand);
+    --color-brand-deep: var(--brand-deep);
+    --color-brand-ink: var(--brand-ink);
+    --color-ink-2: var(--ink-2);
+    --color-ink-3: var(--ink-3);
+    --color-ink-4: var(--ink-4);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -48,75 +54,92 @@
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
     --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+    --font-serif: var(--font-serif);
 }
 
+/* Colors follow claude.dev. Every other numeric token uses Tailwind's default scale.
+   `--accent` is shadcn's hover surface; the orange brand color is `--brand`.
+   Use `--brand-ink` when orange is small text (contrast-tuned per theme). */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.141 0.005 285.823);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.141 0.005 285.823);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.141 0.005 285.823);
-    --primary: oklch(0.21 0.006 285.885);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.967 0.001 286.375);
-    --secondary-foreground: oklch(0.21 0.006 285.885);
-    --muted: oklch(0.967 0.001 286.375);
-    --muted-foreground: oklch(0.552 0.016 285.938);
-    --accent: oklch(0.967 0.001 286.375);
-    --accent-foreground: oklch(0.21 0.006 285.885);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.92 0.004 286.32);
-    --input: oklch(0.92 0.004 286.32);
-    --ring: oklch(0.705 0.015 286.067);
-    --chart-1: oklch(0.871 0.006 286.286);
-    --chart-2: oklch(0.552 0.016 285.938);
-    --chart-3: oklch(0.442 0.017 285.786);
-    --chart-4: oklch(0.37 0.013 285.805);
-    --chart-5: oklch(0.274 0.006 286.033);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.141 0.005 285.823);
-    --sidebar-primary: oklch(0.21 0.006 285.885);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.967 0.001 286.375);
-    --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-    --sidebar-border: oklch(0.92 0.004 286.32);
-    --sidebar-ring: oklch(0.705 0.015 286.067);
+    --background: #faf9f5;
+    --foreground: #141413;
+    --card: #f1efe8;
+    --card-foreground: #141413;
+    --popover: #edeae2;
+    --popover-foreground: #141413;
+    --primary: #141413;
+    --primary-foreground: #faf9f5;
+    --secondary: #ece9e0;
+    --secondary-foreground: #141413;
+    --muted: #f1efe8;
+    --muted-foreground: #7b7a72;
+    --accent: #1414130d;
+    --accent-foreground: #141413;
+    --destructive: #a04545;
+    --border: #1414131c;
+    --input: #14141338;
+    --ring: #141413;
+    --brand: #c15f3c;
+    --brand-deep: #a94e2f;
+    --brand-ink: #a94e2f;
+    --ink-2: #4c4b45;
+    --ink-3: #7b7a72;
+    --ink-4: #a8a69d;
+    --chart-1: #c15f3c;
+    --chart-2: #4c4b45;
+    --chart-3: #7b7a72;
+    --chart-4: #a8a69d;
+    --chart-5: #d2cdbf;
+    --radius: 0rem;
+    --sidebar: #f2f0ea;
+    --sidebar-foreground: #141413;
+    --sidebar-primary: #141413;
+    --sidebar-primary-foreground: #faf9f5;
+    --sidebar-accent: #1414130d;
+    --sidebar-accent-foreground: #141413;
+    --sidebar-border: #1414131c;
+    --sidebar-ring: #141413;
 }
 
 .dark {
-    --background: oklch(0.141 0.005 285.823);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.21 0.006 285.885);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.21 0.006 285.885);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.92 0.004 286.32);
-    --primary-foreground: oklch(0.21 0.006 285.885);
-    --secondary: oklch(0.274 0.006 286.033);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.274 0.006 286.033);
-    --muted-foreground: oklch(0.705 0.015 286.067);
-    --accent: oklch(0.274 0.006 286.033);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.552 0.016 285.938);
-    --chart-1: oklch(0.871 0.006 286.286);
-    --chart-2: oklch(0.552 0.016 285.938);
-    --chart-3: oklch(0.442 0.017 285.786);
-    --chart-4: oklch(0.37 0.013 285.805);
-    --chart-5: oklch(0.274 0.006 286.033);
-    --sidebar: oklch(0.21 0.006 285.885);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.274 0.006 286.033);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.552 0.016 285.938);
+    --background: #141413;
+    --foreground: #faf9f5;
+    --card: #1a1a18;
+    --card-foreground: #faf9f5;
+    --popover: #121110;
+    --popover-foreground: #faf9f5;
+    --primary: #faf9f5;
+    --primary-foreground: #141413;
+    --secondary: #1e1d1b;
+    --secondary-foreground: #faf9f5;
+    --muted: #1a1a18;
+    --muted-foreground: #87867f;
+    --accent: #faf9f50b;
+    --accent-foreground: #faf9f5;
+    --destructive: #c29a9a;
+    --border: #faf9f517;
+    --input: #faf9f529;
+    --ring: #faf9f5;
+    --brand: #d97757;
+    --brand-deep: #c15f3c;
+    --brand-ink: #e08a6c;
+    --ink-2: #b0aea5;
+    --ink-3: #87867f;
+    --ink-4: #5e5d59;
+    --chart-1: #d97757;
+    --chart-2: #b0aea5;
+    --chart-3: #87867f;
+    --chart-4: #5e5d59;
+    --chart-5: #3a3936;
+    --sidebar: #161514;
+    --sidebar-foreground: #faf9f5;
+    --sidebar-primary: #faf9f5;
+    --sidebar-primary-foreground: #141413;
+    --sidebar-accent: #faf9f50b;
+    --sidebar-accent-foreground: #faf9f5;
+    --sidebar-border: #faf9f517;
+    --sidebar-ring: #faf9f5;
 }
 
 @layer base {
@@ -125,6 +148,9 @@
     }
   body {
     @apply bg-background text-foreground;
+    }
+  ::selection {
+    @apply bg-brand text-background;
     }
   button:not(:disabled), [role="button"]:not(:disabled) {
     cursor: pointer;
