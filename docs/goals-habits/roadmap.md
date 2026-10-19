@@ -26,7 +26,9 @@ done. Tick items in the PR that delivers them and reference rule IDs (`HB-3`) in
       mapped to `{ error }` (spec §6.1).
 - [ ] Every new table: RLS template (spec §6.2), indexes, pgTAP allow/deny tests; types regenerated.
 - [ ] UI built from shadcn components (spec §7.5); no hand-rolled replacement for an existing primitive.
-- [ ] Pure rules (dates, schedules, stats, pet) have unit tests next to them.
+- [ ] Pure rules (dates, schedules, stats, pet) have unit tests in the area's `__tests__/` folder (`*.test.ts`).
+- [ ] Each page loads its data once per request (`React.cache` loader), starts independent reads together and keeps
+      `cacheLife` stale at 5 min with `updateTag` on writes.
 - [ ] `pnpm check` and `pnpm build` pass.
 - [ ] Exercised in the running app (desktop + 375 px, dark + light); the PR lists what was and wasn't verified.
 - [ ] HTML prototype updated if the behaviour changed; spec updated if a rule changed.
@@ -53,78 +55,100 @@ done. Tick items in the PR that delivers them and reference rule IDs (`HB-3`) in
 - [x] `components/shared/heatmap.tsx` (cell tooltips are native `title` for now; revisit in Phase 6) on top of shadcn `Tooltip` / `ScrollArea`; levels and tooltips as props (MT-7).
 - [x] `config/navigation.ts`: Today replaces Overview at `/dashboard`. Habits, Tasks, Goals and Weekly review entries are
       added in the phase that creates each route, so the sidebar never links to a 404.
-- [ ] `supabase/seed.sql`: demo user + prototype dataset.
+- [x] `supabase/seed.sql`: demo user + prototype dataset (for a local `db reset` only; written in Phase 6, not run: there is no local stack).
 
 Done when: signed in with Supabase locally, the dashboard shows "today" in the user's timezone and a heatmap from seeded
 data, and the full shadcn set builds.
 
 ## Phase 1: Habits and check-ins
 
-- [ ] `features/habits/schemas.ts`: Habit, Schedule, CheckIn DTOs + form schemas (HB-1, HB-2).
-- [ ] `features/habits/stats.ts` (pure): due-on-date (HB-2…HB-5), streak, best, consistency, weekday rate (MT-1…MT-3,
+- [x] `features/habits/schemas.ts`: Habit, Schedule, CheckIn DTOs + form schemas (HB-1, HB-2).
+- [x] `features/habits/stats.ts` (pure): due-on-date (HB-2…HB-5), streak, best, consistency, weekday rate (MT-1…MT-3,
       MT-6) + unit tests (pauses, `every n`, schedule history, non-due check-ins).
-- [ ] Migration: `habits`, `habit_schedules`, `activities` (check-in part), RPC `toggle_check_in` (AC-2, AC-3, AC-5,
+- [x] Migration: `habits`, `habit_schedules`, `activities` (check-in part), RPC `toggle_check_in` (AC-2, AC-3, AC-5,
       AC-6); RLS + pgTAP (incl. the 3-day window and another user's habit).
-- [ ] `server.ts` + `queries.ts`: list, detail, check-ins in range.
-- [ ] `actions.ts`: create, edit (schedule history HB-4), pause/resume, archive, check-in toggle (AC-2, AC-3, AC-5),
+- [x] `server.ts` + `queries.ts`: list, detail, check-ins in range.
+- [x] `actions.ts`: create, edit (schedule history HB-4), pause/resume, archive, check-in toggle (AC-2, AC-3, AC-5),
       check-in note (AC-8).
-- [ ] Components: habit row (optimistic toggle, minimum, note prompt), habit list, habit detail (metrics, 52-week heatmap,
+- [x] Components: habit row (optimistic toggle, minimum, note prompt), habit list, habit detail (metrics, 52-week heatmap,
       weekday chart, recent notes), new/edit habit dialog.
-- [ ] Routes: `/dashboard/habits`, `/dashboard/habits/[habitId]`; Today page shows due habits by time of day.
+- [x] Routes: `/dashboard/habits`, `/dashboard/habits/[habitId]`; Today page shows due habits by time of day.
+- [ ] Back-dating a check-in or log (Popover + Calendar, AC-5): the database enforces it, the picker UI is Phase 6.
 
 Done when: a user can create a habit with either schedule, check in full/minimum/undo on Today, and see streak and
 heatmap update; reload keeps the data.
 
 ## Phase 2: Activity log and Mochi
 
-- [ ] Migration: activity log trigger (AC-5 for logs).
-- [ ] `features/activities`: schemas, server, queries (range, by goal, week numbers), actions (log, edit note,
+- [x] Migration: activity log trigger (AC-5 for logs), shipped with the Phase 1 migration for every source.
+- [x] `features/activities`: schemas, server, queries (range, by goal, week numbers), actions (log, edit note,
       delete) (AC-1, AC-5, AC-7, AC-9).
-- [ ] Today: log form, "Done today" metric; overall heatmap 26 weeks comes from `features/habits` (MT-7).
-- [ ] `features/pet`: `pet.ts` rules (PT-2…PT-4) + tests; sprite component (template, tail/eyes/tangerine overlays,
+- [x] Today: log form, "Done today" metric; overall heatmap 26 weeks comes from `features/habits` (MT-7).
+- [x] `features/pet`: `pet.ts` rules (PT-2…PT-4) + tests; sprite component (template, tail/eyes/tangerine overlays,
       reduced motion); pet card. Stats passed in as props from the page.
-- [ ] Feeding feedback after check-in/log (PT-5).
-- [ ] design-system.md: pet palette tokens (`--cat-*`, `--mikan*`) and the "second orange" exception.
+- [x] Feeding feedback after check-in/log (PT-5).
+- [x] design-system.md: pet palette tokens (`--cat-*`, `--mikan*`) and the "second orange" exception.
 
 Done when: every check-in or log raises treats, the pet changes stage/mood correctly, and deleting a log lowers it.
 
+## Phase 2.5: OpenAPI contract
+
+Makes a later move to an external backend a change to `server.ts` only. Done after Phase 2 so the contract describes
+what actually runs; every later phase updates it with its own operations.
+
+- [x] `docs/goals-habits/openapi.yaml` (OpenAPI 3.1; 3.2 once `openapi-typescript` supports it): habits, check-ins,
+      activities, settings operations as the logical backend API.
+- [x] `openapi-typescript` (devDependency) generates `lib/api/schema.d.ts`; script `pnpm --filter web gen:api`.
+- [x] `server.ts` of habits, activities and settings return DTOs that match the generated types; `contract.test.ts` per
+      feature fails (type-level and runtime) when a Zod DTO drifts from `openapi.yaml`.
+- [ ] Record an ADR (`engineering:architecture`): contract-first at the `server.ts` seam, why not PostgREST's spec.
+- [ ] Definition of done for Phases 3-5: add the phase's operations to `openapi.yaml`.
+
 ## Phase 3: Tasks
 
-- [ ] Migration: `tasks`, RPC `log_task`; RLS + pgTAP.
-- [ ] `features/tasks`: schemas, server, queries by list, actions: add with `#slug` (TK-3), complete/un-complete
+- [x] Migration: `tasks`, RPC `log_task`; RLS + pgTAP.
+- [x] `features/tasks`: schemas, server, queries by list, actions: add with `#slug` (TK-3), complete/un-complete
       (TK-6, TK-7), keep/later/drop (TK-5), edit note/goal.
-- [ ] Carry-over age on read (TK-4); stale prompt at ≥ 5 days.
-- [ ] "Add to log?" offer → RPC `log_task` (TK-6).
-- [ ] Routes: `/dashboard/tasks?tab=today|later|done`; Today shows today's tasks.
+- [x] Carry-over age on read (TK-4); stale prompt at ≥ 5 days (unit-tested; not yet seen in the UI, needs a task older than 5 days).
+- [x] "Add to log?" offer → RPC `log_task` (TK-6). Wired, but only appears for goal-linked tasks, so it is first exercised in Phase 4.
+- [x] Routes: `/dashboard/tasks?tab=today|later|done`; Today shows today's tasks and the inspector lists "Up next".
+- [x] Tasks added to `openapi.yaml` and covered by `contract.test.ts`.
 
 Done when: tasks roll over, stale prompt works, and a linked task can be logged to its goal.
 
 ## Phase 4: Goals
 
-- [ ] Migration: `goals` (+ GL-3/GL-4 trigger), `checkpoints`, `chapters`, RPC `close_chapter`; RLS + pgTAP.
-- [ ] `features/goals`: schemas, server, queries, actions: create (slug, GL-3), edit, status (GL-3, GL-4),
+- [x] Migration: `goals` (+ GL-3/GL-4 trigger), `checkpoints`, `chapters`, RPC `close_chapter`; RLS + pgTAP.
+- [x] `features/goals`: schemas, server, queries, actions: create (slug, GL-3), edit, status (GL-3, GL-4),
       checkpoints (CP-1…CP-4), close chapter (CH-1…CH-3).
-- [ ] Goal list (Active n/3, Someday, Done) and goal detail page composing: activities (timeline, heatmap, counters,
+- [x] Goal list (Active n/3, Someday, Done) and goal detail page composing: activities (timeline, heatmap, counters,
       log form preset to the goal), habits linked (consistency), tasks linked (open), checkpoints, chapters.
-- [ ] Sidebar "I'm becoming" section and the overview column's active goals.
-- [ ] Routes: `/dashboard/goals`, `/dashboard/goals/[goalId]`.
+- [x] Sidebar "I'm becoming" section and the overview column's active goals.
+- [x] Routes: `/dashboard/goals`, `/dashboard/goals/[goalId]`.
+
+- [ ] Not done yet: link or relink a task to a goal after it exists (only `#slug` at creation works), goal select inside the
+      task note panel; pgTAP tests for the Phase 3 and 4 tables.
 
 Done when: an open-ended goal works with logs and chapters only, and a goal with checkpoints shows n/m and can be marked done.
 
 ## Phase 5: Weekly review
 
-- [ ] Migration: `reviews`, RPC `complete_review`; RLS + pgTAP.
-- [ ] `features/reviews`: schemas, server, queries (current week + stats), `completeReviewAction` (RV-1…RV-5)
+- [x] Migration: `reviews`, RPC `complete_review`; RLS + pgTAP.
+- [x] `features/reviews`: schemas, server, queries (current week + stats), `completeReviewAction` (RV-1…RV-5)
       applying pauses and focus tasks in one write.
-- [ ] Three-step page; "due" badge in the sidebar until saved.
+- [x] Three-step page; "due" badge in the sidebar until saved.
+
+- [x] `tasks.focus_from` (RV-4): focus tasks count as today tasks from next week start, or at once on the last day of the week.
+- [x] Added to `openapi.yaml` and covered by `contract.test.ts`.
 
 Done when: finishing a review pauses the chosen habits from next week and moves focus tasks to Today.
 
 ## Phase 6: Hardening
 
-- [ ] Empty states for every list (first-run: no habits, no goals, no tasks).
-- [ ] Error and loading states; action failures revert optimistic UI.
-- [ ] Accessibility pass (keyboard check-in, focus order, labels, contrast of heatmap levels).
-- [ ] Instant-navigation check for the main routes (advanced-patterns.md §telemetry/instant tests).
-- [ ] Supabase advisors (security + performance lints) clean; query plans checked for the Today and goal pages.
-- [ ] Production project: `supabase db push`, env vars, auth redirect URLs.
+- [x] Empty states for every list (first-run: no habits, no goals, no tasks).
+- [x] Error and loading states (`dashboard/error.tsx`, `dashboard/not-found.tsx`, sized Suspense fallbacks); action failures revert optimistic UI (`useOptimistic` resets when the transition ends, the reason shows inline).
+- [x] Accessibility pass: heatmap summary label, `aria-pressed` on Minimum, group labels on toggle groups, heat ramp raised to 3:1 in both themes. Not done: a screen-reader run and a full keyboard walk-through.
+- [x] Instant-navigation check: dev validation shows no insights on Today, Habits, Tasks, Goals and a goal page; build prerenders every route as partial. Not done: `@next/playwright` `instant()` e2e tests (they need a signed-in session; no e2e setup exists yet).
+- [x] Supabase advisors: security clean except leaked-password protection (an Auth dashboard setting); `SECURITY DEFINER` RPCs moved to `private` with invoker wrappers. Performance: only unused-index infos on foreign keys of young tables. Query plans not checked.
+- [x] pgTAP tests for tasks, goals/checkpoints/chapters and reviews written (`supabase/tests`); not run: they need a local stack (`supabase test db`).
+- [ ] Production project: every migration is already pushed to the linked project; env vars and auth redirect URLs for a deployed domain are still to do.

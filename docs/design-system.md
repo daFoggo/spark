@@ -214,6 +214,21 @@ Rules:
 - `idle` animates only under `motion-safe`; with reduced motion it renders exactly like `static`.
 - The favicon is `apps/web/app/icon.svg`, the same mark with fixed light/dark colors (`prefers-color-scheme`).
 
+## Pet
+
+Mochi, the orange loaf cat (`features/pet/components/mochi.tsx`), is the **second orange element** the system allows on
+a screen, next to the logo. It lives only on Today.
+
+- **Palette:** `--cat-o/d/m/l/c/e/n/y`, `--mikan`, `--mikan-l`, `--mikan-d`, `--leaf` in `globals.css` (both themes), exposed
+  as `fill-cat-*` utilities. They paint the sprite only; never use them for UI.
+- **Drawing:** one hand-drawn pixel template plus overlays (tail, eyes, tangerines), `shape-rendering="crispEdges"`, one
+  `<path>` per colour.
+- **Motion:** like the logo, a documented exception to "only colors are custom": `--animate-cat-*` keyframes use
+  `steps()` so pixels jump. Always `motion-safe:`; with reduced motion the cat is static (tail down, eyes open).
+- **Heatmap:** `--heat-1..4` stay neutral, so the map never competes with the cat.
+
+---
+
 ## 7. Navigation
 
 - Site nav: sticky, `h-24` (`max-sm:h-18`), brand left, links with `[X]` keys in the middle, commands and CTA right.
@@ -332,6 +347,11 @@ comes from the `--sidebar-width` variable; change it in the theme rather than wi
 shadcn files in `packages/ui` are **never edited**, so `shadcn add --overwrite` and future migrations stay clean. The
 Spark look is composed on top in `apps/web/components/layout/`:
 
+**Inspector (implemented):** `components/layout/inspector.tsx` holds `InspectorProvider` (state, `useMediaQuery` for `xl`),
+`InspectorCommand` (`[I]`, header) and `InspectorPanel` (a fixed `w-80 border-l` column from `xl`, a right `Sheet` below it,
+`[ESC]` closes). The layout fills it with a server component (`app/(dashboard)/_components/inspector-content.tsx`): the pet
+and "This week" (`WeekStrip` + `DitherMeter`, both in `components/shared/`). Dithered meters use the `bg-dither` utility.
+
 | Part | File | Built from |
 | :--- | :--- | :--- |
 | `ColumnHeader` | `column-header.tsx` | Plain `div` (`h-14 border-b px-4`) |
@@ -366,7 +386,7 @@ Applied in `apps/web`:
 
 | Pattern | Where | Implementation |
 | :--- | :--- | :--- |
-| Stagger on enter (slide up 8px, `duration-500`, `delay-75` steps) | Dashboard body, auth form column | `components/shared/stagger.tsx` (direct children, `*:nth-N:delay-*`) |
+| Stagger on enter (slide up 8px, `duration-500`, `delay-75` steps) | Dashboard body, auth form column | `components/shared/stagger.tsx` (direct children, `*:nth-N:delay-*`). Plays once per element: Cache Components hides visited routes with `display: none` and a CSS animation restarts when its element is shown again, so each child switches its animation off when it ends (`onAnimationEnd`) and going back is instant |
 | Terminal lines reveal in order | Auth rail | `app/(auth)/_components/terminal.tsx` (`step` prop) |
 | Burger bars turn into an X (`duration-300 ease-out`) | Dashboard header below `md` | `components/layout/burger.tsx` |
 | TOC nudge (`translate-x-1`, `duration-200`) | Sidebar nav rows | `NavTree` `RowLabel` |
