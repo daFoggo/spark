@@ -51,6 +51,18 @@
   --color-heat-2: var(--heat-2);
   --color-heat-3: var(--heat-3);
   --color-heat-4: var(--heat-4);
+  --color-cat-o: var(--cat-o);
+  --color-cat-d: var(--cat-d);
+  --color-cat-m: var(--cat-m);
+  --color-cat-l: var(--cat-l);
+  --color-cat-c: var(--cat-c);
+  --color-cat-e: var(--cat-e);
+  --color-cat-n: var(--cat-n);
+  --color-cat-y: var(--cat-y);
+  --color-mikan: var(--mikan);
+  --color-mikan-l: var(--mikan-l);
+  --color-mikan-d: var(--mikan-d);
+  --color-leaf: var(--leaf);
   --color-diff-add: var(--diff-add);
   --color-diff-del: var(--diff-del);
   --color-diff-add-bg: var(--diff-add-bg);
@@ -120,11 +132,59 @@
   }
 }
 
+/*
+ * Pet motion: the second exception, same rules as the logo (docs/design-system.md, Pet).
+ * Frame-by-frame so pixels jump. Use only via the Mochi sprite, always behind `motion-safe:`.
+ */
+@theme {
+  --animate-cat-tail-a: cat-tail-a 3.2s steps(1, end) infinite;
+  --animate-cat-tail-b: cat-tail-b 3.2s steps(1, end) infinite;
+  --animate-cat-eye-open: cat-eye-open 5s steps(1, end) infinite;
+  --animate-cat-eye-shut: cat-eye-shut 5s steps(1, end) infinite;
+  --animate-cat-z: cat-z 3s steps(4, end) infinite;
+  --animate-cat-z-late: cat-z 3s steps(4, end) 1s infinite;
+  --animate-cat-z-later: cat-z 3s steps(4, end) 2s infinite;
+  --animate-cat-munch: cat-munch 0.4s steps(1, end) 3;
+  --animate-cat-heart: cat-heart 1.2s steps(4, end) 1;
+
+  @keyframes cat-tail-a {
+    0% { opacity: 1; }
+    82% { opacity: 0; }
+  }
+  @keyframes cat-tail-b {
+    0% { opacity: 0; }
+    82% { opacity: 1; }
+  }
+  @keyframes cat-eye-open {
+    0% { opacity: 1; }
+    94% { opacity: 0; }
+    97% { opacity: 1; }
+  }
+  @keyframes cat-eye-shut {
+    0% { opacity: 0; }
+    94% { opacity: 1; }
+    97% { opacity: 0; }
+  }
+  @keyframes cat-z {
+    0% { opacity: 0; transform: translateY(0); }
+    25% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-4px); }
+  }
+  @keyframes cat-munch {
+    50% { transform: translateY(-1px); }
+  }
+  @keyframes cat-heart {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-4px); }
+  }
+}
+
 /* Colors follow claude.dev. Every other numeric token uses Tailwind's default scale.
    `--accent` is shadcn's hover surface; the orange brand color is `--brand`.
    Use `--brand-ink` when orange is small text (contrast-tuned per theme).
    `--diff-*` mark status (add = success, del = blocked); `--syn-*` color code only.
-   `--heat-1..4` are the activity heatmap ramp (neutral, so orange stays once per screen). */
+   `--heat-1..4` are the activity heatmap ramp (neutral, so orange stays once per screen); the lowest step keeps 3:1
+   against the page in each theme (WCAG 1.4.11). */
 :root {
   --background: #faf9f5;
   --foreground: #141413;
@@ -151,9 +211,21 @@
   --ink-3: #7b7a72;
   --ink-4: #a8a69d;
   --chip-fill: #1414130a;
-  --heat-1: color-mix(in srgb, var(--foreground) 22%, var(--background));
-  --heat-2: color-mix(in srgb, var(--foreground) 42%, var(--background));
-  --heat-3: color-mix(in srgb, var(--foreground) 66%, var(--background));
+  --cat-o: #4a2616;
+  --cat-d: #c2612e;
+  --cat-m: #e8894a;
+  --cat-l: #f5ae72;
+  --cat-c: #fbe6cc;
+  --cat-e: #2a1810;
+  --cat-n: #ef8f86;
+  --cat-y: #9aa83a;
+  --mikan: #f58a1f;
+  --mikan-l: #ffc06a;
+  --mikan-d: #c9640c;
+  --leaf: #5f9a3c;
+  --heat-1: color-mix(in srgb, var(--foreground) 46%, var(--background));
+  --heat-2: color-mix(in srgb, var(--foreground) 62%, var(--background));
+  --heat-3: color-mix(in srgb, var(--foreground) 80%, var(--background));
   --heat-4: var(--foreground);
   --diff-add: #3e7a3e;
   --diff-del: #a04545;
@@ -205,9 +277,21 @@
   --ink-3: #87867f;
   --ink-4: #5e5d59;
   --chip-fill: #faf9f50d;
-  --heat-1: color-mix(in srgb, var(--foreground) 22%, var(--background));
-  --heat-2: color-mix(in srgb, var(--foreground) 42%, var(--background));
-  --heat-3: color-mix(in srgb, var(--foreground) 66%, var(--background));
+  --cat-o: #4a2616;
+  --cat-d: #c2612e;
+  --cat-m: #e8894a;
+  --cat-l: #f5ae72;
+  --cat-c: #fbe6cc;
+  --cat-e: #2a1810;
+  --cat-n: #ef8f86;
+  --cat-y: #9aa83a;
+  --mikan: #f58a1f;
+  --mikan-l: #ffc06a;
+  --mikan-d: #c9640c;
+  --leaf: #5f9a3c;
+  --heat-1: color-mix(in srgb, var(--foreground) 34%, var(--background));
+  --heat-2: color-mix(in srgb, var(--foreground) 52%, var(--background));
+  --heat-3: color-mix(in srgb, var(--foreground) 74%, var(--background));
   --heat-4: var(--foreground);
   --diff-add: #9ac29a;
   --diff-del: #c29a9a;
@@ -233,6 +317,11 @@
 }
 
 /* Scroll areas of the dashboard columns: still scrollable by wheel, keys and touch. */
+/* Usage meters are dithered (design system §8): a 2px checker of ink-4 under a solid ink fill. */
+@utility bg-dither {
+  background: repeating-conic-gradient(var(--ink-4) 0 25%, transparent 0 50%) 0 0 / 2px 2px;
+}
+
 @utility no-scrollbar {
   scrollbar-width: none;
   &::-webkit-scrollbar {
