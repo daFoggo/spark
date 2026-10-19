@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { SIGN_IN_PATH } from "@/config/routes"
 import { SignUpForm } from "@/features/auth/components/sign-up-form"
 
@@ -16,6 +17,8 @@ import {
   TerminalOutput,
   TerminalPrompt,
 } from "../_components/terminal"
+
+export const metadata: Metadata = { title: "Sign up" }
 
 export default function SignUpPage() {
   return (

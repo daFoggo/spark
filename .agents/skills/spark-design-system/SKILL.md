@@ -16,7 +16,8 @@ section when a case is not covered here.
 ## Hard rules (check every className you write)
 
 1. Only colors are custom. Everything numeric uses Tailwind's default scale. **No arbitrary values**
-   (`mt-[54px]`, `text-[13px]`, `grid-cols-[auto_1fr]`, `rounded-[10px]`).
+   (`mt-[54px]`, `text-[13px]`, `grid-cols-[auto_1fr]`, `rounded-[10px]`). Only exception: the logo's
+   `--animate-spark-*` keyframes, used by `AppLogo` alone.
 2. Smallest text is `text-xs`. Weights: `font-normal`, `font-medium`.
 3. shadcn components: choose a `size` / `variant` prop. Never set `h-*`, `px-*`, `py-*`, `text-*` on them via
    `className`; layout classes (`w-full`, `mt-*`, `self-*`) are fine.
@@ -75,11 +76,15 @@ anchors use `scroll-mt-24`; the logo scrolls to `0`.
 - Three full-height columns: shadcn `<Sidebar collapsible="offcanvas">` · main `flex-1 min-w-0` · inspector `w-80
   border-l`. Each column = `<ColumnHeader>` (`flex h-14 shrink-0 items-center gap-4 border-b px-4`) + a body with
   `no-scrollbar overflow-y-auto`. Never give one column a different header height; a new panel is a new column.
-- Logo lives in the sidebar header; below `lg` it moves into the main header next to the burger (`SidebarTrigger`).
-- Sidebar body is the big TOC: mono `text-sm`, `└` glyphs, current item glyph `text-brand`, max two levels, counts
+- Logo lives in the sidebar header; below `md` (or with the sidebar collapsed) it shows in the main header next to the `Burger`.
+- Sidebar body = labelled sections (`config/navigation.ts`), named by content (`Workspace`, `Settings`), never "Tree".
+  Header = path breadcrumb (no project name) + `[X] LABEL` commands with bare-key shortcuts (`[B]` sidebar, `[D]` theme).
+- Never edit shadcn files in `packages/ui`; compose in `apps/web/components/layout/`.
+- Each section is the big TOC: mono `text-sm`, `└` glyphs, current item glyph `text-brand`, max two levels, counts
   `ml-auto text-xs tabular-nums`.
 - Inspector below `xl` becomes `<Sheet side="right">`. Selected row `bg-primary text-primary-foreground`.
-- Metrics are a `dl` row, no stat cards. Orange appears once per screen.
+- Metrics are a `dl` row, no stat cards. Orange appears once per screen (the logo's spark does not count).
+- Logo: always `<AppLogo variant size motion />` (doc § Logo), sizes 16/24/32 only, animated (`idle`) by default everywhere.
 
 ## Type and motion
 

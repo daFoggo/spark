@@ -3,6 +3,7 @@ import type { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { authConfig } from "../config"
+import { ROLES, type Role } from "../permissions"
 
 /**
  * The whole backend session lives in one encrypted + signed httpOnly cookie
@@ -15,14 +16,21 @@ export type BackendSession = {
   refreshToken: string
   accessExpiresAt: number
   refreshExpiresAt: number
+  role: Role
+  name: string | null
+  email: string | null
 }
 
+// Defaults keep cookies sealed before role/name/email existed valid (no forced sign-out).
 const sessionSchema = z.object({
   userId: z.string(),
   accessToken: z.string(),
   refreshToken: z.string(),
   accessExpiresAt: z.number(),
   refreshExpiresAt: z.number(),
+  role: z.enum(ROLES).default("member"),
+  name: z.string().nullable().default(null),
+  email: z.string().nullable().default(null),
 })
 
 export const ACCESS_REFRESH_SKEW_MS = 2 * 60 * 1000

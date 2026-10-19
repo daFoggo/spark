@@ -14,6 +14,9 @@ describe("sealed session cookie size", () => {
       refreshToken: jwt(283),
       accessExpiresAt: Date.now() + 1_800_000,
       refreshExpiresAt: Date.now() + 604_800_000,
+      role: "member",
+      name: "Nguyen Thi Ngoc Anh",
+      email: "ngoc.anh.nguyen@example.com",
     }
     const size = encodeURIComponent(await seal(session)).length
     expect(size).toBeLessThan(3000)

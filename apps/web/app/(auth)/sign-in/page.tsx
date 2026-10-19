@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import { SIGN_UP_PATH } from "@/config/routes"
@@ -19,6 +20,8 @@ import {
   TerminalOutput,
   TerminalPrompt,
 } from "../_components/terminal"
+
+export const metadata: Metadata = { title: "Sign in" }
 
 async function OAuthError({
   searchParams,

@@ -40,6 +40,10 @@ const nextConfig: NextConfig = {
   // Recommended for all new apps from Next.js 16.4 (default in create-next-app).
   cacheComponents: true,
   partialPrefetching: true,
+  // Enables forbidden() / forbidden.tsx, used by requirePermission() in lib/dal.ts.
+  experimental: {
+    authInterrupts: true,
+  },
   async headers() {
     return [
       {

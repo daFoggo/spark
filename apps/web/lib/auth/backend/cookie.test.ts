@@ -8,6 +8,9 @@ const session = (): BackendSession => ({
   refreshToken: "r",
   accessExpiresAt: Date.now() + 60_000,
   refreshExpiresAt: Date.now() + 3_600_000,
+  role: "admin",
+  name: "Ada",
+  email: "ada@example.com",
 })
 
 describe("parseExpirationMs", () => {
@@ -25,6 +28,16 @@ describe("sealed session cookie", () => {
   it("round-trips a session", async () => {
     const original = session()
     expect(await unseal(await seal(original))).toEqual(original)
+  })
+
+  it("reads cookies sealed before role/name/email existed as a member", async () => {
+    const { role: _role, name: _name, email: _email, ...legacy } = session()
+    expect(await unseal(await seal(legacy as BackendSession))).toEqual({
+      ...legacy,
+      role: "member",
+      name: null,
+      email: null,
+    })
   })
 
   it("rejects missing, tampered and malformed cookies", async () => {

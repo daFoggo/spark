@@ -1,20 +1,18 @@
 import Link from "next/link"
 import { IconArrowRight } from "@tabler/icons-react"
 
-function HomeLink({ className }: { className?: string }) {
-  return (
-    <Link href="/" className={className}>
-      <span className="font-mono text-sm">spark</span>
-    </Link>
-  )
-}
+import { ThemeCommand } from "@/components/layout/header-commands"
+import { Stagger } from "@/components/shared/stagger"
+import { AppLogo } from "@/components/shared/app-logo"
 
 /** Left rail from lg: wordmark, page-specific showcase centered, footer. Hidden below lg. */
 export function AuthAside({ children }: { children: React.ReactNode }) {
   return (
     <aside className="hidden border-r px-9 lg:sticky lg:top-0 lg:col-span-6 lg:flex lg:h-svh lg:flex-col xl:col-span-7">
       <div className="flex h-24 shrink-0 items-center">
-        <HomeLink />
+        <Link href="/">
+          <AppLogo size="lg" />
+        </Link>
       </div>
       <div className="flex flex-1 flex-col justify-center">
         <div className="flex flex-col gap-8">{children}</div>
@@ -22,9 +20,7 @@ export function AuthAside({ children }: { children: React.ReactNode }) {
       {/* Same height as the header so the showcase stays vertically centered. */}
       <div className="flex h-24 shrink-0 items-center justify-between font-mono text-xs text-ink-3">
         <span>© 2026 Spark</span>
-        <span>
-          <kbd className="text-foreground">[D]</kbd> Toggle theme
-        </span>
+        <ThemeCommand />
       </div>
     </aside>
   )
@@ -64,7 +60,9 @@ export function AuthMain({ children }: { children: React.ReactNode }) {
 export function AuthHeader({ children }: { children: React.ReactNode }) {
   return (
     <header className="flex h-24 items-center justify-between gap-4 max-sm:h-18">
-      <HomeLink className="lg:invisible" />
+      <Link href="/" className="lg:invisible">
+        <AppLogo size="md" />
+      </Link>
       {children}
     </header>
   )
@@ -101,9 +99,9 @@ export function AuthSwitch({
 export function AuthBody({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col justify-center py-12 max-sm:py-8">
-      <div className="mx-auto flex w-full max-w-sm flex-col gap-8">
+      <Stagger className="mx-auto flex w-full max-w-sm flex-col gap-8">
         {children}
-      </div>
+      </Stagger>
     </div>
   )
 }
