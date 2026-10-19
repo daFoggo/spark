@@ -6,6 +6,8 @@ export const SIGN_UP_PATH = "/sign-up"
 /** Pages a signed-in user is redirected away from (optimistic check in `proxy.ts`). */
 export const AUTH_PAGES = [SIGN_IN_PATH, SIGN_UP_PATH] as const
 export const DASHBOARD_PATH = "/dashboard"
+export const ACCOUNT_PATH = "/dashboard/settings/account"
+export const MEMBERS_PATH = "/dashboard/settings/members"
 export const OAUTH_CALLBACK_PATH = "/auth/callback"
 /**
  * Clears the session cookie, then goes to sign-in. Used when the backend rejects a token
