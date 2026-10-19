@@ -67,6 +67,55 @@
   --font-serif: var(--font-serif);
 }
 
+/*
+ * Logo motion: the one exception to "only colors are custom" (docs/design-system.md, Logo).
+ * Frame-by-frame (`steps()`) so pixels jump instead of sliding. Use only via AppLogo, always
+ * behind `motion-safe:`.
+ */
+@theme {
+  --animate-spark-plus: spark-plus 4s steps(1, end) infinite;
+  --animate-spark-cross: spark-cross 4s steps(1, end) infinite;
+  --animate-spark-rise: spark-rise 3s steps(4, end) infinite;
+  --animate-spark-rise-late: spark-rise 3s steps(4, end) 1s infinite;
+  --animate-spark-rise-later: spark-rise 3s steps(4, end) 2s infinite;
+
+  @keyframes spark-plus {
+    0% {
+      opacity: 1;
+    }
+    70% {
+      opacity: 0;
+    }
+    82% {
+      opacity: 1;
+    }
+  }
+  @keyframes spark-cross {
+    0% {
+      opacity: 0;
+    }
+    70% {
+      opacity: 1;
+    }
+    82% {
+      opacity: 0;
+    }
+  }
+  @keyframes spark-rise {
+    0% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+    25% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-3px);
+    }
+  }
+}
+
 /* Colors follow claude.dev. Every other numeric token uses Tailwind's default scale.
    `--accent` is shadcn's hover surface; the orange brand color is `--brand`.
    Use `--brand-ink` when orange is small text (contrast-tuned per theme).
@@ -170,6 +219,14 @@
   --sidebar-ring: #faf9f5;
 }
 
+/* Scroll areas of the dashboard columns: still scrollable by wheel, keys and touch. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -250,4 +307,3 @@ textarea:focus-visible,
 [data-slot="input-group"] input:focus-visible {
   outline: none;
 }
-
