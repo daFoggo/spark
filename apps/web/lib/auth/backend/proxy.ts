@@ -35,8 +35,9 @@ async function refresh(
     })
     if (!res.ok) return null
     const body = refreshSchema.parse(await res.json())
+    // Identity fields are kept from sign-in; a role change shows after the next sign-in.
     return {
-      userId: session.userId,
+      ...session,
       accessToken: body.access_token,
       refreshToken: body.refresh_token,
       accessExpiresAt: parseExpirationMs(body.expiration),

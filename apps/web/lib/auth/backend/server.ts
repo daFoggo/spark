@@ -7,6 +7,7 @@ import { z } from "zod"
 import { isExpectedApiError } from "@/lib/errors"
 import { apiFetch } from "@/lib/http"
 
+import { parseRole } from "../permissions"
 import type {
   AuthProvider,
   Credentials,
@@ -27,7 +28,13 @@ const signInSchema = z.object({
   refresh_token: z.string(),
   expiration: z.union([z.string(), z.number()]),
   refresh_expiration: z.union([z.string(), z.number()]),
-  user_info: z.object({ id: z.string() }),
+  // name/email/role are optional: a backend that only returns `id` still works (role = member).
+  user_info: z.object({
+    id: z.string(),
+    name: z.string().nullish(),
+    email: z.string().nullish(),
+    role: z.unknown(),
+  }),
 })
 
 export const backendProvider: AuthProvider = {
@@ -39,7 +46,13 @@ export const backendProvider: AuthProvider = {
     // The seal is authenticated encryption, so the userId can be trusted without
     // asking the backend. The backend still checks the token on every API call.
     if (!session || session.accessExpiresAt <= Date.now()) return null
-    return { userId: session.userId, accessToken: session.accessToken }
+    return {
+      userId: session.userId,
+      accessToken: session.accessToken,
+      role: session.role,
+      name: session.name,
+      email: session.email,
+    }
   },
 
   // The backend validates the token and the user's status on every call, so a
@@ -75,6 +88,9 @@ export const backendProvider: AuthProvider = {
       refreshToken: body.refresh_token,
       accessExpiresAt: parseExpirationMs(body.expiration),
       refreshExpiresAt: parseExpirationMs(body.refresh_expiration),
+      role: parseRole(body.user_info.role),
+      name: body.user_info.name ?? null,
+      email: body.user_info.email ?? credentials.email,
     }
     const store = await cookies()
     store.set(cookieName(), await seal(session), cookieOptions(session))

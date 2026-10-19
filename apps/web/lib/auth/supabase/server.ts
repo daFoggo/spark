@@ -3,6 +3,7 @@ import "server-only"
 import { isAuthError } from "@supabase/supabase-js"
 import { io } from "next/cache"
 
+import { parseRole } from "../permissions"
 import type {
   AuthProvider,
   Credentials,
@@ -11,6 +12,10 @@ import type {
   SignUpResult,
 } from "../types"
 import { createClient } from "./client"
+
+function stringOrNull(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null
+}
 
 export const supabaseProvider: AuthProvider = {
   async getSession(): Promise<Session | null> {
@@ -25,7 +30,15 @@ export const supabaseProvider: AuthProvider = {
     // Only used to forward the (already verified) token to the backend.
     const { data } = await supabase.auth.getSession()
     if (!data.session) return null
-    return { userId, accessToken: data.session.access_token }
+    return {
+      userId,
+      accessToken: data.session.access_token,
+      // app_metadata is writable only with the service role; user_metadata is user-editable,
+      // so it may supply the display name but never the role.
+      role: parseRole(claims.claims.app_metadata?.role),
+      name: stringOrNull(claims.claims.user_metadata?.name),
+      email: stringOrNull(claims.claims.email),
+    }
   },
 
   async verifySessionFresh(): Promise<Session | null> {
@@ -39,6 +52,9 @@ export const supabaseProvider: AuthProvider = {
     return {
       userId: data.user.id,
       accessToken: sessionData.session.access_token,
+      role: parseRole(data.user.app_metadata.role),
+      name: stringOrNull(data.user.user_metadata.name),
+      email: data.user.email ?? null,
     }
   },
 

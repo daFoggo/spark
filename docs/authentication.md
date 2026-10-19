@@ -57,7 +57,7 @@ Paths relative to `apps/web/`: [proxy.ts](../apps/web/proxy.ts), [config/routes.
 
 | Endpoint (relative to `API_BASE_URL`, which may include a path like `/api/v1/`) | Request | Response |
 |---|---|---|
-| `POST auth/sign-in` | `{ email, password }` | `{ access_token, refresh_token, expiration, refresh_expiration, user_info: { id } }` |
+| `POST auth/sign-in` | `{ email, password }` | `{ access_token, refresh_token, expiration, refresh_expiration, user_info: { id, name?, email?, role? } }` |
 | `POST auth/sign-up` | `{ name, email, password }` | Any `2xx`; the body is ignored and the provider signs the user in right after |
 | `POST auth/refresh` | `{ refresh_token }` | `{ access_token, refresh_token, expiration, refresh_expiration }` |
 | Protected APIs | `Authorization: Bearer <access_token>` | `401` when the token is not accepted |
@@ -133,6 +133,19 @@ enable Google in Supabase → Authentication → Providers; add `<NEXT_PUBLIC_AP
 | `getSession()` | You only need to know if a session exists | `React.cache`-memoized |
 | `verifySession()` | A Server Component/Action requires a session | No session → `redirect(SESSION_EXPIRED_PATH)`, which clears any leftover cookie and goes to sign-in (this also prevents a proxy/DAL redirect loop) [N10] |
 | `verifySessionFresh()` | Sensitive actions | Also asks the identity system whether the session was revoked (extra round trip on Supabase) |
+| `requirePermission(p)` | A page or action needs a permission | `verifySession()`, then `forbidden()` (403, [app/forbidden.tsx](../apps/web/app/forbidden.tsx)) when the role lacks `p`; needs `experimental.authInterrupts` |
+
+**Roles and permissions** ([lib/auth/permissions.ts](../apps/web/lib/auth/permissions.ts)): `Session` carries `role` (`member` | `admin`),
+`name` and `email`. A role maps to permissions (`dashboard:view`, `settings:view`, `members:view`, `members:manage`); unknown or missing
+roles become `member`. Sources:
+
+- `supabase`: `app_metadata.role` (writable only with the service role). `user_metadata` is editable by the user, so it supplies the
+  display name only, never the role.
+- `backend`: optional `user_info.name`, `user_info.email`, `user_info.role` in the `auth/sign-in` response, sealed into the cookie.
+  Cookies sealed before these fields existed still unseal (role `member`). A role change shows after the next sign-in.
+
+The dashboard nav hides links a role lacks ([config/navigation.ts](../apps/web/config/navigation.ts)); that is UI only. Every page and
+action still calls `requirePermission`, and the backend authorizes every API call.
 
 - Check next to the data: layouts do not re-render on navigation and do not control child segments [N3]. Client Components cannot import
   the DAL; pass data as props [N3].

@@ -1,9 +1,18 @@
 import type { NextResponse } from "next/server"
 
-/** Provider-agnostic session. `accessToken` is sent as Bearer to the backend. */
+import type { Role } from "./permissions"
+
+/**
+ * Provider-agnostic session. `accessToken` is sent as Bearer to the backend.
+ * `role` comes from a source the user cannot edit and only drives UI and early checks;
+ * the backend still authorizes every call.
+ */
 export type Session = {
   userId: string
   accessToken: string
+  role: Role
+  name: string | null
+  email: string | null
 }
 
 export type Credentials = {
