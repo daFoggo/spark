@@ -1,0 +1,811 @@
+openapi: 3.1.0
+info:
+  title: Spark goals and habits API
+  version: 0.1.0
+  description: |
+    The logical backend API behind `apps/web/features/*/server.ts` (spec: docs/goals-habits/spec.md).
+    Today the Supabase adapter implements it with Postgres + RLS; a future external backend must implement the same
+    operations. Every operation acts for the authenticated user (Bearer token). Dates are local dates
+    (`YYYY-MM-DD`) in the user's timezone (TM-1). Rule IDs in descriptions refer to the spec.
+    Errors: 422 carries `{ rule, message }` where `rule` is the spec ID (`AC-5`, `HB-2`, ...).
+servers:
+  - url: /v1
+security:
+  - bearer: []
+
+paths:
+  /settings:
+    get:
+      operationId: getSettings
+      summary: The user's settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Settings" }
+    patch:
+      operationId: updateSettings
+      summary: Change timezone, week start or pet name (TM-2, TM-4, PT-1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SettingsPatch" }
+      responses:
+        "204": { description: Saved }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /habits:
+    get:
+      operationId: listHabits
+      summary: Habits that are not archived (HB-6), with their schedule history
+      responses:
+        "200":
+          description: Habits
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Habit" }
+    post:
+      operationId: createHabit
+      summary: Create a habit and its first schedule (HB-1, HB-2, HB-3)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HabitCreate" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id: { type: string, format: uuid }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /habits/{habitId}:
+    parameters:
+      - $ref: "#/components/parameters/habitId"
+    get:
+      operationId: getHabit
+      summary: One habit, archived or not
+      responses:
+        "200":
+          description: Habit
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Habit" }
+        "404": { description: Not found }
+    patch:
+      operationId: updateHabit
+      summary: Edit text fields, pause, resume or archive (HB-5, HB-6)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HabitPatch" }
+      responses:
+        "204": { description: Saved }
+        "404": { description: Not found }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /habits/{habitId}/schedule:
+    put:
+      operationId: setHabitSchedule
+      summary: Change the schedule from today on; earlier days keep the old one (HB-4)
+      parameters:
+        - $ref: "#/components/parameters/habitId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Schedule" }
+      responses:
+        "204": { description: Saved }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /check-ins:
+    get:
+      operationId: listCheckIns
+      summary: Habit check-ins between two dates, optionally for one habit
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+        - { name: habitId, in: query, required: false, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Check-ins, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CheckIn" }
+
+  /habits/{habitId}/check-ins/{date}:
+    parameters:
+      - $ref: "#/components/parameters/habitId"
+      - { name: date, in: path, required: true, schema: { type: string, format: date } }
+    post:
+      operationId: toggleCheckIn
+      summary: Tap full or minimum (AC-3). The goal is copied from the habit (AC-6); only the last 3 days (AC-5).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [level]
+              properties:
+                level: { $ref: "#/components/schemas/CheckInLevel" }
+      responses:
+        "200":
+          description: The level after the tap, null when it was undone
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [level]
+                properties:
+                  level:
+                    oneOf:
+                      - { $ref: "#/components/schemas/CheckInLevel" }
+                      - { type: "null" }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+    patch:
+      operationId: setCheckInNote
+      summary: Add or clear the note of a check-in (AC-8)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties:
+                note: { type: string, maxLength: 280 }
+      responses:
+        "204": { description: Saved }
+
+  /activities:
+    get:
+      operationId: listActivities
+      summary: Activities between two dates, newest first
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+        - { name: source, in: query, required: false, schema: { $ref: "#/components/schemas/ActivitySource" } }
+      responses:
+        "200":
+          description: Activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Activity" }
+
+  /activities/logs:
+    post:
+      operationId: createLog
+      summary: A free log (AC-7); only the last 3 days (AC-5)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LogCreate" }
+      responses:
+        "201": { description: Created }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /activities/{activityId}:
+    delete:
+      operationId: deleteActivity
+      summary: Delete an activity from the history (AC-9)
+      parameters:
+        - { name: activityId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found }
+
+  /activities/stats:
+    get:
+      operationId: getActivityStats
+      summary: Treats since adoption, newest activity date and today's count (PT-2, PT-4)
+      parameters:
+        - { name: adoptedOn, in: query, required: true, schema: { type: string, format: date } }
+        - { name: today, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ActivityStats" }
+
+  /tasks:
+    get:
+      operationId: listTasks
+      summary: Tasks of one tab. Open ones oldest first, done ones newest first and only the last 30 days (TK-8)
+      parameters:
+        - { name: tab, in: query, required: true, schema: { $ref: "#/components/schemas/TaskTab" } }
+        - { name: today, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Task" }
+    post:
+      operationId: createTask
+      summary: Add a task (TK-1, TK-2); created_on is the user's local today (TK-4)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaskCreate" }
+      responses:
+        "201": { description: Created }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /tasks/{taskId}:
+    parameters:
+      - $ref: "#/components/parameters/taskId"
+    patch:
+      operationId: updateTask
+      summary: Change the note, move between lists or reset the age (TK-5)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaskPatch" }
+      responses:
+        "204": { description: Saved }
+        "404": { description: Not found }
+    delete:
+      operationId: deleteTask
+      summary: Drop a task (TK-5)
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found }
+
+  /tasks/{taskId}/done:
+    put:
+      operationId: setTaskDone
+      summary: Complete or un-complete; the backend stamps the user's local today (TK-6, TK-7)
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [done]
+              properties:
+                done: { type: boolean }
+      responses:
+        "200":
+          description: The done date, null when un-completed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [doneOn]
+                properties:
+                  doneOn:
+                    oneOf:
+                      - { $ref: "#/components/schemas/LocalDate" }
+                      - { type: "null" }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /tasks/{taskId}/log:
+    post:
+      operationId: logTask
+      summary: Add a goal-linked task to the log as an activity; idempotent (TK-6)
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        "200":
+          description: The activity id
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [activityId]
+                properties:
+                  activityId: { type: integer }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /goals:
+    get:
+      operationId: listGoals
+      summary: Goals that are not archived (GL-5), with their checkpoints
+      responses:
+        "200":
+          description: Goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Goal" }
+    post:
+      operationId: createGoal
+      summary: Create a goal from a name. The slug is generated; with 3 active goals it is created as someday (GL-1, GL-3)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 120 }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, slug, status]
+                properties:
+                  id: { type: string, format: uuid }
+                  slug: { type: string }
+                  status: { $ref: "#/components/schemas/GoalStatus" }
+
+  /goals/{goalId}:
+    parameters:
+      - $ref: "#/components/parameters/goalId"
+    get:
+      operationId: getGoal
+      summary: One goal, archived or not
+      responses:
+        "200":
+          description: Goal
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Goal" }
+        "404": { description: Not found }
+    patch:
+      operationId: updateGoal
+      summary: Edit details or change status. 422 `GL-3` (4th active goal) or `GL-4` (done with nothing to finish)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GoalPatch" }
+      responses:
+        "204": { description: Saved }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /goals/{goalId}/checkpoints:
+    post:
+      operationId: addCheckpoint
+      summary: Add a checkpoint (CP-1)
+      parameters:
+        - $ref: "#/components/parameters/goalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, position]
+              properties:
+                title: { type: string, minLength: 1, maxLength: 120 }
+                position: { type: integer, minimum: 0 }
+      responses:
+        "201": { description: Created }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /checkpoints/{checkpointId}:
+    parameters:
+      - { name: checkpointId, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      operationId: editCheckpoint
+      summary: Rename, or swap with the neighbour above (-1) or below (1) (CP-4)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string, minLength: 1, maxLength: 120 }
+                move: { type: integer, enum: [-1, 1] }
+      responses:
+        "204": { description: Saved }
+    delete:
+      operationId: deleteCheckpoint
+      summary: Delete a checkpoint (CP-4)
+      responses:
+        "204": { description: Deleted }
+
+  /checkpoints/{checkpointId}/done:
+    put:
+      operationId: setCheckpointDone
+      summary: Tick or untick; the backend stamps the user's local today (CP-3)
+      parameters:
+        - { name: checkpointId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [done]
+              properties:
+                done: { type: boolean }
+      responses:
+        "200":
+          description: The done date, null when cleared
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [doneOn]
+                properties:
+                  doneOn:
+                    oneOf:
+                      - { $ref: "#/components/schemas/LocalDate" }
+                      - { type: "null" }
+
+  /goals/{goalId}/chapters:
+    parameters:
+      - $ref: "#/components/parameters/goalId"
+    get:
+      operationId: listChapters
+      summary: Closed chapters, oldest first (CH-4 append-only)
+      responses:
+        "200":
+          description: Chapters
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Chapter" }
+    post:
+      operationId: closeChapter
+      summary: Close the current chapter; snapshots its count and hours (CH-1, CH-2). 422 `CH-1` without activity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string, minLength: 1, maxLength: 120 }
+      responses:
+        "201": { description: Closed }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+  /goals/{goalId}/activity:
+    get:
+      operationId: getGoalActivity
+      summary: Activities of the goal since a date, plus the current chapter totals (CH-3)
+      parameters:
+        - $ref: "#/components/parameters/goalId"
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: afterId, in: query, required: true, schema: { type: integer, minimum: 0 } }
+      responses:
+        "200":
+          description: Goal activity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GoalActivity" }
+
+  /reviews/{weekStart}:
+    parameters:
+      - { name: weekStart, in: path, required: true, schema: { type: string, format: date } }
+    get:
+      operationId: getReview
+      summary: The review of the week starting on that date (RV-1), or 404 when none was saved
+      responses:
+        "200":
+          description: Review
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Review" }
+        "404": { description: Not saved yet }
+    put:
+      operationId: completeReview
+      summary: >
+        Save the review and apply it in one transaction (RV-1..RV-5): habits chosen as pause get paused_from = next
+        week start, focus tasks (at most 3) start showing on Today from next week start, or at once when it is the
+        last day of the week. 422 `RV-1` when weekStart is not the current week, `RV-4` for more than 3 focus tasks.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewComplete" }
+      responses:
+        "204": { description: Saved }
+        "422": { $ref: "#/components/responses/RuleViolation" }
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+
+  parameters:
+    habitId:
+      name: habitId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+    goalId:
+      name: goalId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    taskId:
+      name: taskId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    RuleViolation:
+      description: A business rule refused the change
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [rule, message]
+            properties:
+              rule: { type: string, examples: [AC-5] }
+              message: { type: string }
+
+  schemas:
+    LocalDate: { type: string, format: date }
+    CheckInLevel: { type: string, enum: [full, minimum] }
+    TimeOfDay: { type: string, enum: [morning, afternoon, evening] }
+    ActivitySource: { type: string, enum: [habit, log, task] }
+    GoalStatus: { type: string, enum: [active, someday, done, archived] }
+    HabitChoice: { type: string, enum: [keep, easier, pause] }
+    TaskList: { type: string, enum: [today, later] }
+    TaskTab: { type: string, enum: [today, later, done] }
+
+    Settings:
+      type: object
+      required: [timezone, timezoneConfirmed, weekStart, petName, adoptedOn]
+      properties:
+        timezone: { type: string, description: IANA name (TM-1) }
+        timezoneConfirmed: { type: boolean }
+        weekStart: { type: integer, minimum: 0, maximum: 6, description: 0 = Sunday (TM-4) }
+        petName: { type: string, minLength: 1, maxLength: 20 }
+        adoptedOn: { $ref: "#/components/schemas/LocalDate" }
+    SettingsPatch:
+      type: object
+      properties:
+        timezone: { type: string }
+        timezoneConfirmed: { type: boolean }
+        weekStart: { type: integer, minimum: 0, maximum: 6 }
+        petName: { type: string, minLength: 1, maxLength: 20 }
+
+    Schedule:
+      description: HB-2
+      oneOf:
+        - type: object
+          required: [kind, weekdays]
+          properties:
+            kind: { const: days }
+            weekdays:
+              type: array
+              minItems: 1
+              items: { type: integer, minimum: 0, maximum: 6 }
+        - type: object
+          required: [kind, everyN]
+          properties:
+            kind: { const: every }
+            everyN: { type: integer, minimum: 2, maximum: 7 }
+    ScheduleRow:
+      description: A schedule in force from `validFrom` on (HB-4)
+      allOf:
+        - $ref: "#/components/schemas/Schedule"
+        - type: object
+          required: [validFrom]
+          properties:
+            validFrom: { $ref: "#/components/schemas/LocalDate" }
+
+    Habit:
+      type: object
+      required: [id, goalId, name, cue, fullVersion, minimumVersion, timeOfDay, startsOn, pausedFrom, pausedUntil, archived, schedules]
+      properties:
+        id: { type: string, format: uuid }
+        goalId: { type: [string, "null"], format: uuid }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        cue: { type: [string, "null"], maxLength: 120 }
+        fullVersion: { type: [string, "null"], maxLength: 60 }
+        minimumVersion: { type: [string, "null"], maxLength: 60 }
+        timeOfDay: { $ref: "#/components/schemas/TimeOfDay" }
+        startsOn: { $ref: "#/components/schemas/LocalDate" }
+        pausedFrom: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+        pausedUntil: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+        archived: { type: boolean }
+        schedules:
+          type: array
+          items: { $ref: "#/components/schemas/ScheduleRow" }
+    HabitCreate:
+      type: object
+      required: [name, timeOfDay, schedule]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        cue: { type: [string, "null"], maxLength: 120 }
+        fullVersion: { type: [string, "null"], maxLength: 60 }
+        minimumVersion: { type: [string, "null"], maxLength: 60 }
+        timeOfDay: { $ref: "#/components/schemas/TimeOfDay" }
+        goalId: { type: [string, "null"], format: uuid }
+        schedule: { $ref: "#/components/schemas/Schedule" }
+    HabitPatch:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        cue: { type: [string, "null"], maxLength: 120 }
+        fullVersion: { type: [string, "null"], maxLength: 60 }
+        minimumVersion: { type: [string, "null"], maxLength: 60 }
+        timeOfDay: { $ref: "#/components/schemas/TimeOfDay" }
+        goalId: { type: [string, "null"], format: uuid }
+        pausedFrom: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+        pausedUntil: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+        archived: { type: boolean }
+
+    CheckIn:
+      type: object
+      required: [id, habitId, date, level, note]
+      properties:
+        id: { type: integer }
+        habitId: { type: string, format: uuid }
+        date: { $ref: "#/components/schemas/LocalDate" }
+        level: { $ref: "#/components/schemas/CheckInLevel" }
+        note: { type: [string, "null"], maxLength: 280 }
+
+    Activity:
+      type: object
+      required: [id, date, source, habitId, goalId, note, hours, topic]
+      properties:
+        id: { type: integer }
+        date: { $ref: "#/components/schemas/LocalDate" }
+        source: { $ref: "#/components/schemas/ActivitySource" }
+        habitId: { type: [string, "null"], format: uuid }
+        goalId: { type: [string, "null"], format: uuid }
+        note: { type: [string, "null"], maxLength: 280 }
+        hours: { type: [number, "null"], exclusiveMinimum: 0, maximum: 24 }
+        topic: { type: [string, "null"], maxLength: 40 }
+    LogCreate:
+      type: object
+      required: [date, note]
+      properties:
+        date: { $ref: "#/components/schemas/LocalDate" }
+        goalId: { type: [string, "null"], format: uuid }
+        note: { type: string, minLength: 1, maxLength: 280 }
+        hours: { type: [number, "null"], exclusiveMinimum: 0, maximum: 24 }
+        topic: { type: [string, "null"], maxLength: 40 }
+    ActivityStats:
+      type: object
+      required: [treats, lastActivity, doneToday]
+      properties:
+        treats: { type: integer, minimum: 0 }
+        lastActivity: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+        doneToday: { type: integer, minimum: 0 }
+
+    Task:
+      type: object
+      required: [id, title, note, goalId, list, createdOn, doneOn]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        note: { type: [string, "null"], maxLength: 2000 }
+        goalId: { type: [string, "null"], format: uuid }
+        list: { $ref: "#/components/schemas/TaskList" }
+        createdOn: { $ref: "#/components/schemas/LocalDate" }
+        doneOn: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+    TaskCreate:
+      type: object
+      required: [title, list]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        list: { $ref: "#/components/schemas/TaskList" }
+    TaskPatch:
+      type: object
+      properties:
+        note: { type: [string, "null"], maxLength: 2000 }
+        list: { $ref: "#/components/schemas/TaskList" }
+        createdOn: { $ref: "#/components/schemas/LocalDate" }
+
+    Checkpoint:
+      type: object
+      required: [id, goalId, title, position, doneOn]
+      properties:
+        id: { type: string, format: uuid }
+        goalId: { type: string, format: uuid }
+        title: { type: string, minLength: 1, maxLength: 120 }
+        position: { type: integer }
+        doneOn: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+    Chapter:
+      type: object
+      required: [id, goalId, title, closedOn, lastActivityId, activityCount, hours]
+      properties:
+        id: { type: string, format: uuid }
+        goalId: { type: string, format: uuid }
+        title: { type: string, minLength: 1, maxLength: 120 }
+        closedOn: { $ref: "#/components/schemas/LocalDate" }
+        lastActivityId: { type: integer }
+        activityCount: { type: integer }
+        hours: { type: number }
+    Goal:
+      type: object
+      required: [id, slug, name, why, becoming, targetDate, ifHardObstacle, ifHardPlan, status, checkpoints]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string, description: Unique per user; used by the hash tag in quick add (TK-3) }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        why: { type: [string, "null"], maxLength: 500 }
+        becoming: { type: [string, "null"], maxLength: 60 }
+        targetDate: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+        ifHardObstacle: { type: [string, "null"], maxLength: 280 }
+        ifHardPlan: { type: [string, "null"], maxLength: 280 }
+        status: { $ref: "#/components/schemas/GoalStatus" }
+        checkpoints:
+          type: array
+          items: { $ref: "#/components/schemas/Checkpoint" }
+    GoalPatch:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        why: { type: [string, "null"], maxLength: 500 }
+        becoming: { type: [string, "null"], maxLength: 60 }
+        targetDate: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
+        ifHardObstacle: { type: [string, "null"], maxLength: 280 }
+        ifHardPlan: { type: [string, "null"], maxLength: 280 }
+        status: { $ref: "#/components/schemas/GoalStatus" }
+    GoalActivity:
+      type: object
+      required: [recent, chapter]
+      properties:
+        recent:
+          type: array
+          items: { $ref: "#/components/schemas/Activity" }
+        chapter:
+          type: object
+          required: [count, hours]
+          properties:
+            count: { type: integer }
+            hours: { type: number }
+
+    Review:
+      type: object
+      required: [id, weekStartOn, reflection, habitChoices, focusTaskIds, completedAt]
+      properties:
+        id: { type: string, format: uuid }
+        weekStartOn: { $ref: "#/components/schemas/LocalDate" }
+        reflection: { type: [string, "null"], maxLength: 2000 }
+        habitChoices:
+          type: object
+          description: Habit id to the choice made in step 2 (RV-3)
+          additionalProperties: { $ref: "#/components/schemas/HabitChoice" }
+        focusTaskIds:
+          type: array
+          maxItems: 3
+          items: { type: string, format: uuid }
+        completedAt: { type: [string, "null"], format: date-time }
+    ReviewComplete:
+      type: object
+      required: [reflection, choices, focusTaskIds]
+      properties:
+        reflection: { type: string, maxLength: 2000 }
+        choices:
+          type: object
+          additionalProperties: { $ref: "#/components/schemas/HabitChoice" }
+        focusTaskIds:
+          type: array
+          maxItems: 3
+          items: { type: string, format: uuid }
