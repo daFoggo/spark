@@ -4,7 +4,7 @@ How `apps/web` looks and behaves: color, type, spacing, responsive layout, compo
 follows [claude.dev](https://claude.dev) (measured on 2026-10-19 at 1440px, 1024px, 768px and 375px). Every value below
 was snapped to Tailwind's default scale. Tokens live in `packages/ui/src/styles/globals.css`, components in
 `packages/ui/src/components` (shadcn, style `base-lyra`). An illustrated, interactive version of this guide (live
-components, motion demos, dashboard demo) lives in [design-system/spark-design-system.html](design-system/spark-design-system.html)
+components, logo, motion demos, dashboard demo with the icon rail) lives in [design-system/spark-design-system.html](design-system/spark-design-system.html)
 and is published as the "Spark Design System" artifact (https://claude.ai/artifact/3HTHeDuJCvVQbNCRHM37mC).
 When the two disagree, this file wins.
 

@@ -22,7 +22,7 @@
   --paper:#faf9f5; --paper-2:#e3dacc;
   --line:#faf9f529; --line-soft:#faf9f517; --hover-row:#faf9f50b; --chip-fill:#faf9f50d;
   --syn-purple:#c792ea; --syn-blue:#82aaff; --syn-green:#c3e88d; --syn-cyan:#89ddff;
-  --diff-add:#9ac29a; --diff-del:#c29a9a;
+  --diff-add:#9ac29a; --diff-del:#c29a9a; --diff-add-bg:#78be7812; --diff-del-bg:#be787812;
   --sans:"Geist","Helvetica Neue",Arial,sans-serif;
   --serif:"STIX Two Text","STIX Two",Georgia,"Times New Roman",serif;
   --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -36,7 +36,7 @@
   --accent:#c15f3c; --accent-deep:#a94e2f; --accent-ink:#a94e2f; --paper:#141413; --paper-2:#2a2927;
   --line:#14141338; --line-soft:#1414131c; --hover-row:#1414130d; --chip-fill:#1414130a;
   --syn-purple:#914dbe; --syn-blue:#3065d7; --syn-green:#567527; --syn-cyan:#16749a;
-  --diff-add:#3e7a3e; --diff-del:#a04545;
+  --diff-add:#3e7a3e; --diff-del:#a04545; --diff-add-bg:#50965017; --diff-del-bg:#b45a5a17;
 }}
 :root[data-theme="light"]{
   color-scheme:light;
@@ -45,7 +45,7 @@
   --accent:#c15f3c; --accent-deep:#a94e2f; --accent-ink:#a94e2f; --paper:#141413; --paper-2:#2a2927;
   --line:#14141338; --line-soft:#1414131c; --hover-row:#1414130d; --chip-fill:#1414130a;
   --syn-purple:#914dbe; --syn-blue:#3065d7; --syn-green:#567527; --syn-cyan:#16749a;
-  --diff-add:#3e7a3e; --diff-del:#a04545;
+  --diff-add:#3e7a3e; --diff-del:#a04545; --diff-add-bg:#50965017; --diff-del-bg:#b45a5a17;
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.5;
@@ -62,8 +62,29 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:32px;
   height:var(--nav-h);background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line-soft)}
 .brand{flex:none;display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:1rem;text-decoration:none;white-space:nowrap}
-.pix{display:inline-grid;grid-template-columns:repeat(7,4px);grid-auto-rows:4px}
-.pix i{display:block}.pix i.on{background:var(--accent)}
+/* ---------- Logo: 8x8 pixel prompt + spark (AppLogo) ---------- */
+.lgm{display:inline-flex;flex:none}
+.lgm svg{display:block;shape-rendering:crispEdges}
+.lgm.sm svg{width:16px;height:16px}.lgm.md svg{width:24px;height:24px}.lgm.lg svg{width:32px;height:32px}.lgm.xl svg{width:160px;height:160px}
+.lgm .p{fill:var(--ink)}.lgm .s{fill:var(--accent)}.lgm .e{fill:var(--ink-4)}
+.lgm .x,.lgm .r{opacity:0}
+.lgm.on-tile .p,.lgm.on-tile .s,.lgm.on-tile .e{fill:var(--bg)}
+.lgm.idle .s1{animation:spark-plus 4s steps(1,end) infinite}
+.lgm.idle .x{animation:spark-cross 4s steps(1,end) infinite}
+.lgm.idle .r{animation:spark-rise 3s steps(4,end) infinite}
+.lgm.idle .r2{animation-delay:1s}.lgm.idle .r3{animation-delay:2s}
+@media (prefers-reduced-motion:no-preference){.lgm.idle .e-static{display:none}}
+@keyframes spark-plus{0%{opacity:1}70%{opacity:0}82%{opacity:1}}
+@keyframes spark-cross{0%{opacity:0}70%{opacity:1}82%{opacity:0}}
+@keyframes spark-rise{0%{opacity:0;transform:translateY(0)}25%{opacity:1}100%{opacity:0;transform:translateY(-3px)}}
+.lgw{font-family:var(--mono);font-weight:500;letter-spacing:-.025em;line-height:1}
+.lgw.sm{font-size:.875rem}.lgw.md{font-size:1.125rem}.lgw.lg{font-size:1.5rem}
+.lgf{display:inline-flex;align-items:center}.lgf.sm{gap:8px}.lgf.md{gap:10px}.lgf.lg{gap:12px}
+.lgstage{display:grid;grid-template-columns:96px repeat(3,minmax(0,1fr));align-items:center;gap:16px 24px;width:100%}
+.lgstage .rh{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.lggrid{display:block;width:100%;max-width:320px;height:auto;background:var(--bg-raised);border:1px solid var(--line-soft)}
+.lggrid .gl{stroke:var(--line-soft);stroke-width:.04}
+@media (max-width:639px){.lgstage{grid-template-columns:72px repeat(3,minmax(0,1fr));gap:12px}}
 .nav-links{flex:1;min-width:0;display:flex;justify-content:center;gap:20px;font-family:var(--mono);font-size:.75rem;letter-spacing:.025em}
 .nav-links a{text-decoration:none;color:var(--ink-3);transition:color .15s;white-space:nowrap}
 .nav-links a .k{color:var(--ink-4);margin-right:6px}
@@ -382,10 +403,12 @@ code,.code{overflow-wrap:anywhere;font-family:var(--mono);font-size:.875rem;back
 .col-b::-webkit-scrollbar{display:none}
 .dside{flex:none;width:256px;display:flex;flex-direction:column;border-right:1px solid var(--line-soft);background:var(--bg)}
 .dside .col-h{gap:8px;font-family:var(--mono);font-size:.875rem}
-.ws-sw{margin-left:auto;color:var(--ink-3)}
+.dside{transition:width .2s var(--ease-out)}
 .dside .col-b{display:flex;flex-direction:column;gap:32px;padding:24px 16px}
+.dsec{display:grid;gap:0}
 .dcol{flex:1;min-width:0;display:flex;flex-direction:column}
-.dh-logo{display:none}
+.dh-logo,.dh-sep{display:none}
+.dh-sep{font-family:var(--mono);font-size:.875rem;color:var(--ink-4)}
 .dmain{display:flex;flex-direction:column;gap:32px;padding:40px 32px 56px}
 .dpanel{flex:none;width:320px;display:flex;flex-direction:column;border-left:1px solid var(--line-soft);background:var(--bg)}
 .dpanel .col-h{justify-content:space-between;padding-inline:24px}
@@ -396,7 +419,11 @@ code,.code{overflow-wrap:anywhere;font-family:var(--mono);font-size:.875rem;back
 .dh-burger{display:none;position:relative;width:32px;height:32px;margin-left:-6px;flex:none}
 .dh-burger i{position:absolute;left:6px;right:6px;height:2px;background:var(--ink)}
 .dh-burger i:nth-child(1){top:10px}.dh-burger i:nth-child(2){top:15px}.dh-burger i:nth-child(3){top:20px}
-.crumbs{display:flex;align-items:center;gap:8px;min-width:0;font-family:var(--mono);font-size:.875rem;color:var(--ink-3);white-space:nowrap}
+.dh-burger i{transition:transform .3s var(--ease-out),opacity .2s}
+.dh-burger[aria-expanded="true"] i:nth-child(1){transform:translateY(5px) rotate(45deg)}
+.dh-burger[aria-expanded="true"] i:nth-child(2){opacity:0}
+.dh-burger[aria-expanded="true"] i:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
+.crumbs{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 0;font-family:var(--mono);font-size:.875rem;color:var(--ink-3);white-space:nowrap}
 .crumbs b{font-weight:400;color:var(--ink-4)}
 .crumbs .cur{color:var(--ink);overflow:hidden;text-overflow:ellipsis}
 .dh-r{margin-left:auto;display:flex;align-items:center;gap:16px;flex:none}
@@ -410,8 +437,13 @@ code,.code{overflow-wrap:anywhere;font-family:var(--mono);font-size:.875rem;back
 .dtree a,.dtree .tg,.dgrp a{display:flex;align-items:center;gap:8px;width:calc(100% + 16px);margin-inline:-8px;padding:6px 8px;font-family:var(--mono);font-size:.875rem;color:var(--ink-2);text-decoration:none;text-align:left;transition:color .15s,background-color .15s}
 .dtree a:hover,.dtree .tg:hover,.dgrp a:hover{color:var(--ink);background:var(--hover-row)}
 .dtree a:hover .gl,.dgrp a:hover .gl{color:var(--ink-3)}
+.dtree a:hover .ic,.dgrp a:hover .ic{color:var(--ink-2)}
+.dtree .lb,.dgrp .lb{transition:transform .2s var(--ease-out)}
+.dtree a:hover .lb,.dtree .tg:hover .lb,.dgrp a:hover .lb{transform:translateX(4px)}
 .dtree a.on{color:var(--ink);font-weight:500}
 .dtree a.on .gl{color:var(--accent)}
+.dtree a.on .ic{color:var(--ink)}
+.ic{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square;stroke-linejoin:miter;color:var(--ink-3);transition:color .15s}
 .dtree .ct{margin-left:auto;font-size:.75rem;color:var(--ink-3);font-weight:400;font-variant-numeric:tabular-nums}
 .dtree .car{margin-left:auto;font-size:.75rem;color:var(--ink-3);transition:transform .2s var(--ease-out)}
 .dtree li[aria-expanded="false"]>.tg .car{transform:rotate(-90deg)}
@@ -425,7 +457,7 @@ code,.code{overflow-wrap:anywhere;font-family:var(--mono);font-size:.875rem;back
 .dither i{position:absolute;top:0;bottom:0;left:0;background:var(--ink)}
 .usage .sub{font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
 .me{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.875rem;color:var(--ink-2)}
-.me .k{margin-left:auto;font-size:.75rem;color:var(--ink-3)}
+.me .role{margin-left:auto;font-size:.75rem;color:var(--ink-3)}
 .phead{display:grid;gap:12px}
 .ptitle{margin:0;font-size:1.5rem;font-weight:500;line-height:1.25}
 .psub{margin:0;font-size:1rem;color:var(--ink-2)}
@@ -455,21 +487,37 @@ code,.code{overflow-wrap:anywhere;font-family:var(--mono);font-size:.875rem;back
 .activity b{font-weight:500;color:var(--ink)}
 .activity time{margin-left:auto;font-family:var(--mono);font-size:.75rem;color:var(--ink-3)}
 .dp-act{margin-top:auto;display:flex;flex-wrap:wrap;gap:8px}
-@container (min-width:1280px){.dside{width:288px}}
 @container (max-width:1279px){
   .dpanel{position:absolute;top:0;right:0;bottom:0;z-index:3}
   .dash.panel-open .dscrim{display:block}
 }
 @container (max-width:1023px){
-  .dh-burger{display:block}
-  .dh-logo{display:block}
-  .dside{position:absolute;top:0;left:0;bottom:0;z-index:3;visibility:hidden;transform:translateX(-100%);transition:transform .3s var(--ease-out),visibility .3s}
-  .dash.side-open .dside{visibility:visible;transform:none}
-  .dash.side-open .dscrim{display:block}
   .dh-k .lbl{display:none}
   .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .drow{grid-template-columns:auto minmax(0,1fr) auto;row-gap:8px}
   .drow .ti{grid-column:1/-1;order:-1;white-space:normal}
+}
+@container (max-width:767px){
+  .dh-burger{display:block}
+  .dh-logo{display:inline-flex}.dh-sep{display:inline}
+  .dh-b{display:none}
+  .dside{position:absolute;top:0;left:0;bottom:0;z-index:3;visibility:hidden;transform:translateX(-100%);transition:transform .3s var(--ease-out),visibility .3s}
+  .dash.side-open .dside{visibility:visible;transform:none}
+  .dash.side-open .dscrim{display:block}
+}
+/* icon rail: [B] collapses the sidebar to 48px, only individual links stay (groups flatten) */
+@container (min-width:768px){
+  .dash.icons .dside{width:48px}
+  .dash.icons .dside .col-h{justify-content:center;padding-inline:0}
+  .dash.icons .dside .col-b{gap:16px;padding:24px 8px}
+  .dash.icons .dside .lb,.dash.icons .dside .gl,.dash.icons .dside .ct,.dash.icons .dside .car,.dash.icons .dside .tg,.dash.icons .dside .th,.dash.icons .dside .usage,.dash.icons .dside .me .role{display:none}
+  .dash.icons .dside .dsec+.dsec{border-top:1px solid var(--line-soft);padding-top:16px}
+  .dash.icons .dtree a,.dash.icons .dgrp a{justify-content:center}
+  .dash.icons .dtree li[aria-expanded="false"]>ul{display:block}
+  .dash.icons .dtree ul ul{padding-left:0}
+  .dash.icons .dtree a.on .ic{color:var(--accent)}
+  .dash.icons .dtree a.on .gl{color:var(--accent)}
+  .dash.icons .me{justify-content:center}
 }
 @container (max-width:639px){
   .dmain{padding:40px 16px 56px}
@@ -507,11 +555,24 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="i-overview" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13h5l1 3h6l1-3h5"/><path d="M3 13l3-8h12l3 8v6H3z"/></symbol>
+  <symbol id="i-cases" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13"/><path d="M9 7V4h6v3"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</defs></svg>
+
 <div class="shell">
 
 <nav class="nav" aria-label="Chính">
   <a class="brand" href="#top" aria-label="Spark Design System">
-    <span class="pix" id="logo" aria-hidden="true"></span><span>spark.ds</span>
+    <span class="lgm md idle" data-mark aria-hidden="true"></span><span class="lgw md">spark.ds</span>
   </a>
   <div class="nav-links">
     <a href="#map" class="on"><span class="k">[A]</span>CẤU TRÚC</a>
@@ -519,6 +580,7 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
     <a href="#spacing"><span class="k">[P]</span>SPACING</a>
     <a href="#responsive"><span class="k">[R]</span>RESPONSIVE</a>
     <a href="#components"><span class="k">[C]</span>COMPONENTS</a>
+    <a href="#logo"><span class="k">[O]</span>LOGO</a>
     <a href="#dashboard"><span class="k">[D]</span>DASHBOARD</a>
     <a href="#motion"><span class="k">[M]</span>MOTION</a>
     <a href="#impl"><span class="k">[I]</span>TRIỂN KHAI</a>
@@ -543,6 +605,7 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
     <a href="#spacing"><span class="k">[P]</span>SPACING</a>
     <a href="#responsive"><span class="k">[R]</span>RESPONSIVE</a>
     <a href="#components"><span class="k">[C]</span>COMPONENTS</a>
+    <a href="#logo"><span class="k">[O]</span>LOGO</a>
     <a href="#dashboard"><span class="k">[D]</span>DASHBOARD</a>
     <a href="#motion"><span class="k">[M]</span>MOTION</a>
     <a href="#impl"><span class="k">[I]</span>TRIỂN KHAI</a>
@@ -666,6 +729,7 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
           <tr><td class="mono">--line-soft</td><td><i style="background:#faf9f517"></i>ink 9%</td><td><i style="background:#1414131c"></i>ink 11%</td><td>Hairline ở light cần alpha cao hơn một chút</td></tr>
           <tr><td class="mono">--panel / --panel-2</td><td><i style="background:#161514"></i>#161514 / #121110</td><td><i style="background:#f2f0ea"></i>#f2f0ea / #edeae2</td><td>Ở dark thì panel tối hơn nền, ở light thì panel đậm hơn nền</td></tr>
           <tr><td class="mono">--syn-* (code)</td><td><i style="background:#c792ea"></i>pastel</td><td><i style="background:#914dbe"></i>saturated</td><td>Màu syntax có bộ riêng cho light, đạt AA trên #faf9f5</td></tr>
+          <tr><td class="mono">--diff-add / --diff-del</td><td><i style="background:#9ac29a"></i>#9ac29a / <i style="background:#c29a9a"></i>#c29a9a</td><td><i style="background:#3e7a3e"></i>#3e7a3e / <i style="background:#a04545"></i>#a04545</td><td>Trạng thái nhỏ (ready / blocked) và Alert success / destructive. Nền dùng tint <span class="mono">--diff-*-bg</span> (alpha khoảng 7%), chữ dùng màu đặc</td></tr>
           <tr><td class="mono">--paper (hover/CTA)</td><td><i style="background:#faf9f5"></i>#faf9f5</td><td><i style="background:#141413"></i>#141413</td><td>"Paper" là màu tương phản tối đa, nên đổi theo theme</td></tr>
         </tbody>
       </table></div>
@@ -1012,7 +1076,7 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
       <div class="cell wide" id="c-prose"><div class="ch"><span>Blog detail</span><span>header · prose · figure</span></div>
         <div class="stage" style="display:grid;gap:24px">
           <div class="prose">
-            <div class="ptile"><span class="pix" id="tile" aria-hidden="true"></span></div>
+            <div class="ptile"><span class="lgm lg on-tile" data-mark aria-hidden="true"></span></div>
             <p class="pt">How the team does code review</p>
             <p class="sf">Tối ưu cho lượng thời gian review ít nhất của con người mà không làm tăng revert hay sự cố.</p>
             <div class="metas"><div><b>AUTHOR</b><span>Ba người</span></div><div><b>CATEGORY</b><span>Engineering</span></div><div><b>PUBLISHED</b><span>Oct 15, 2026</span></div></div>
@@ -1041,13 +1105,96 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
   </div>
 </section>
 
+<!-- ================= LOGO ================= -->
+<section class="sec" id="logo">
+  <div class="rail"><div class="rail-in">
+    <span class="eyebrow">06 · LOGO</span>
+    <h2>Dấu nhắc và tia lửa</h2>
+    <p>Mark 8×8 pixel: một dấu nhắc <code>&gt;</code> màu ink và một tia lửa nhỏ màu brand, dựng bằng các <code>&lt;rect&gt;</code> nguyên pixel với <code>crispEdges</code>. Ý tưởng: mọi thứ bắt đầu từ một tia lửa nhỏ, ngay chỗ con trỏ đang chờ. Component là <code>AppLogo</code> (<code>apps/web/components/shared/app-logo.tsx</code>).</p>
+  </div></div>
+  <div class="body">
+    <div class="cgrid">
+      <div class="cell"><div class="ch"><span>Idle</span><span>motion="idle"</span></div>
+        <div class="stage" style="justify-content:space-between;align-items:flex-end"><span class="lgm xl idle" data-mark role="img" aria-label="Logo Spark"></span><button type="button" class="dh-k" id="lg-toggle" aria-pressed="true"><span>IDLE</span></button></div>
+        <div class="spec">tia lửa nháy + ↔ × · 3 tàn lửa bay lên lệch nhịp 0 / 1 / 2s · <b>steps()</b> theo từng frame · chỉ chạy dưới motion-safe, reduced motion thì đứng yên</div></div>
+      <div class="cell"><div class="ch"><span>Cấu tạo</span><span>8 × 8</span></div>
+        <div class="stage"><svg class="lggrid" viewBox="0 0 8 8" shape-rendering="crispEdges" role="img" aria-label="Lưới 8 nhân 8 của mark">
+          <path class="gl" fill="none" d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8"/>
+          <g fill="var(--ink)"><rect x="0" y="1" width="1" height="1"/><rect x="1" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="2"/><rect x="1" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/></g>
+          <g fill="var(--accent)"><rect x="5" y="2" width="1" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="5" y="4" width="1" height="1"/></g>
+          <rect x="7" y="1" width="1" height="1" fill="var(--ink-4)"/></svg></div>
+        <div class="spec">5 pixel ink (currentColor) · 5 pixel brand · 1 pixel ink-4 · mỗi pixel là một số nguyên trên lưới</div></div>
+
+      <div class="cell wide"><div class="ch"><span>Variant × size</span><span>AppLogo</span></div>
+        <div class="stage"><div class="lgstage">
+          <span></span><span class="rh">sm · 16px</span><span class="rh">md · 24px</span><span class="rh">lg · 32px</span>
+          <span class="rh">full</span>
+          <span class="lgf sm"><span class="lgm sm idle" data-mark aria-hidden="true"></span><span class="lgw sm">spark</span></span>
+          <span class="lgf md"><span class="lgm md idle" data-mark aria-hidden="true"></span><span class="lgw md">spark</span></span>
+          <span class="lgf lg"><span class="lgm lg idle" data-mark aria-hidden="true"></span><span class="lgw lg">spark</span></span>
+          <span class="rh">mark</span>
+          <span class="lgm sm idle" data-mark aria-hidden="true"></span><span class="lgm md idle" data-mark aria-hidden="true"></span><span class="lgm lg idle" data-mark aria-hidden="true"></span>
+          <span class="rh">wordmark</span>
+          <span class="lgw sm">spark</span><span class="lgw md">spark</span><span class="lgw lg">spark</span>
+        </div></div>
+        <div class="spec">mark size-4 / size-6 / size-8 (bội của lưới 8×8) · chữ mono font-medium tracking-tight text-sm/none · text-lg/none · text-2xl/none · gap-2 / 2.5 / 3</div></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Quy tắc</h3>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Quy tắc</th><th>Chi tiết</th></tr></thead>
+        <tbody>
+          <tr><td>Kích thước</td><td>Chỉ 16 / 24 / 32px (<span class="mono">size-4 / 6 / 8</span>) để mỗi pixel luôn tròn 2 / 3 / 4px. Không scale tự do.</td></tr>
+          <tr><td>Màu</td><td><span class="mono">&gt;</span> dùng <span class="mono">currentColor</span> nên theo theme, tia lửa dùng <span class="mono">brand</span>, đốm tĩnh dùng <span class="mono">ink-4</span>. Không đổi màu ở chỗ dùng. Tia lửa là màu nhận diện, không tính vào "cam một lần mỗi màn hình".</td></tr>
+          <tr><td>Variant</td><td><b>full</b> (mặc định): mark + wordmark. <b>mark</b> khi chật hoặc làm icon: sidebar thu thành dải icon, favicon. <b>wordmark</b> khi mark đã hiện ngay bên cạnh.</td></tr>
+          <tr><td>Motion</td><td><b>idle</b> là mặc định ở mọi nơi trong app (sidebar, header, auth). <b>static</b> chỉ khi cần đứng yên (in ấn, list dày). Reduced motion: đứng yên như static.</td></tr>
+          <tr><td>Bố cục</td><td>Khối <span class="mono">flex w-fit items-center</span>, không dùng inline-flex (sẽ nằm trên baseline và chừa khoảng thừa phía dưới). Chữ <span class="mono">leading-none</span> để cao đúng bằng cỡ chữ và canh giữa với mark.</td></tr>
+          <tr><td>Favicon</td><td><span class="mono">app/icon.svg</span>: cùng mark, màu cố định theo <span class="mono">prefers-color-scheme</span>.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3 class="h3">Keyframe: ngoại lệ duy nhất của "chỉ màu là custom"</h3>
+      <div class="tscroll"><table class="typetable">
+        <thead><tr><th>Token</th><th>Thời lượng</th><th>Dùng cho</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">--animate-spark-plus</td><td class="mono">4s steps(1, end) ∞</td><td>Tia lửa <span class="mono">+</span> biến mất ở 70% rồi quay lại ở 82%</td></tr>
+          <tr><td class="mono">--animate-spark-cross</td><td class="mono">4s steps(1, end) ∞</td><td>Dạng <span class="mono">×</span> hiện đúng lúc <span class="mono">+</span> tắt</td></tr>
+          <tr><td class="mono">--animate-spark-rise(-late/-later)</td><td class="mono">3s steps(4, end) ∞ · delay 0 / 1 / 2s</td><td>Tàn lửa nhích lên 3px rồi tắt</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-h"><span>Cách dùng · AppLogo</span><button data-copy="logo-code">Copy</button></div>
+<pre id="logo-code"><span class="c">// apps/web/components/shared/app-logo.tsx · bọc trong &lt;Link&gt; khi cần điều hướng</span>
+<span class="k">&lt;AppLogo</span> <span class="k">/&gt;</span>                              <span class="c">{/* full · md · idle (mặc định) */}</span>
+<span class="k">&lt;AppLogo</span> variant=<span class="v">"mark"</span> size=<span class="v">"sm"</span> <span class="k">/&gt;</span>         <span class="c">{/* chỗ chật, icon */}</span>
+<span class="k">&lt;AppLogo</span> variant=<span class="v">"wordmark"</span> <span class="k">/&gt;</span>
+<span class="k">&lt;AppLogo</span> motion=<span class="v">"static"</span> <span class="k">/&gt;</span>                <span class="c">{/* chỉ khi cần đứng yên */}</span>
+<span class="k">&lt;AppLogo</span> textClassName=<span class="v">"group-data-[collapsible=icon]:hidden"</span> <span class="k">/&gt;</span>  <span class="c">{/* thu còn mark trong sidebar */}</span>
+
+<span class="c">/* packages/ui/src/styles/globals.css · keyframe chỉ dành cho AppLogo, luôn sau motion-safe: */</span>
+<span class="k">@theme</span> {
+  --animate-spark-plus:  spark-plus 4s steps(1, end) infinite;
+  --animate-spark-cross: spark-cross 4s steps(1, end) infinite;
+  --animate-spark-rise:  spark-rise 3s steps(4, end) infinite;
+  --animate-spark-rise-late:  spark-rise 3s steps(4, end) 1s infinite;
+  --animate-spark-rise-later: spark-rise 3s steps(4, end) 2s infinite;
+}</pre>
+    </div>
+  </div>
+</section>
+
 <!-- ================= DASHBOARD ================= -->
 <section class="sec sec-dash" id="dashboard">
   <div class="rail"><div class="rail-in">
-    <span class="eyebrow">06 · DASHBOARD</span>
+    <span class="eyebrow">07 · DASHBOARD</span>
     <h2>App shell</h2>
-    <p>Mở rộng design system cho giao diện làm việc. Cây <b>TREE</b> trong bài viết của claude.dev được phóng to thành sidebar, ký tự └ thể hiện cấp bậc, mục đang mở dùng màu cam. Header gọn như một dòng lệnh, panel phải dùng lại bảng spec └ của trang Mods.</p>
-    <p>Bấm vào mục trong cây, dòng trong danh sách, và đổi độ rộng để xem shell co giãn.</p>
+    <p>Mở rộng design system cho giao diện làm việc. Cây <b>TREE</b> của claude.dev được phóng to thành sidebar gồm các <b>section có tên</b> (Workspace, Reports, Projects…). Mỗi link là <code>└ icon nhãn</code>, trang đang mở có └ màu cam. Header gọn như một dòng lệnh với breadcrumb dạng path; panel phải dùng lại bảng spec └ của trang Mods.</p>
+    <p>Bấm vào mục trong cây, dòng trong danh sách, đổi độ rộng để xem shell co giãn, và bấm <kbd>B</kbd> (hoặc <b>[B] SIDEBAR</b>) để thu sidebar về dải icon: chỉ còn từng trang riêng lẻ, nhóm trải phẳng.</p>
   </div></div>
   <div class="dash-wide">
     <div class="dash-ctrl" role="group" aria-label="Độ rộng demo">
@@ -1062,37 +1209,43 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
       <div class="dash panel-open" id="dash" style="width:1280px">
         <div class="dscrim" data-act="close"></div>
         <aside class="dside" aria-label="Điều hướng">
-          <div class="col-h"><span class="pix-dot"></span><span class="ws-n">spark</span><span class="ws-sw">▾</span></div>
+          <div class="col-h"><span class="lgf md"><span class="lgm md idle" data-mark aria-hidden="true"></span><span class="lgw md lb">spark</span></span></div>
           <div class="col-b">
-            <nav class="dtree" aria-label="Tree">
-              <span class="th">Tree</span>
-              <ul role="tree" id="tree">
-                <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="overview"><span class="gl">└</span>Overview</a></li>
-                <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="inbox"><span class="gl">└</span>Inbox<span class="ct">12</span></a></li>
-                <li role="treeitem" aria-expanded="true" class="grp">
-                  <button type="button" class="tg"><span class="gl">└</span>Cases<span class="car">▾</span></button>
-                  <ul role="group">
-                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="all cases"><span class="gl">└</span>All cases<span class="ct">86</span></a></li>
-                    <li role="treeitem" aria-selected="true"><a href="#dashboard" data-sec="cases" data-page="assigned to me" class="on"><span class="gl">└</span>Assigned to me<span class="ct">4</span></a></li>
-                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="waiting"><span class="gl">└</span>Waiting<span class="ct">7</span></a></li>
-                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="closed"><span class="gl">└</span>Closed</a></li>
-                  </ul>
-                </li>
-                <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="annotations"><span class="gl">└</span>Annotations</a></li>
-                <li role="treeitem" aria-expanded="false" class="grp">
-                  <button type="button" class="tg"><span class="gl">└</span>Reports<span class="car">▾</span></button>
-                  <ul role="group">
-                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="reports" data-page="weekly"><span class="gl">└</span>Weekly</a></li>
-                    <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="reports" data-page="quality"><span class="gl">└</span>Quality</a></li>
-                  </ul>
-                </li>
-              </ul>
-            </nav>
-            <div class="dgrp">
-              <span class="th">Projects</span>
-              <a href="#dashboard" class="pj"><span class="gl">└</span>Spark core</a>
-              <a href="#dashboard" class="pj"><span class="gl">└</span>Labeling v2</a>
-              <a href="#dashboard" class="pj add"><span class="gl">└</span>New project</a>
+            <div class="dsec">
+              <span class="th lb">Workspace</span>
+              <nav class="dtree" aria-label="Workspace">
+                <ul role="tree" id="tree">
+                  <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="overview" title="Overview"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-overview"/></svg><span class="lb">Overview</span></a></li>
+                  <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="inbox" title="Inbox"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><span class="lb">Inbox</span><span class="ct">12</span></a></li>
+                  <li role="treeitem" aria-expanded="true" class="grp">
+                    <button type="button" class="tg"><span class="gl">└</span><span class="lb">Cases</span><span class="car">▾</span></button>
+                    <ul role="group">
+                      <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="all cases" title="All cases"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-cases"/></svg><span class="lb">All cases</span><span class="ct">86</span></a></li>
+                      <li role="treeitem" aria-selected="true"><a href="#dashboard" data-sec="cases" data-page="assigned to me" title="Assigned to me" class="on"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span class="lb">Assigned to me</span><span class="ct">4</span></a></li>
+                      <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="waiting" title="Waiting"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span class="lb">Waiting</span><span class="ct">7</span></a></li>
+                      <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="cases" data-page="closed" title="Closed"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span class="lb">Closed</span></a></li>
+                    </ul>
+                  </li>
+                  <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="workspace" data-page="annotations" title="Annotations"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg><span class="lb">Annotations</span></a></li>
+                </ul>
+              </nav>
+            </div>
+            <div class="dsec">
+              <span class="th lb">Reports</span>
+              <nav class="dtree" aria-label="Reports">
+                <ul role="tree">
+                  <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="reports" data-page="weekly" title="Weekly"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><span class="lb">Weekly</span></a></li>
+                  <li role="treeitem" aria-selected="false"><a href="#dashboard" data-sec="reports" data-page="quality" title="Quality"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span class="lb">Quality</span></a></li>
+                </ul>
+              </nav>
+            </div>
+            <div class="dsec">
+              <span class="th lb">Projects</span>
+              <div class="dgrp">
+                <a href="#dashboard" class="pj" title="Spark core"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span class="lb">Spark core</span></a>
+                <a href="#dashboard" class="pj" title="Labeling v2"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span class="lb">Labeling v2</span></a>
+                <a href="#dashboard" class="pj add" title="New project"><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="lb">New project</span></a>
+              </div>
             </div>
             <div class="dfoot">
               <div class="usage">
@@ -1100,18 +1253,19 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
                 <div class="meter"><div class="dither" role="img" aria-label="34% đã dùng"><i style="width:34%"></i></div><span>34%</span></div>
                 <span class="sub">1,204 / 3,500 tasks · reset Nov 01</span>
               </div>
-              <div class="me"><span class="gl">└</span>Giang N.<span class="k">[,]</span></div>
+              <div class="me" title="Giang N."><span class="gl">└</span><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span class="lb">Giang N.</span><span class="role">[admin]</span></div>
             </div>
           </div>
         </aside>
         <div class="dcol">
           <header class="col-h dh">
             <button class="dh-burger" type="button" aria-label="Mở sidebar" aria-expanded="false" data-act="side"><i></i><i></i><i></i></button>
-            <span class="pix-dot dh-logo"></span>
-            <nav class="crumbs" aria-label="Breadcrumb"><span>spark</span><b>/</b><span id="cr-sec">cases</span><b>/</b><span class="cur" id="cr-page">assigned to me</span></nav>
+            <span class="lgf sm dh-logo"><span class="lgm sm idle" data-mark aria-hidden="true"></span><span class="lgw sm">spark</span></span><b class="dh-sep" aria-hidden="true">/</b>
+            <nav class="crumbs" aria-label="Breadcrumb"><span>dashboard</span><b>/</b><span id="cr-sec">cases</span><b>/</b><span class="cur" id="cr-page">assigned to me</span></nav>
             <div class="dh-r">
-              <button type="button" class="dh-k" data-act="search"><span class="k">[/]</span><span class="lbl">SEARCH</span></button>
+              <button type="button" class="dh-k dh-b" data-act="rail" aria-pressed="true"><span class="k">[B]</span><span class="lbl">SIDEBAR</span></button>
               <button type="button" class="dh-k" data-act="panel" aria-pressed="true"><span class="k">[I]</span><span class="lbl">INSPECTOR</span></button>
+              <button type="button" class="dh-k" data-act="theme"><span class="k">[D]</span><span class="lbl">THEME</span></button>
               <button type="button" class="btn btn-sm">New case</button>
             </div>
           </header>
@@ -1170,8 +1324,8 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
         <thead><tr><th>Vùng</th><th>Tailwind / component</th><th>Nội dung</th></tr></thead>
         <tbody>
           <tr><td>Shell</td><td class="mono">flex h-dvh · mỗi cột flex flex-col</td><td>Ba cột cao hết màn hình. Mỗi cột gồm một ô header và một vùng thân tự cuộn (ẩn thanh cuộn)</td></tr>
-          <tr><td>Hàng header</td><td class="mono">&lt;ColumnHeader&gt; · h-14 border-b px-4 · dùng chung cho mọi cột</td><td>Sidebar: logo + workspace. Main: breadcrumb, lệnh <span class="mono">[/]</span> <span class="mono">[I]</span>, <span class="mono">&lt;Button size="sm"&gt;</span>. Panel: id + <span class="mono">[ESC]</span>. Hairline chạy liền một đường</td></tr>
-          <tr><td>Sidebar</td><td class="mono">shadcn &lt;Sidebar&gt; · w-64 → xl:w-72 · thân px-4 py-6 gap-8</td><td>Header là logo. Thân gồm TREE, Projects, cuối cùng là Usage và tài khoản</td></tr>
+          <tr><td>Hàng header</td><td class="mono">&lt;ColumnHeader&gt; · h-14 border-b px-4 · dùng chung cho mọi cột</td><td>Sidebar: logo (thu còn mark). Main: burger + logo (dưới md), breadcrumb dạng path, lệnh <span class="mono">[B]</span> <span class="mono">[I]</span> <span class="mono">[D]</span> (thêm <span class="mono">[/]</span> khi có tìm kiếm), <span class="mono">&lt;Button size="sm"&gt;</span>. Panel: id + <span class="mono">[ESC]</span>. Hairline chạy liền một đường</td></tr>
+          <tr><td>Sidebar</td><td class="mono">shadcn &lt;Sidebar collapsible="icon"&gt; · w-64 ⇄ 48px · thân px-4 py-6 gap-8</td><td>Header là logo. Thân gồm các section có tên (mỗi section là một tree), cuối cùng là Usage và tài khoản. Dựng bằng composite, không sửa file shadcn</td></tr>
           <tr><td>Main</td><td class="mono">px-4 sm:px-8 pt-10 pb-14 · max-w-5xl</td><td>Page head (gap-3) → metrics → tabs + list, các khối cách nhau gap-8</td></tr>
           <tr><td>Panel phải</td><td class="mono">w-80 border-l · thân p-6 gap-8 · &lt;xl: shadcn &lt;Sheet side="right"&gt;</td><td>Header là id của bản ghi. Thân gồm tiêu đề, spec └, activity └, hành động size="sm". Thêm panel mới thì thêm một cột có ColumnHeader</td></tr>
         </tbody>
@@ -1183,10 +1337,11 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
       <div class="tscroll"><table class="typetable">
         <thead><tr><th>Trạng thái</th><th>Hiển thị</th><th>Tailwind</th></tr></thead>
         <tbody>
-          <tr><td>Mặc định</td><td>└ ink-4 · chữ ink-2</td><td class="mono">font-mono text-sm py-1.5 text-ink-2</td></tr>
-          <tr><td>Hover</td><td>Chữ ink, nền hover-row, dịch phải 4px</td><td class="mono">hover:bg-accent hover:text-foreground · translate-x-1 duration-200</td></tr>
-          <tr><td>Đang mở</td><td><b>└ chuyển sang màu cam</b>, chữ ink, font-medium</td><td class="mono">aria-current="page" · text-foreground font-medium · glyph text-brand</td></tr>
-          <tr><td>Nhóm</td><td>Mũi tên ▾ xoay khi đóng, con thụt vào pl-4</td><td class="mono">aria-expanded · rotate-0 / -rotate-90 duration-200</td></tr>
+          <tr><td>Mặc định</td><td>└ ink-4 · icon ink-3 · chữ ink-2</td><td class="mono">font-mono text-sm py-1.5 text-ink-2 · icon size-4</td></tr>
+          <tr><td>Hover</td><td>Chữ ink và dịch phải 4px, icon ink-2, nền hover-row</td><td class="mono">hover:bg-accent hover:text-foreground · translate-x-1 duration-200</td></tr>
+          <tr><td>Đang mở</td><td><b>└ chuyển sang màu cam</b>, icon và chữ ink, font-medium</td><td class="mono">aria-current="page" · text-foreground font-medium · glyph text-brand</td></tr>
+          <tr><td>Nhóm</td><td>└ + nhãn + mũi tên ▾ xoay khi đóng (nhóm không có icon), con thụt vào pl-4</td><td class="mono">aria-expanded · rotate-0 / -rotate-90 duration-200</td></tr>
+          <tr><td>Dải icon</td><td>Chỉ còn icon; trang đang mở thì icon cam. Section thành đường kẻ, nhóm trải phẳng, tooltip bên phải</td><td class="mono">group-data-[collapsible=icon]:* · &lt;Tooltip side="right"&gt;</td></tr>
           <tr><td>Bộ đếm</td><td>Mono, căn phải, tabular</td><td class="mono">ml-auto text-xs text-ink-3 tabular-nums</td></tr>
           <tr><td>Focus</td><td>Outline 1px</td><td class="mono">focus-visible:outline outline-offset-2</td></tr>
         </tbody>
@@ -1198,11 +1353,11 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
       <div class="tscroll"><table class="typetable matrix">
         <thead><tr><th>Vùng</th><th>&lt; lg</th><th>lg → xl</th><th>≥ xl</th></tr></thead>
         <tbody>
-          <tr><td>Sidebar</td><td>Ẩn; burger ở header mở Sheet trái (offcanvas)</td><td>Cố định w-64</td><td>Cố định w-72</td></tr>
+          <tr><td>Sidebar</td><td>Ẩn dưới md: burger ở header mở Sheet trái. Từ md cố định w-64</td><td colspan="2">Cố định w-64; <span class="mono">[B]</span> thu về dải icon 48px</td></tr>
           <tr><td>Panel phải</td><td>Sheet phải, full width dưới sm</td><td>Sheet phải w-80, mở bằng [I] hoặc khi chọn dòng</td><td>Cột cố định w-80, đóng/mở bằng [I]</td></tr>
           <tr><td>Dòng danh sách</td><td>2 hàng: tiêu đề / id · trạng thái · thời gian</td><td colspan="2">1 hàng: id · tiêu đề · trạng thái · thời gian</td></tr>
           <tr><td>Metrics</td><td>grid-cols-2</td><td colspan="2">grid-cols-4</td></tr>
-          <tr><td>Header</td><td>Logo chuyển sang header chính cạnh burger; ẩn nhãn, giữ [/] [I]</td><td colspan="2">Logo ở header của sidebar, đầy đủ nhãn</td></tr>
+          <tr><td>Header</td><td>Dưới md: burger + logo + path ở header chính; ẩn nhãn lệnh, giữ [I] [D]</td><td colspan="2">Logo ở header của sidebar (còn mark khi thu); lệnh đầy đủ nhãn</td></tr>
         </tbody>
       </table></div>
     </div>
@@ -1211,66 +1366,62 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
       <h3 class="h3">Nguyên tắc cho dashboard</h3>
       <div class="ux">
         <div><h4>Dày hơn một tầng, không chật hơn</h4><p>App dùng chung T1–T4. Ở vòng ngoài thì mỗi tầng hạ một bậc: vùng trang pt-10 thay cho pt-20, giữa các section gap-10 thay cho gap-14. Vẫn thoáng, nhưng hợp để thao tác lâu.</p></div>
-        <div><h4>Cây là bản đồ, không phải menu</h4><p>Tree hiển thị đúng cấu trúc dữ liệu (workspace → nhóm → view) bằng └ và thụt lề. Không dùng icon trang trí; chỉ có bộ đếm là thông tin thêm.</p></div>
-        <div><h4>Cam chỉ có một chỗ</h4><p>Trên toàn màn hình, màu brand chỉ xuất hiện ở glyph của mục đang mở và ở mark quan trọng nhất trong biểu đồ. Trạng thái dùng chấm nhỏ, không tô nền.</p></div>
+        <div><h4>Cây là bản đồ, không phải menu</h4><p>Tree hiển thị đúng cấu trúc dữ liệu (workspace → nhóm → view) bằng └ và thụt lề. Icon chỉ có chức năng: mỗi trang một icon để vẫn nhận ra khi sidebar thu gọn; nhóm và section không có icon.</p></div>
+        <div><h4>Cam chỉ có một chỗ</h4><p>Trên toàn màn hình, màu brand chỉ xuất hiện ở glyph của mục đang mở (icon của nó khi sidebar thu về dải icon) và ở mark quan trọng nhất trong biểu đồ. Tia lửa của logo là màu nhận diện, không tính. Trạng thái dùng chấm nhỏ, không tô nền.</p></div>
         <div><h4>Không có thẻ số to</h4><p>Metrics là một dòng dl: nhãn mono xs, giá trị text-2xl. Ngăn cách bằng khoảng trắng, không đóng khung.</p></div>
         <div><h4>Panel là ngữ cảnh, không phải trang</h4><p>Chọn một dòng thì panel cập nhật mà không đổi route. Trên màn hẹp panel thành Sheet, đóng bằng Esc hoặc [I].</p></div>
-        <div><h4>Mọi thứ có phím tắt</h4><p>Đưa ngoặc phím từ nav của claude.dev vào app: [/] tìm, [I] inspector, [,] cài đặt, mũi tên để đi trong tree, ←/→ để thu/mở nhóm.</p></div>
+        <div><h4>Thu gọn mà không biến mất</h4><p>Sidebar thu về dải icon 48px thay vì ẩn hẳn: mỗi trang vẫn cách một click, tooltip gọi tên icon, section thành đường kẻ mảnh, nhóm trải phẳng thành từng link. Mép trái là vùng bấm để mở lại.</p></div>
+        <div><h4>Mọi thứ có phím tắt</h4><p>Đưa ngoặc phím từ nav của claude.dev vào app: [B] thu/mở sidebar, [D] đổi theme, [/] tìm, [I] inspector, mũi tên để đi trong tree, ←/→ để thu/mở nhóm. Bỏ qua khi đang gõ hoặc giữ phím bổ trợ.</p></div>
       </div>
     </div>
 
     <div class="codeblock">
-      <div class="cb-h"><span>Công thức · shell với shadcn Sidebar + Sheet</span><button data-copy="dash-code">Copy</button></div>
-<pre id="dash-code"><span class="c">// pnpm dlx shadcn@latest add sidebar sheet badge tabs   (chạy trong apps/web)</span>
+      <div class="cb-h"><span>Công thức · shell dựng trên shadcn Sidebar (không sửa file gốc)</span><button data-copy="dash-code">Copy</button></div>
+<pre id="dash-code"><span class="c">// pnpm dlx shadcn@latest add sidebar dropdown-menu breadcrumb badge   (chạy trong apps/web)</span>
+<span class="c">// file shadcn giữ nguyên để migrate về sau; Spark dựng trên chúng ở apps/web/components/layout</span>
 <span class="k">&lt;SidebarProvider&gt;</span>
-  <span class="k">&lt;Sidebar</span> collapsible=<span class="v">"offcanvas"</span><span class="k">&gt;</span>                 <span class="c">{/* &lt; lg tự thành Sheet trái */}</span>
-    <span class="k">&lt;ColumnHeader&gt;</span>&lt;Logo /&gt;&lt;WorkspaceSwitcher /&gt;<span class="k">&lt;/ColumnHeader&gt;</span>   <span class="c">{/* cùng h-14 với 2 cột kia */}</span>
-    <span class="k">&lt;SidebarContent</span> className=<span class="v">"gap-8"</span><span class="k">&gt;</span>               <span class="c">{/* T4 giữa các nhóm */}</span>
-      <span class="k">&lt;SidebarGroup&gt;</span>
-        <span class="k">&lt;SidebarGroupLabel</span> className=<span class="v">"font-mono uppercase tracking-wider"</span><span class="k">&gt;</span>Tree<span class="k">&lt;/SidebarGroupLabel&gt;</span>
-        <span class="k">&lt;SidebarMenu&gt;</span>
-          <span class="k">&lt;SidebarMenuItem&gt;</span>
-            <span class="k">&lt;SidebarMenuButton</span> size=<span class="v">"default"</span> isActive render={<span class="k">&lt;Link</span> href=<span class="v">"/cases/mine"</span> <span class="k">/&gt;</span>}<span class="k">&gt;</span>
-              <span class="k">&lt;TreeGlyph /&gt;</span>Assigned to me                    <span class="c">{/* └ đổi sang text-brand khi active */}</span>
-            <span class="k">&lt;/SidebarMenuButton&gt;</span>
-            <span class="k">&lt;SidebarMenuBadge&gt;</span>4<span class="k">&lt;/SidebarMenuBadge&gt;</span>
-          <span class="k">&lt;/SidebarMenuItem&gt;</span>
-        <span class="k">&lt;/SidebarMenu&gt;</span>
-      <span class="k">&lt;/SidebarGroup&gt;</span>
-    <span class="k">&lt;/SidebarContent&gt;</span>
-    <span class="k">&lt;SidebarFooter&gt;</span>&lt;UsageMeter /&gt;<span class="k">&lt;/SidebarFooter&gt;</span>
-  <span class="k">&lt;/Sidebar&gt;</span>
-  <span class="k">&lt;SidebarInset</span> className=<span class="v">"flex h-dvh flex-row"</span><span class="k">&gt;</span>
-    <span class="k">&lt;div</span> className=<span class="v">"flex min-w-0 flex-1 flex-col"</span><span class="k">&gt;</span>
-      <span class="k">&lt;ColumnHeader&gt;</span>
-        <span class="k">&lt;SidebarTrigger</span> className=<span class="v">"lg:hidden"</span> <span class="k">/&gt;</span><span class="k">&lt;Logo</span> className=<span class="v">"lg:hidden"</span> <span class="k">/&gt;</span><span class="k">&lt;Breadcrumbs /&gt;</span><span class="k">&lt;HeaderCommands /&gt;</span>
-      <span class="k">&lt;/ColumnHeader&gt;</span>
-      <span class="k">&lt;main</span> className=<span class="v">"no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pt-10 pb-14 sm:px-8"</span><span class="k">/&gt;</span>
-    <span class="k">&lt;/div&gt;</span>
-    <span class="k">&lt;aside</span> className=<span class="v">"hidden w-80 shrink-0 flex-col border-l xl:flex"</span><span class="k">&gt;</span>
-      <span class="k">&lt;ColumnHeader&gt;</span>CASE-1042 [ESC]<span class="k">&lt;/ColumnHeader&gt;</span>
-      <span class="k">&lt;div</span> className=<span class="v">"no-scrollbar flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto p-6"</span><span class="k">/&gt;</span>
-    <span class="k">&lt;/aside&gt;</span>                                        <span class="c">{/* &lt; xl: cùng nội dung trong &lt;Sheet side="right"&gt; */}</span>
+  <span class="k">&lt;AppSidebar&gt;</span>                                         <span class="c">{/* &lt;Sidebar collapsible="icon"&gt; + &lt;SidebarRail /&gt; */}</span>
+    <span class="k">&lt;ColumnHeader</span> className=<span class="v">"group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"</span><span class="k">&gt;</span>
+      <span class="k">&lt;AppLogo</span> textClassName=<span class="v">"group-data-[collapsible=icon]:hidden"</span> <span class="k">/&gt;</span>   <span class="c">{/* thu còn mark */}</span>
+    <span class="k">&lt;/ColumnHeader&gt;</span>
+    <span class="k">&lt;AppSidebarBody&gt;</span>
+      <span class="k">&lt;AppSidebarSection</span> label=<span class="v">"Workspace"</span><span class="k">&gt;</span>               <span class="c">{/* một section = một tree; thêm section tuỳ ý */}</span>
+        <span class="k">&lt;NavTree</span> entries={section.entries} <span class="k">/&gt;</span>             <span class="c">{/* └ + icon + nhãn; thu còn icon + tooltip */}</span>
+      <span class="k">&lt;/AppSidebarSection&gt;</span>
+      <span class="k">&lt;AppSidebarSection</span> label=<span class="v">"Account"</span> pinned<span class="k">&gt;</span>&lt;UserMenu /&gt;<span class="k">&lt;/AppSidebarSection&gt;</span>
+    <span class="k">&lt;/AppSidebarBody&gt;</span>
+  <span class="k">&lt;/AppSidebar&gt;</span>
+  <span class="k">&lt;SidebarInset&gt;</span>
+    <span class="k">&lt;ColumnHeader&gt;</span>
+      <span class="k">&lt;MainHeaderStart&gt;</span>&lt;DashboardBreadcrumb /&gt;<span class="k">&lt;/MainHeaderStart&gt;</span> <span class="c">{/* dưới md: burger + logo + / */}</span>
+      <span class="k">&lt;SidebarCommand /&gt;</span> <span class="k">&lt;ThemeCommand /&gt;</span>                  <span class="c">{/* [B] SIDEBAR · [D] THEME, kèm phím tắt */}</span>
+    <span class="k">&lt;/ColumnHeader&gt;</span>
+    <span class="k">&lt;main</span> className=<span class="v">"no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pt-10 pb-14 sm:px-8"</span><span class="k">/&gt;</span>
   <span class="k">&lt;/SidebarInset&gt;</span>
+<span class="k">&lt;/SidebarProvider&gt;</span>
+
+<span class="c">// nav là dữ liệu; icon gọi bằng tên vì entries đi từ Server Component sang NavTree (client)</span>
+<span class="c">// config/navigation.ts</span>
+{ title: <span class="v">"Account"</span>, href: ACCOUNT_PATH, icon: <span class="v">"account"</span>, permission: <span class="v">"settings:view"</span> }
+<span class="c">// components/layout/nav-icons.tsx · Record&lt;NavIconName, Icon&gt; nên thiếu icon là lỗi typecheck</span>
 
 <span class="c">// một component, một chiều cao: mọi header luôn thẳng hàng</span>
-<span class="k">function</span> <span class="p">ColumnHeader</span>({ children }) {
-  <span class="k">return</span> <span class="k">&lt;div</span> className=<span class="v">"flex h-14 shrink-0 items-center gap-4 border-b px-4"</span><span class="k">&gt;</span>{children}<span class="k">&lt;/div&gt;</span>
+<span class="k">function</span> <span class="p">ColumnHeader</span>({ className, children }) {
+  <span class="k">return</span> <span class="k">&lt;div</span> className=<span class="v">{cn("flex h-14 shrink-0 items-center gap-4 border-b px-4", className)}</span><span class="k">&gt;</span>{children}<span class="k">&lt;/div&gt;</span>
 }
-<span class="c">/* globals.css: @utility no-scrollbar { scrollbar-width: none; &amp;::-webkit-scrollbar { display: none } } */</span>
-<span class="k">&lt;/SidebarProvider&gt;</span></pre>
+<span class="c">/* globals.css: @utility no-scrollbar { scrollbar-width: none; &amp;::-webkit-scrollbar { display: none } } */</span></pre>
     </div>
 
-    <div class="warn"><b>Câu hỏi còn mở:</b> (0) Thanh cuộn bị ẩn bằng utility <code>no-scrollbar</code>, nhưng vùng thân vẫn cuộn bằng chuột, phím và cảm ứng. (1) Shadcn Sidebar mặc định rộng 16rem (w-64). Muốn w-72 ở xl thì phải đổi biến <code>--sidebar-width</code> trong theme, chứ không override bằng className. (2) Tree sâu hơn 2 cấp có nên cho phép không? Đề xuất tối đa 2 cấp, sâu hơn thì đưa vào trang con. (3) Bộ chọn workspace: dropdown hay chuyển hẳn sang trang riêng?</div>
+    <div class="warn"><b>Câu hỏi còn mở:</b> (0) Thanh cuộn bị ẩn bằng utility <code>no-scrollbar</code>, nhưng vùng thân vẫn cuộn bằng chuột, phím và cảm ứng. (1) Shadcn Sidebar rộng cố định 16rem (w-64). Muốn w-72 ở xl thì phải đổi biến <code>--sidebar-width</code> trong theme, chứ không override bằng className; hiện chưa dùng. (2) Shadcn chuyển sang Sheet ở 768px (hook <code>useIsMobile</code> cố định), nên sidebar ẩn dưới <b>md</b> chứ không phải lg. (3) Tree sâu hơn 2 cấp có nên cho phép không? Đề xuất tối đa 2 cấp, sâu hơn thì đưa vào trang con. (4) Inspector chưa dựng trong app: thêm một cột có <code>ColumnHeader</code> khi có list đầu tiên.</div>
   </div>
 </section>
 
 <!-- ================= MOTION ================= -->
 <section class="sec" id="motion">
   <div class="rail"><div class="rail-in">
-    <span class="eyebrow">07 · MOTION</span>
+    <span class="eyebrow">08 · MOTION</span>
     <h2>Chuyển động</h2>
-    <p>Chỉ dùng duration và easing có sẵn trong Tailwind: <code>ease-out</code> cho đi vào, <code>ease-in-out</code> cho đi ra. Transition màu ngắn (<code>duration-150</code>), transform dùng <code>duration-200</code>/<code>300</code>. Site gốc dùng expo-out, mình đã thay bằng ease-out mặc định. Khi người dùng bật <code>prefers-reduced-motion</code> thì tắt hết animation.</p>
+    <p>Chỉ dùng duration và easing có sẵn trong Tailwind: <code>ease-out</code> cho đi vào, <code>ease-in-out</code> cho đi ra. Transition màu ngắn (<code>duration-150</code>), transform dùng <code>duration-200</code>/<code>300</code>. Site gốc dùng expo-out, mình đã thay bằng ease-out mặc định. Khi người dùng bật <code>prefers-reduced-motion</code> thì tắt hết animation. Ngoại lệ duy nhất cần keyframe riêng là logo (xem mục Logo).</p>
     <svg class="curve" viewBox="0 0 200 56" aria-label="Đường cong ease-out">
       <line x1="10" y1="48" x2="190" y2="48"/><line x1="10" y1="6" x2="10" y2="48"/>
       <path d="M10 48 C 10 48, 46 6, 190 6"/>
@@ -1280,10 +1431,10 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
   <div class="body">
     <p class="eyebrow" style="margin:0">Click vào ô demo bên phải để chạy lại animation.</p>
     <div class="mlist">
-      <div class="mrow"><div><h4>Intro gõ chữ</h4><p>Wordmark được gõ từng ký tự theo steps, caret nhấp nháy, rồi một lớp veil mờ đi để lộ trang.</p></div>
+      <div class="mrow"><div><h4>Intro gõ chữ</h4><p>Wordmark được gõ từng ký tự theo steps, caret nhấp nháy, rồi một lớp veil mờ đi để lộ trang. Chưa dùng trong app vì cần keyframe riêng.</p></div>
         <div class="val">chữ gõ <b>duration-1000 steps</b> · caret <b>1000ms</b> · veil <b>duration-500</b></div>
         <div class="mdemo" data-run="d-type"><div class="d-type" id="d-type"><span>claude.dev</span><i class="caret" style="width:.45em"></i></div></div></div>
-      <div class="mrow"><div><h4>Stagger vào trang</h4><p>Các khối <code>.stag</code> trượt lên rồi hiện ra theo thứ tự. Độ trễ = <code>--stag-at + --i × 75ms</code>.</p></div>
+      <div class="mrow"><div><h4>Stagger vào trang</h4><p>Các khối <code>.stag</code> trượt lên rồi hiện ra theo thứ tự. Độ trễ = <code>--stag-at + --i × 75ms</code>. Trong app là component <code>Stagger</code>: các con trực tiếp trượt lên 8px, mỗi con trễ thêm một bước (dashboard, cột form auth).</p></div>
         <div class="val"><b>duration-500 ease-out</b> · bước <b>delay-75</b> × i</div>
         <div class="mdemo" data-run="d-stag"><div class="d-stag" id="d-stag"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i></div></div></div>
       <div class="mrow"><div><h4>Reveal khi cuộn</h4><p>Các phần tử có <code>[data-reveal]</code> chạy reveal-up 14px. Ngoài ra có các biến thể fade, left và right với biên độ 18px.</p></div>
@@ -1295,12 +1446,18 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
       <div class="mrow"><div><h4>Hover dòng bài</h4><p>Nền chuyển sang paper, thời lượng dịch trái, mũi tên trượt vào, các dòng còn lại mờ xuống 35%. Xem demo ở mục Components.</p></div>
         <div class="val">bg <b>duration-150</b> · shift <b>duration-200</b> · dòng khác <b>duration-300</b></div>
         <div class="mdemo"><a class="post" href="#motion" style="width:100%;border:0"><span class="ti" style="font-size:.875rem">Hover vào tôi</span><span class="t">9m</span></a></div></div>
-      <div class="mrow"><div><h4>Ambient</h4><p>Mascot trôi trong footer (7s). Ticker chạy tuyến tính 28s và dừng lại khi hover.</p></div>
+      <div class="mrow"><div><h4>Ambient</h4><p>Mascot trôi trong footer (7s). Ticker chạy tuyến tính 28s và dừng lại khi hover. Chưa dùng trong app; chỉ có logo idle là chuyển động nền.</p></div>
         <div class="val">float <b>7s ease-in-out ∞</b> · ticker <b>linear</b> (keyframe riêng)</div>
         <div class="mdemo" style="grid-template-columns:40px 1fr;gap:12px;padding:0 12px;cursor:default"><div class="d-float"></div><div class="d-ticker"><div><span>/help · /posts · /read · /mods · /changelog ·</span><span>/help · /posts · /read · /mods · /changelog ·</span></div></div></div></div>
-      <div class="mrow"><div><h4>Micro-interaction</h4><p>Nav và tab: đổi màu .15s. TOC dịch 3px. Card related nhích lên 3px. Đổi theme: chuyển màu .45s. Kbd-hint hiện sau 1.2s.</p></div>
+      <div class="mrow"><div><h4>Micro-interaction</h4><p>Nav và tab: đổi màu .15s. TOC và nav của sidebar dịch phải 4px (duration-200). Mũi tên trên link và CTA trượt 4px. Card related nhích lên 3px. Đổi theme: chuyển màu .45s. Kbd-hint hiện sau 1.2s.</p></div>
         <div class="val">màu <b>duration-150</b> · transform <b>duration-200/300</b> · theme <b>duration-500</b></div>
         <div class="mdemo" style="cursor:default"><div class="tree"><a href="#motion">Hover: dịch 3px</a></div></div></div>
+      <div class="mrow"><div><h4>Logo idle</h4><p>Tia lửa nháy và đổi dạng + ↔ ×, ba tàn lửa bay lên lệch nhịp. Chạy theo từng frame (<code>steps()</code>) để pixel nhảy chứ không trượt. Chạy ở mọi logo trong app, dưới <code>motion-safe</code>.</p></div>
+        <div class="val">plus/cross <b>4s steps(1)</b> · rise <b>3s steps(4)</b> · delay <b>0 / 1 / 2s</b></div>
+        <div class="mdemo" style="cursor:default"><span class="lgm md idle" data-mark aria-hidden="true"></span></div></div>
+      <div class="mrow"><div><h4>Burger thành X</h4><p>Ba vạch 2px: vạch trên và dưới dịch vào giữa rồi xoay ±45°, vạch giữa tắt. Dùng ở nav của trang và header dashboard dưới md (bấm thử).</p></div>
+        <div class="val"><b>duration-300 ease-out</b> · vạch giữa <b>duration-200</b></div>
+        <div class="mdemo"><button class="burger" id="d-burger" type="button" aria-expanded="false" aria-label="Demo burger" style="display:block"><i></i><i></i><i></i></button></div></div>
     </div>
   </div>
 </section>
@@ -1308,16 +1465,16 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
 <!-- ================= UX ================= -->
 <section class="sec" id="ux">
   <div class="rail"><div class="rail-in">
-    <span class="eyebrow">08 · UX</span>
+    <span class="eyebrow">09 · UX</span>
     <h2>Hành vi</h2>
     <p>Những quy tắc tương tác lặp lại trên mọi trang, nên đưa vào component để không phải nhớ.</p>
   </div></div>
   <div class="body"><div class="ux">
-    <div><h4>Keyboard-first</h4><p>Mỗi mục nav đều có phím tắt: <kbd>H</kbd> <kbd>M</kbd> <kbd>D</kbd> <kbd>T</kbd>, cộng <kbd>S</kbd> để tìm kiếm. Trang Terminal có command palette. Trang này cũng hỗ trợ: <kbd>A</kbd> <kbd>T</kbd> <kbd>P</kbd> <kbd>R</kbd> <kbd>C</kbd> <kbd>D</kbd> <kbd>M</kbd> <kbd>I</kbd>, và <kbd>L</kbd> để đổi theme.</p></div>
+    <div><h4>Keyboard-first</h4><p>Mỗi mục nav đều có phím tắt: <kbd>H</kbd> <kbd>M</kbd> <kbd>D</kbd> <kbd>T</kbd>, cộng <kbd>S</kbd> để tìm kiếm. Trang Terminal có command palette. Trang này cũng hỗ trợ: <kbd>A</kbd> <kbd>T</kbd> <kbd>P</kbd> <kbd>R</kbd> <kbd>C</kbd> <kbd>O</kbd> <kbd>D</kbd> <kbd>M</kbd> <kbd>I</kbd>, và <kbd>L</kbd> để đổi theme.</p></div>
     <div><h4>Focus-in-context</h4><p>Hover một dòng thì các dòng khác mờ đi. Trên thiết bị cảm ứng (<code>hover:none</code>), dòng vừa chạm (<code>.tap</code>) sẽ thay vai trò đó.</p></div>
     <div><h4>Đảo màu thay cho shadow</h4><p>Trạng thái nổi bật được thể hiện bằng nền paper và chữ bg, không dùng elevation. Nhờ vậy giữ được tinh thần 2D của terminal.</p></div>
     <div><h4>Đọc lâu</h4><p>Prose dùng ink-2 để giảm độ chói. Line-height 1.65–1.7, cột 660px. TOC sticky giúp người đọc biết mình đang ở đâu.</p></div>
-    <div><h4>Thông tin có cấu trúc</h4><p>Ký tự └ cho quan hệ cha–con, nhãn mono VIẾT HOA cho metadata, tabular-nums cho số. Không dùng icon trang trí.</p></div>
+    <div><h4>Thông tin có cấu trúc</h4><p>Ký tự └ cho quan hệ cha–con, nhãn mono VIẾT HOA cho metadata, tabular-nums cho số. Icon chỉ để chỉ chức năng (một icon cho mỗi trang trong nav), không để trang trí.</p></div>
     <div><h4>Tôn trọng người dùng</h4><p>Có <code>prefers-reduced-motion</code>, focus-visible 1px, consent mặc định không chọn thêm. Dark là mặc định, light có palette riêng chứ không chỉ đảo ngược màu.</p></div>
   </div></div>
 </section>
@@ -1325,28 +1482,29 @@ footer.foot{padding-block:40px 64px;display:flex;justify-content:space-between;f
 <!-- ================= IMPLEMENTATION ================= -->
 <section class="sec" id="impl">
   <div class="rail"><div class="rail-in">
-    <span class="eyebrow">09 · TRIỂN KHAI</span>
+    <span class="eyebrow">10 · TRIỂN KHAI</span>
     <h2>Áp vào spark</h2>
     <p>Map sang biến của shadcn trong <code>packages/ui/src/styles/globals.css</code>. Style <code>base-lyra</code> vốn đã vuông và gọn, rất hợp với ngôn ngữ thiết kế này.</p>
   </div></div>
   <div class="body">
-    <div class="warn"><b>Phát hiện trong repo:</b> <code>packages/ui/components.json</code> đã chuyển sang <code>base-lyra</code>, nhưng <code>apps/web/components.json</code> vẫn đang là <code>base-nova</code>. Hai file phải khớp nhau thì CLI mới sinh đúng style. Ngoài ra 8 component đang bị xoá trong working tree mà app vẫn import (button ×6, input, label, alert, spinner, input-group, skeleton).</div>
+    <div class="warn"><b>Hiện trạng (19/10/2026):</b> đã áp dụng trên <code>main</code>: theme và font, shell dashboard (sidebar có section và dải icon, breadcrumb dạng path, lệnh <code>[B]</code> <code>[D]</code>), roles và permissions, <code>AppLogo</code>, trang auth. Hai <code>components.json</code> đều là <code>base-lyra</code>; alias <code>hooks</code> của app trỏ về <code>@workspace/ui/hooks</code> để <code>use-mobile</code> nằm cạnh sidebar. Trang này là bản tham chiếu minh hoạ; khi lệch với <code>docs/design-system.md</code> thì docs thắng.</div>
     <div class="warn"><b>Font:</b> Geist, Geist Mono và STIX Two Text đều có trong <code>next/font/google</code> và có subset <code>vietnamese</code>. Đổi Inter sang Geist. STIX Two Text chỉ đăng ký vào <code>--font-serif</code> để có sẵn class <code>font-serif</code>, không gán cho component nào.</div>
     <div class="warn"><b>Dark-first nhưng light phải đủ:</b> shadcn dùng class <code>.dark</code> (next-themes). Đặt <code>defaultTheme="dark"</code> và giữ <code>enableSystem</code>. Cả <code>:root</code> (light) lẫn <code>.dark</code> đều phải có đủ bộ token, không token nào được chỉ có ở một bên. Khi màu cam dùng làm chữ thì dùng <code>--brand-ink</code>.</div>
     <div class="warn"><b>Xung đột tên:</b> trong shadcn, <code>--accent</code> là màu nền khi hover, không phải màu thương hiệu. Vì vậy màu cam được đặt tên là <code>--brand</code>, còn <code>--accent</code> của shadcn trỏ tới hover-row.</div>
 
     <div class="steps">
-      <div class="step"><div><h4>Đồng bộ components.json</h4><p>Đổi <code>"style"</code> trong <code>apps/web/components.json</code> thành <code>base-lyra</code>.</p></div></div>
-      <div class="step"><div><h4>Cài lại component</h4><p>Chạy từ <code>apps/web</code>: CLI sẽ đặt file vào <code>packages/ui</code> nhờ alias <code>ui</code>. Dùng <code>--overwrite</code> nếu cần.</p></div></div>
-      <div class="step"><div><h4>Thay theme</h4><p>Dán khối token bên dưới vào <code>globals.css</code>, đặt <code>--radius: 0</code>, thêm <code>--font-mono</code> vào <code>@theme</code>.</p></div></div>
+      <div class="step"><div><h4>Cài component shadcn</h4><p>Chạy từ <code>apps/web</code>: CLI đặt file vào <code>packages/ui</code> nhờ alias <code>ui</code>. <b>Không sửa</b> các file này, để cập nhật hoặc migrate về sau không bị xung đột.</p></div></div>
+      <div class="step"><div><h4>Dựng composite</h4><p>Phần riêng của Spark (<code>ColumnHeader</code>, <code>AppSidebar</code> với <code>collapsible="icon"</code>, <code>NavTree</code>, <code>UserMenu</code>, <code>AppLogo</code>…) nằm ở <code>apps/web/components</code> và chỉ ghép các primitive.</p></div></div>
+      <div class="step"><div><h4>Thay theme</h4><p>Dán khối token bên dưới vào <code>globals.css</code>, đặt <code>--radius: 0</code>, thêm <code>--font-mono</code> vào <code>@theme</code>, cùng token trạng thái / code và keyframe của logo.</p></div></div>
       <div class="step"><div><h4>Font + theme provider</h4><p>Trong <code>apps/web/app/layout.tsx</code>: load Geist, Geist_Mono và STIX_Two_Text, rồi đặt <code>defaultTheme="dark"</code>. Giữ root 16px để scale rem của Tailwind không bị lệch.</p></div></div>
       <div class="step"><div><h4>Kiểm chứng</h4><p>Chạy <code>pnpm check</code> và <code>pnpm build</code>, sau đó mở app ở cả hai theme. Với light, kiểm tra riêng ba chỗ: prose STIX trên nền giấy, chữ mono ink-3 cỡ nhỏ, và trạng thái hover đảo màu sang paper.</p></div></div>
     </div>
 
     <div class="codeblock">
       <div class="cb-h"><span>terminal · apps/web</span><button data-copy="cmd">Copy</button></div>
-<pre id="cmd"><span class="c"># sau khi sửa style → base-lyra trong apps/web/components.json</span>
-pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea input-group --overwrite</pre>
+<pre id="cmd"><span class="c"># từ apps/web: file shadcn vào packages/ui, không sửa chúng</span>
+pnpm dlx shadcn@latest add sidebar dropdown-menu breadcrumb badge
+<span class="c"># apps/web/components.json → "hooks": "@workspace/ui/hooks"</span></pre>
     </div>
 
     <div class="codeblock">
@@ -1363,7 +1521,7 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
 
 <span class="c">// &lt;html className={cn("antialiased font-sans", fontSans.variable, fontMono.variable, fontSerif.variable)}&gt;</span>
 <span class="c">// &lt;ThemeProvider defaultTheme="dark"&gt;  ← dark-first, vẫn giữ enableSystem</span>
-<span class="c">// Lưu ý: hotkey "d" đổi theme đang trùng với [D] DOCS nếu làm keyboard nav kiểu claude.dev</span></pre>
+<span class="c">// hotkey "d" đổi theme (ThemeProvider + lệnh [D] THEME); trang tài liệu này dùng [D] cho DASHBOARD</span></pre>
     </div>
 
     <div class="codeblock">
@@ -1381,6 +1539,9 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
   --border: <span class="v">#1414131c</span>;    --input: <span class="v">#14141338</span>;  --ring: <span class="v">#141413</span>;
   --brand: <span class="v">#c15f3c</span>;       --brand-deep: <span class="v">#a94e2f</span>;  --brand-ink: <span class="v">#a94e2f</span>;
   --ink-2: <span class="v">#4c4b45</span>;       --ink-3: <span class="v">#7b7a72</span>;  --ink-4: <span class="v">#a8a69d</span>;
+  --chip-fill: <span class="v">#1414130a</span>; --diff-add: <span class="v">#3e7a3e</span>;  --diff-del: <span class="v">#a04545</span>;
+  --diff-add-bg: <span class="v">#50965017</span>; --diff-del-bg: <span class="v">#b45a5a17</span>;
+  --syn-purple: <span class="v">#914dbe</span>; --syn-blue: <span class="v">#3065d7</span>; --syn-green: <span class="v">#567527</span>; --syn-cyan: <span class="v">#16749a</span>;
   --chart-1: <span class="v">#c15f3c</span>; --chart-2: <span class="v">#4c4b45</span>; --chart-3: <span class="v">#7b7a72</span>;
   --chart-4: <span class="v">#a8a69d</span>; --chart-5: <span class="v">#d2cdbf</span>;
   --radius: <span class="v">0</span>;
@@ -1398,6 +1559,9 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
   --border: <span class="v">#faf9f517</span>;    --input: <span class="v">#faf9f529</span>;  --ring: <span class="v">#faf9f5</span>;
   --brand: <span class="v">#d97757</span>;       --brand-deep: <span class="v">#c15f3c</span>;  --brand-ink: <span class="v">#e08a6c</span>;
   --ink-2: <span class="v">#b0aea5</span>;       --ink-3: <span class="v">#87867f</span>;  --ink-4: <span class="v">#5e5d59</span>;
+  --chip-fill: <span class="v">#faf9f50d</span>; --diff-add: <span class="v">#9ac29a</span>;  --diff-del: <span class="v">#c29a9a</span>;
+  --diff-add-bg: <span class="v">#78be7812</span>; --diff-del-bg: <span class="v">#be787812</span>;
+  --syn-purple: <span class="v">#c792ea</span>; --syn-blue: <span class="v">#82aaff</span>; --syn-green: <span class="v">#c3e88d</span>; --syn-cyan: <span class="v">#89ddff</span>;
   --chart-1: <span class="v">#d97757</span>; --chart-2: <span class="v">#b0aea5</span>; --chart-3: <span class="v">#87867f</span>;
   --chart-4: <span class="v">#5e5d59</span>; --chart-5: <span class="v">#3a3936</span>;
 }
@@ -1405,25 +1569,45 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
   --color-brand: var(--brand);  --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);  --color-ink-4: var(--ink-4);
   --color-brand-ink: var(--brand-ink);
+  --color-chip-fill: var(--chip-fill);  --color-diff-add: var(--diff-add);  --color-diff-del: var(--diff-del);
+  --color-diff-add-bg: var(--diff-add-bg);  --color-diff-del-bg: var(--diff-del-bg);
+  --color-syn-purple: var(--syn-purple);  --color-syn-blue: var(--syn-blue);
+  --color-syn-green: var(--syn-green);  --color-syn-cyan: var(--syn-cyan);
   --font-mono: var(--font-mono);  --font-serif: var(--font-serif);
 }
-<span class="k">::selection</span> { background: var(--brand); color: var(--background); }</pre>
+<span class="k">::selection</span> { background: var(--brand); color: var(--background); }
+
+<span class="c">/* ngoại lệ duy nhất cho "chỉ màu là custom": keyframe logo, chỉ AppLogo dùng, luôn sau motion-safe: */</span>
+<span class="k">@theme</span> {
+  --animate-spark-plus: spark-plus 4s steps(1, end) infinite;   <span class="c">/* + spark-cross, spark-rise(-late/-later) */</span>
+  <span class="k">@keyframes</span> spark-plus { 0% { opacity: 1 } 70% { opacity: 0 } 82% { opacity: 1 } }
+}
+<span class="k">@utility</span> no-scrollbar { scrollbar-width: none; &amp;::-webkit-scrollbar { display: none } }</pre>
     </div>
   </div>
 </section>
 
-<footer class="foot"><span>spark.ds · tham chiếu claude.dev, đo ngày 19/10/2026</span><span>Geist · Geist Mono · STIX Two Text</span></footer>
+<footer class="foot"><span>spark.ds · tham chiếu claude.dev, đo ngày 19/10/2026 · cập nhật theo apps/web</span><span>Geist · Geist Mono · STIX Two Text</span></footer>
 </div>
 
 <script>
 (function(){
-  // pixel logo (own 7x5 glyph)
-  const glyph=["0111110","1101011","1111111","0101010","1010101"];
-  function draw(el,scale){ if(!el) return; el.innerHTML=glyph.join("").split("").map(c=>'<i class="'+(c==="1"?"on":"")+'"></i>').join(""); if(scale){el.style.gridTemplateColumns="repeat(7,"+scale+"px)";el.style.gridAutoRows=scale+"px";el.querySelectorAll("i.on").forEach(i=>i.style.background="var(--bg)")} }
-  draw(document.getElementById("logo")); draw(document.getElementById("tile"),6);
+  // logo marks: 8x8 prompt + spark, built once per [data-mark] (same rects as AppLogo)
+  const R=(c,x,y,w)=>'<rect class="'+c+'" x="'+x+'" y="'+y+'" width="'+(w||1)+'" height="1"/>';
+  const markSvg=()=>'<svg viewBox="0 0 8 8" aria-hidden="true">'
+    +R("p",0,1)+R("p",1,2)+'<rect class="p" x="2" y="3" width="1" height="2"/>'+R("p",1,5)+R("p",0,6)
+    +'<g class="s s1">'+R("s",5,2)+R("s",4,3,3)+R("s",5,4)+'</g>'
+    +'<g class="s x">'+R("s",4,2)+R("s",6,2)+R("s",5,3)+R("s",4,4)+R("s",6,4)+'</g>'
+    +R("e r",7,3)+R("e r r2",6,2)+R("e r r3",4,2)
+    +R("e e-static",7,1)+'</svg>';
+  document.querySelectorAll("[data-mark]").forEach(el=>{ el.innerHTML=markSvg() });
+  // "Static / Idle" switch in the logo section
+  const lgToggle=document.getElementById("lg-toggle");
+  if(lgToggle) lgToggle.addEventListener("click",()=>{ const marks=document.querySelectorAll("#logo [data-mark]"); const idle=lgToggle.getAttribute("aria-pressed")!=="true";
+    marks.forEach(m=>m.classList.toggle("idle",idle)); lgToggle.setAttribute("aria-pressed",idle); lgToggle.querySelector("span").textContent=idle?"IDLE":"STATIC" });
 
   // swatches read live tokens
-  const toks=[["--bg","nền trang"],["--bg-raised","cli, card"],["--bg-panel","panel 3"],["--panel-2","dropdown"],["--ink","chữ chính"],["--ink-2","prose, mô tả"],["--ink-3","meta, nhãn"],["--ink-4","└, dots"],["--accent","brand · cam"],["--accent-deep","pressed"],["--paper","nút, hover"],["--line","viền mạnh"],["--line-soft","hairline"],["--hover-row","hover nền"],["--syn-purple","code kw"],["--diff-add","diff +"]];
+  const toks=[["--bg","nền trang"],["--bg-raised","cli, card"],["--bg-panel","panel 3"],["--panel-2","dropdown"],["--ink","chữ chính"],["--ink-2","prose, mô tả"],["--ink-3","meta, nhãn"],["--ink-4","└, dots"],["--accent","brand · cam"],["--accent-deep","pressed"],["--paper","nút, hover"],["--line","viền mạnh"],["--line-soft","hairline"],["--hover-row","hover nền"],["--syn-purple","code kw"],["--syn-blue","code fn"],["--chip-fill","code chip"],["--diff-add","ok · diff +"],["--diff-del","blocked · diff −"],["--diff-add-bg","tint ok"],["--diff-del-bg","tint lỗi"]];
   const sw=document.getElementById("sw");
   function paint(){ const cs=getComputedStyle(document.documentElement); sw.innerHTML=toks.map(([t,u])=>'<div class="sw"><div class="chipc" style="background:var('+t+')"></div><b>'+t+'</b><span>'+cs.getPropertyValue(t).trim()+' · '+u+'</span></div>').join(""); }
   paint(); try{ matchMedia("(prefers-color-scheme: light)").addEventListener("change",paint) }catch(e){}
@@ -1464,6 +1648,9 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
     const wide=()=>dash.getBoundingClientRect().width>=1280;
     function setPanel(open){ dash.classList.toggle("panel-open",open); panelBtn.setAttribute("aria-pressed",open) }
     function setSide(open){ dash.classList.toggle("side-open",open); sideBtn.setAttribute("aria-expanded",open) }
+    const railBtn=q('[data-act="rail"]');
+    function setRail(collapsed){ dash.classList.toggle("icons",collapsed); railBtn.setAttribute("aria-pressed",!collapsed) }
+    const railOk=()=>dash.getBoundingClientRect().width>=768;
     document.querySelectorAll(".dash-ctrl button").forEach(b=>b.addEventListener("click",()=>{
       document.querySelectorAll(".dash-ctrl button").forEach(x=>x.classList.toggle("on",x===b));
       dash.style.width=b.dataset.w+"px"; setSide(false); setPanel(+b.dataset.w>=1280); fit() }));
@@ -1479,6 +1666,8 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
       const act=e.target.closest("[data-act]")?.dataset.act;
       if(act==="side") setSide(!dash.classList.contains("side-open"));
       if(act==="panel") setPanel(!dash.classList.contains("panel-open"));
+      if(act==="rail") setRail(!dash.classList.contains("icons"));
+      if(act==="theme") toggleTheme();
       if(act==="panel-close"||act==="close"){ setPanel(false); setSide(false) }
       const a=e.target.closest(".dtree a, .dgrp a");
       if(a){ e.preventDefault(); if(a.dataset.page){
@@ -1503,11 +1692,16 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
       if(i>-1&&(e.key==="ArrowDown"||e.key==="ArrowUp")){ e.preventDefault(); items[(i+(e.key==="ArrowDown"?1:-1)+items.length)%items.length].focus() }
       else if(document.activeElement.classList.contains("tg")&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){ e.preventDefault(); document.activeElement.closest("li").setAttribute("aria-expanded",e.key==="ArrowRight") }
       else if(e.key==="i"||e.key==="I"){ setPanel(!dash.classList.contains("panel-open")) }
+      else if(e.key==="b"||e.key==="B"){ if(railOk()) setRail(!dash.classList.contains("icons")) }
+      else if(e.key==="d"||e.key==="D"){ toggleTheme() }
       else if(e.key==="Escape"){ setPanel(false); setSide(false) }
       else return;
       e.stopPropagation();
     });
   })();
+
+  const dBurger=document.getElementById("d-burger");
+  if(dBurger) dBurger.addEventListener("click",e=>{ e.stopPropagation(); dBurger.setAttribute("aria-expanded",dBurger.getAttribute("aria-expanded")!=="true") });
 
   // burger: below xl the section links move into a panel under the sticky nav
   const burger=document.getElementById("burger"), panel=document.getElementById("navpanel");
@@ -1526,7 +1720,7 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
   document.querySelectorAll('.nav a[href^="#"]').forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); go(a.getAttribute("href")) }));
 
   // keyboard nav like claude.dev
-  const map={a:"#map",t:"#tokens",p:"#spacing",r:"#responsive",c:"#components",d:"#dashboard",m:"#motion",i:"#impl"};
+  const map={a:"#map",t:"#tokens",p:"#spacing",r:"#responsive",c:"#components",o:"#logo",d:"#dashboard",m:"#motion",i:"#impl"};
   document.addEventListener("keydown",e=>{ if(e.metaKey||e.ctrlKey||e.altKey||/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
     if(e.key==="l"||e.key==="L"){ toggleTheme(); return }
     if(e.key==="s"||e.key==="S"){ e.preventDefault(); go("#components"); s.classList.add("open"); setTimeout(()=>q.focus(),300); return }
@@ -1535,7 +1729,7 @@ pnpm dlx shadcn@latest add button input label alert skeleton spinner textarea in
   // active nav on scroll
   const links=[...document.querySelectorAll('.nav-links a, .nav-panel a[href^="#"]')];
   const io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ links.forEach(l=>l.classList.toggle("on",l.getAttribute("href")==="#"+en.target.id)) } }),{rootMargin:"-40% 0px -55% 0px"});
-  ["map","tokens","spacing","responsive","components","dashboard","motion","impl"].forEach(id=>io.observe(document.getElementById(id)));
+  ["map","tokens","spacing","responsive","components","logo","dashboard","motion","impl"].forEach(id=>io.observe(document.getElementById(id)));
 
   // copy
   document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ const t=document.getElementById(b.dataset.copy).innerText;
