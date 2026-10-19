@@ -266,19 +266,36 @@ section an entry is a link or a collapsible group of links (two levels max).
 
 Header commands are `[X] LABEL` buttons: mono `text-xs` uppercase, key in `ink-3`, label in `ink-2`, `aria-pressed` for
 toggles. Every command has its bare-key shortcut (ignored while typing): `[B]` sidebar (shadcn's Cmd/Ctrl+B also works),
-`[D]` theme. The account row shows `└ name  role`, no selector icon. No decorative icons in menus.
+`[D]` theme. The account row shows `└`, a user icon, name and role. Icons are functional only: one per navigable page (and the
+account row), never on group headers or menu items; the `└` glyph stays next to them as the hierarchy mark.
 
 Main header below `md` (or while the sidebar is collapsed): burger, wordmark, `/`, current page in ink, truncated
 with `…` rather than wrapping.
+
+### Icon rail
+
+The sidebar uses `collapsible="icon"`: `[B]` (or a click on the rail edge) shrinks it from `w-64` to a 48px rail instead of
+hiding it, so every page stays one click away.
+
+- Every nav link carries `└`, its icon and its label. In the rail only the icon shows (the glyph and label hide; the
+  current page's icon turns brand orange there) and a right-side tooltip names it (`SidebarMenuButton`'s rule: only
+  while collapsed on desktop).
+- The rail lists individual pages only, never groups: a section label becomes a hairline between sections, a collapsible
+  group loses its header and its links show flat (open or closed). The logo shrinks to its mark and the account row to
+  a user icon whose menu opens to the right.
+- Icons are named in `config/navigation.ts` (`NavLink.icon: NavIconName`) and resolved to components in
+  `components/layout/nav-icons.tsx` (a `Record`, so a new name without an icon fails typecheck). Names, not components,
+  because `entries` cross from a Server Component to the client `NavTree`.
+- Rows use `group-data-[collapsible=icon]:*` variants of the sidebar's own `group` wrapper; no JS state except the tooltip.
 
 ### Tree items (the large TOC)
 
 | State | Look | Classes |
 | :--- | :--- | :--- |
-| Default | `└` in ink-4, label ink-2 | `font-mono text-sm py-1.5 text-ink-2` |
-| Hover | Label ink, hover surface | `hover:bg-accent hover:text-foreground` |
-| Current | `└` turns brand orange, label ink, medium | `aria-current="page"`, glyph `text-brand` |
-| Group | Caret rotates when collapsed, children indent | `aria-expanded`, children `pl-4` |
+| Default | `└` in ink-4, Tabler icon `size-4` in ink-3, label ink-2 | `font-mono text-sm py-1.5 text-ink-2` |
+| Hover | Label ink and nudged 4px right, icon ink-2, hover surface | `hover:bg-accent hover:text-foreground` |
+| Current | `└` turns brand orange, icon and label ink, medium | `aria-current="page"`, glyph `text-brand` |
+| Group | `└`, label and a caret that rotates when collapsed (no icon); children indent | `aria-expanded`, children `pl-4` |
 | Count | Mono, right aligned | `ml-auto text-xs text-ink-3 tabular-nums` |
 
 Keep the tree at most two levels deep; deeper structure belongs on its own page. Keyboard: arrows move, left/right
@@ -300,7 +317,7 @@ collapse and expand groups, Enter opens.
 
 | Region | < lg | lg to xl | >= xl |
 | :--- | :--- | :--- | :--- |
-| Sidebar | Hidden below `md` (shadcn's `useIsMobile`, 768px); burger opens it as a left Sheet | Fixed `w-64` from `md` | Fixed `w-64` |
+| Sidebar | Hidden below `md` (shadcn's `useIsMobile`, 768px); burger opens it as a left Sheet | `w-64` from `md`; `[B]` collapses it to a 48px icon rail | same |
 | Inspector | Right Sheet, full width below `sm` | Right Sheet `w-80` over a scrim | Fixed column, toggled with `[I]` |
 | Logo | Main header, next to the burger | Sidebar header | Sidebar header |
 | List row | Two lines: title / id, status, time | One line | One line |
@@ -319,7 +336,7 @@ Spark look is composed on top in `apps/web/components/layout/`:
 | :--- | :--- | :--- |
 | `ColumnHeader` | `column-header.tsx` | Plain `div` (`h-14 border-b px-4`) |
 | `AppSidebar`, `AppSidebarBody`, `AppSidebarSection` | `app-sidebar.tsx` | `Sidebar collapsible="offcanvas"`, `SidebarContent` |
-| `NavTree` | `nav-tree.tsx` | `SidebarMenu` / `SidebarMenuItem` for structure; its own `Link` row for the tree look. One per section |
+| `NavTree` | `nav-tree.tsx`, `nav-icons.tsx` | `SidebarMenu` / `SidebarMenuItem` for structure; its own `Link` row for the tree look; `Tooltip` names the icon in the rail. One per section |
 | `SidebarCommand`, `ThemeCommand` | `header-commands.tsx` | `HeaderCommand` button + `hooks/use-hotkey.ts` |
 | `UserMenu` | `user-menu.tsx` | `DropdownMenu`; items are passed as children (sign out comes from `features/auth`) |
 | `DashboardBreadcrumb` | `dashboard-breadcrumb.tsx` | `Breadcrumb`; segments from the URL, index pages append their nav title |

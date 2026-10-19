@@ -79,8 +79,9 @@ anchors use `scroll-mt-24`; the logo scrolls to `0`.
 - Logo lives in the sidebar header; below `md` (or with the sidebar collapsed) it shows in the main header next to the `Burger`.
 - Sidebar body = labelled sections (`config/navigation.ts`), named by content (`Workspace`, `Settings`), never "Tree".
   Header = path breadcrumb (no project name) + `[X] LABEL` commands with bare-key shortcuts (`[B]` sidebar, `[D]` theme).
+  The sidebar collapses to a 48px icon rail (doc § Icon rail): every `NavLink` needs an `icon` name; icons are functional, never decorative.
 - Never edit shadcn files in `packages/ui`; compose in `apps/web/components/layout/`.
-- Each section is the big TOC: mono `text-sm`, `└` glyphs, current item glyph `text-brand`, max two levels, counts
+- Each section is the big TOC: mono `text-sm`, `└` + an icon per link (current glyph `text-brand`; in the icon rail the current icon is brand), max two levels, counts
   `ml-auto text-xs tabular-nums`.
 - Inspector below `xl` becomes `<Sheet side="right">`. Selected row `bg-primary text-primary-foreground`.
 - Metrics are a `dl` row, no stat cards. Orange appears once per screen (the logo's spark does not count).
