@@ -14,7 +14,8 @@ When the two disagree, this file wins.
 
 1. **Only colors are custom.** Font size, weight, leading, tracking, spacing, border width, radius, duration, easing and
    breakpoints come from Tailwind's default scale. No arbitrary values (`mt-[54px]`, `text-[13px]`, `grid-cols-[auto_1fr]`).
-   If no step fits, use the nearest one.
+   If no step fits, use the nearest one. **One exception: the logo.** Its frame-by-frame keyframes live as
+   `--animate-spark-*` tokens in `globals.css` and are used only by `AppLogo` (see [Logo](#logo)).
 2. **Smallest text is `text-xs`.** Weights are `font-normal` and `font-medium` only.
 3. **Components keep their own sizes.** Pick a `size` / `variant` prop (`<Button size="sm">`). Never override height,
    padding or font size through `className`. Layout classes such as `w-full` or `mt-*` are fine. If no size fits, add a
@@ -193,6 +194,26 @@ Patterns specific to this language:
 
 ---
 
+## Logo
+
+`AppLogo` (`apps/web/components/shared/app-logo.tsx`): an 8x8 pixel mark, a `>` prompt in ink (`currentColor`, follows
+the theme), a little spark in `brand` and one `ink-4` ember, drawn as `<rect>`s with `shape-rendering="crispEdges"`.
+The project line behind it: *everything starts with a little spark* (context only, never shown).
+
+| Prop | Values | Use |
+| :--- | :--- | :--- |
+| `variant` | `full` (default) · `mark` · `wordmark` | `mark` where space is tight or for icons; `wordmark` when the mark already shows nearby |
+| `size` | `sm` 16px · `md` 24px (default) · `lg` 32px | Mark and wordmark scale together; the wordmark is mono `font-medium tracking-tight` (`text-sm/none` / `text-lg/none` / `text-2xl/none`) |
+| `motion` | `idle` (default) · `static` | The logo is always alive: `idle` everywhere in the app (sidebar, headers, auth). `static` only where the mark must stay still (print, dense lists) |
+
+Rules:
+
+- Sizes are whole multiples of the 8x8 grid (16, 24, 32px) so every pixel stays crisp. Never scale the mark freely.
+- Do not redraw or recolor the mark at the call site; wrap it in a `Link` when it navigates. The logo is a block-level
+  `flex w-fit` box (an inline box would sit on the text baseline and add a gap below it).
+- `idle` animates only under `motion-safe`; with reduced motion it renders exactly like `static`.
+- The favicon is `apps/web/app/icon.svg`, the same mark with fixed light/dark colors (`prefers-color-scheme`).
+
 ## 7. Navigation
 
 - Site nav: sticky, `h-24` (`max-sm:h-18`), brand left, links with `[X]` keys in the middle, commands and CTA right.
@@ -224,8 +245,8 @@ function ColumnHeader({ children }: { children: React.ReactNode }) {
 
 | Column | Header cell | Body |
 | :--- | :--- | :--- |
-| Sidebar (shadcn `<Sidebar collapsible="offcanvas">`, `w-64`, `xl:w-72`) | Logo + workspace switcher | `px-4 py-6 gap-8`: TREE, Projects, then Usage and account pinned to the bottom |
-| Main (`flex-1 min-w-0`) | Burger + logo (below `lg` only), breadcrumb path, `[/]` `[I]` commands, `<Button size="sm">` | `px-4 sm:px-8 pt-10 pb-14 gap-8`: page head, metrics, tabs + list |
+| Sidebar (shadcn `<Sidebar collapsible="offcanvas">`, `w-64`, `xl:w-72`) | Logo + workspace switcher | `px-4 py-6 gap-8`: one labelled **section** per nav group (`WORKSPACE`, `SETTINGS`, ...), then account pinned to the bottom |
+| Main (`flex-1 min-w-0`) | Burger + logo (below `md` only), path breadcrumb (`dashboard / settings / account`, no project name), `[B]` `[D]` commands (`[/]` `[I]` when search and inspector exist), `<Button size="sm">` | `px-4 sm:px-8 pt-10 pb-14 gap-8`: page head, metrics, tabs + list |
 | Inspector (`w-80`, `border-l`) | Record id + `[ESC]` | `p-6 gap-8`: title, `└` spec list, `└` activity, actions |
 
 Adding another side panel later means adding another column with a `ColumnHeader`; nothing else moves.
@@ -235,6 +256,20 @@ Scroll areas hide their scrollbar but stay scrollable (mouse, keys, touch):
 ```css
 @utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
 ```
+
+### Sections
+
+The sidebar holds any number of **sections**, each a mono `text-xs` uppercase label over a tree
+(`config/navigation.ts`, `NavSection`). Name a section after what its pages are about (`Workspace`, `Settings`,
+`Projects`), never after the widget ("Tree", "Menu"). A section whose links the role cannot open is hidden. Inside a
+section an entry is a link or a collapsible group of links (two levels max).
+
+Header commands are `[X] LABEL` buttons: mono `text-xs` uppercase, key in `ink-3`, label in `ink-2`, `aria-pressed` for
+toggles. Every command has its bare-key shortcut (ignored while typing): `[B]` sidebar (shadcn's Cmd/Ctrl+B also works),
+`[D]` theme. The account row shows `└ name  role`, no selector icon. No decorative icons in menus.
+
+Main header below `md` (or while the sidebar is collapsed): burger, wordmark, `/`, current page in ink, truncated
+with `…` rather than wrapping.
 
 ### Tree items (the large TOC)
 
@@ -251,7 +286,8 @@ collapse and expand groups, Enter opens.
 
 ### Content conventions
 
-- **Orange appears once per screen**: the current tree glyph (plus at most one focal chart mark). Status uses small
+- **Orange appears once per screen**: the current tree glyph (plus at most one focal chart mark). The logo's spark is
+  identity and does not count. Status uses small
   square dots: ink for "needs review", `diff-del` for blocked, ink-4 for done.
 - **No big-number tiles.** Metrics are one `dl` row: mono `text-xs` label, `text-2xl font-medium` value, separated by space.
 - **Selected list row is inverted** (`bg-primary text-primary-foreground`); hover is only `bg-accent`.
@@ -264,15 +300,34 @@ collapse and expand groups, Enter opens.
 
 | Region | < lg | lg to xl | >= xl |
 | :--- | :--- | :--- | :--- |
-| Sidebar | Hidden; burger opens it as a left Sheet | Fixed `w-64` | Fixed `w-72` |
+| Sidebar | Hidden below `md` (shadcn's `useIsMobile`, 768px); burger opens it as a left Sheet | Fixed `w-64` from `md` | Fixed `w-64` |
 | Inspector | Right Sheet, full width below `sm` | Right Sheet `w-80` over a scrim | Fixed column, toggled with `[I]` |
 | Logo | Main header, next to the burger | Sidebar header | Sidebar header |
 | List row | Two lines: title / id, status, time | One line | One line |
 | Metrics | `grid-cols-2` | `grid-cols-4` | `grid-cols-4` |
-| Header commands | Keys only (`[/]` `[I]`) | Keys and labels | Keys and labels |
+| Header commands | Keys only (`[D]`; `[B]` hidden below `md`, the burger takes over) | Keys and labels from `lg` | Keys and labels |
 
 Needed components: `pnpm dlx shadcn@latest add sidebar sheet badge tabs` (from `apps/web`). shadcn's sidebar width
 comes from the `--sidebar-width` variable; change it in the theme rather than with a class.
+
+### Implementation (apps/web)
+
+shadcn files in `packages/ui` are **never edited**, so `shadcn add --overwrite` and future migrations stay clean. The
+Spark look is composed on top in `apps/web/components/layout/`:
+
+| Part | File | Built from |
+| :--- | :--- | :--- |
+| `ColumnHeader` | `column-header.tsx` | Plain `div` (`h-14 border-b px-4`) |
+| `AppSidebar`, `AppSidebarBody`, `AppSidebarSection` | `app-sidebar.tsx` | `Sidebar collapsible="offcanvas"`, `SidebarContent` |
+| `NavTree` | `nav-tree.tsx` | `SidebarMenu` / `SidebarMenuItem` for structure; its own `Link` row for the tree look. One per section |
+| `SidebarCommand`, `ThemeCommand` | `header-commands.tsx` | `HeaderCommand` button + `hooks/use-hotkey.ts` |
+| `UserMenu` | `user-menu.tsx` | `DropdownMenu`; items are passed as children (sign out comes from `features/auth`) |
+| `DashboardBreadcrumb` | `dashboard-breadcrumb.tsx` | `Breadcrumb`; segments from the URL, index pages append their nav title |
+| `PageHead`, `Metrics`, `SpecList` | `page-head.tsx`, `components/shared/` | Plain markup |
+
+Two consequences of not editing shadcn: the sidebar switches to a Sheet below `md` (768px, hard-coded in shadcn's hook)
+instead of `lg`, and keeps one width (`16rem`); `xl:w-72` would need an arbitrary value. The inspector column is not built
+yet: add it with a `ColumnHeader` when the first list feature needs it.
 
 ---
 
@@ -289,6 +344,22 @@ Tailwind durations and easings only: `ease-out` to enter, `ease-in-out` to leave
 | Theme switch | Instant (`disableTransitionOnChange`) |
 
 Everything must respect `prefers-reduced-motion` (`motion-safe:` / `motion-reduce:`).
+
+Applied in `apps/web`:
+
+| Pattern | Where | Implementation |
+| :--- | :--- | :--- |
+| Stagger on enter (slide up 8px, `duration-500`, `delay-75` steps) | Dashboard body, auth form column | `components/shared/stagger.tsx` (direct children, `*:nth-N:delay-*`) |
+| Terminal lines reveal in order | Auth rail | `app/(auth)/_components/terminal.tsx` (`step` prop) |
+| Burger bars turn into an X (`duration-300 ease-out`) | Dashboard header below `md` | `components/layout/burger.tsx` |
+| TOC nudge (`translate-x-1`, `duration-200`) | Sidebar nav rows | `NavTree` `RowLabel` |
+| Arrow slides on hover (`translate-x-1`) | Auth switch link, 403 CTA | `group-hover` on the icon |
+| Caret rotates (`duration-300`) | Collapsible nav group | `NavTree` `TreeGroup` |
+
+| Spark twinkles (`+` → `×`), embers rise, `steps()` frames | Every logo (sidebar, headers, auth) | `AppLogo` (`motion="idle"` by default), `--animate-spark-*` |
+
+Not used: the typing intro and ambient float (custom keyframes are allowed for the logo only), and the theme switch
+stays instant.
 
 ---
 
