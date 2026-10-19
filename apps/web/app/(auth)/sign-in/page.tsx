@@ -3,7 +3,6 @@ import { Suspense } from "react"
 
 import { FormError } from "@/features/auth/components/form-error"
 import { SignInForm } from "@/features/auth/components/sign-in-form"
-import { authConfig } from "@/lib/auth/config"
 
 async function OAuthError({
   searchParams,
@@ -34,7 +33,8 @@ export default function SignInPage({
         <Suspense>
           <OAuthError searchParams={searchParams} />
         </Suspense>
-        <SignInForm showGoogle={authConfig.AUTH_PROVIDER === "supabase"} />
+        {/* Google is disabled for now. Enable the provider in Supabase, then use `authConfig.AUTH_PROVIDER === "supabase"`. */}
+        <SignInForm showGoogle={false} />
       </div>
       <p className="mt-6 text-center text-sm text-muted-foreground">
         No account yet?{" "}
