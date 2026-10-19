@@ -1,7 +1,10 @@
 import { nextJsConfig } from "@workspace/eslint-config/next-js"
 
 const featureRestrictions = [
-  { group: ["@/app", "@/app/**"], message: "features/ must not import from app/." },
+  {
+    group: ["@/app", "@/app/**"],
+    message: "features/ must not import from app/.",
+  },
   {
     group: ["@/features", "@/features/**"],
     message:
@@ -35,6 +38,7 @@ export default [
                 "**/queries",
                 "@/lib/dal",
                 "@/lib/http",
+                "@/lib/supabase/data",
                 ...authRestrictedGroup,
               ],
               message:
@@ -54,7 +58,12 @@ export default [
         {
           patterns: [
             {
-              group: ["@/lib/dal", "@/lib/http", ...authRestrictedGroup],
+              group: [
+                "@/lib/dal",
+                "@/lib/http",
+                "@/lib/supabase/data",
+                ...authRestrictedGroup,
+              ],
               message:
                 "Shared components must not import server-only modules (dal, http, auth).",
             },
