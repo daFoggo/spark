@@ -15,11 +15,18 @@ import {
   SidebarCommand,
   ThemeCommand,
 } from "@/components/layout/header-commands"
+import {
+  InspectorCommand,
+  InspectorPanel,
+  InspectorProvider,
+} from "@/components/layout/inspector"
 import { MainHeaderStart } from "@/components/layout/main-header-start"
 import { Stagger } from "@/components/shared/stagger"
 import { AppLogo } from "@/components/shared/app-logo"
 import { DASHBOARD_NAV } from "@/config/navigation"
 
+import { GoalsNav } from "./_components/goals-nav"
+import { InspectorContent } from "./_components/inspector-content"
 import { SessionAccount, SessionNav } from "./_components/session-nav"
 import { TimezoneGate } from "./_components/timezone-gate"
 
@@ -35,45 +42,58 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <AppSidebar>
-        <ColumnHeader className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <Link href="/">
-            <AppLogo textClassName="group-data-[collapsible=icon]:hidden" />
-          </Link>
-        </ColumnHeader>
-        <AppSidebarBody>
-          {/* One AppSidebarSection per nav section (config/navigation.ts). */}
-          <Suspense fallback={<NavSkeleton />}>
-            <SessionNav />
-          </Suspense>
-          <AppSidebarSection label="Account" pinned>
-            <Suspense fallback={<Skeleton className="h-8" />}>
-              <SessionAccount />
-            </Suspense>
-          </AppSidebarSection>
-        </AppSidebarBody>
-      </AppSidebar>
-      <SidebarInset>
-        <div className="flex h-svh min-w-0 flex-col">
-          <ColumnHeader>
-            <MainHeaderStart>
-              <DashboardBreadcrumb sections={DASHBOARD_NAV} />
-            </MainHeaderStart>
-            <div className="ml-auto flex shrink-0 items-center gap-4">
-              <SidebarCommand className="max-md:hidden" />
-              <ThemeCommand />
-            </div>
+      <InspectorProvider>
+        <AppSidebar>
+          <ColumnHeader className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+            <Link href="/">
+              <AppLogo textClassName="group-data-[collapsible=icon]:hidden" />
+            </Link>
           </ColumnHeader>
-          <div className="no-scrollbar flex-1 overflow-y-auto">
-            <Stagger className="flex flex-col gap-8 px-4 pt-10 pb-14 sm:px-8">
-              {children}
-            </Stagger>
+          <AppSidebarBody>
+            {/* One AppSidebarSection per nav section (config/navigation.ts). */}
+            <Suspense fallback={<NavSkeleton />}>
+              <SessionNav />
+            </Suspense>
+            <Suspense fallback={null}>
+              <GoalsNav />
+            </Suspense>
+            <AppSidebarSection label="Account" pinned>
+              <Suspense fallback={<Skeleton className="h-8" />}>
+                <SessionAccount />
+              </Suspense>
+            </AppSidebarSection>
+          </AppSidebarBody>
+        </AppSidebar>
+        <SidebarInset>
+          <div className="flex h-svh min-w-0 flex-col">
+            <ColumnHeader>
+              <MainHeaderStart>
+                <Suspense fallback={null}>
+                  <DashboardBreadcrumb sections={DASHBOARD_NAV} />
+                </Suspense>
+              </MainHeaderStart>
+              <div className="ml-auto flex shrink-0 items-center gap-4">
+                <SidebarCommand className="max-md:hidden" />
+                <InspectorCommand />
+                <ThemeCommand />
+              </div>
+            </ColumnHeader>
+            <div className="no-scrollbar flex-1 overflow-y-auto">
+              <Stagger className="flex flex-col gap-8 px-4 pt-10 pb-14 sm:px-8">
+                {children}
+              </Stagger>
+            </div>
           </div>
-        </div>
-      </SidebarInset>
-      <Suspense fallback={null}>
-        <TimezoneGate />
-      </Suspense>
+        </SidebarInset>
+        <InspectorPanel title="Overview">
+          <Suspense fallback={<Skeleton className="h-64" />}>
+            <InspectorContent />
+          </Suspense>
+        </InspectorPanel>
+        <Suspense fallback={null}>
+          <TimezoneGate />
+        </Suspense>
+      </InspectorProvider>
     </SidebarProvider>
   )
 }

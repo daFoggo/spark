@@ -86,6 +86,11 @@ function TreeLink({ link }: { link: NavLink }) {
           <NavIcon name={link.icon} />
         </span>
         <RowLabel>{link.title}</RowLabel>
+        {link.badge ? (
+          <span className="ml-auto font-mono text-xs text-ink-3 tabular-nums group-data-[collapsible=icon]:hidden">
+            {link.badge}
+          </span>
+        ) : null}
       </TooltipTrigger>
       {/* Names the icon; only while the sidebar is the icon rail (same rule as SidebarMenuButton). */}
       <TooltipContent

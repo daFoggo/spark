@@ -1,4 +1,8 @@
 import {
+  IconCalendarCheck,
+  IconChecklist,
+  IconRepeat,
+  IconTarget,
   IconSunHigh,
   IconUser,
   IconUsers,
@@ -10,6 +14,10 @@ import type { NavIconName } from "@/config/navigation"
 /** `Record` makes TypeScript fail here when a name is added to `NavIconName` without an icon. */
 const NAV_ICONS: Record<NavIconName, Icon> = {
   today: IconSunHigh,
+  habits: IconRepeat,
+  tasks: IconChecklist,
+  goals: IconTarget,
+  review: IconCalendarCheck,
   account: IconUser,
   members: IconUsers,
 }

@@ -6,7 +6,7 @@ import {
   filterNav,
   navLinks,
   type NavSection,
-} from "./navigation"
+} from "../navigation"
 
 const sections: NavSection[] = [
   {
@@ -78,5 +78,14 @@ describe("DASHBOARD_NAV", () => {
   it("has unique hrefs", () => {
     const hrefs = navLinks(DASHBOARD_NAV).map((l) => l.href)
     expect(new Set(hrefs).size).toBe(hrefs.length)
+  })
+
+  it("shows a record id as details", () => {
+    expect(
+      breadcrumbTrail(
+        "/dashboard/habits/29ef238d-7877-4eae-a21c-808a9e16b1e4",
+        sections
+      ).at(-1)
+    ).toEqual({ label: "details", href: undefined })
   })
 })

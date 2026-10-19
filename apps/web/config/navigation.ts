@@ -1,23 +1,36 @@
-import { ACCOUNT_PATH, DASHBOARD_PATH, MEMBERS_PATH } from "@/config/routes"
+import {
+  ACCOUNT_PATH,
+  DASHBOARD_PATH,
+  GOALS_PATH,
+  HABITS_PATH,
+  MEMBERS_PATH,
+  REVIEW_PATH,
+  TASKS_PATH,
+} from "@/config/routes"
 import type { Permission } from "@/lib/auth/permissions"
 
 /**
  * Semantic icon names, resolved to Tabler icons in `components/layout/nav-icons.tsx`. Names (not
  * components) because `entries` cross from a Server Component to the client `NavTree`.
  */
-export type NavIconName = "today" | "account" | "members"
+export type NavIconName =
+  "today" | "habits" | "tasks" | "goals" | "review" | "account" | "members"
 
 export type NavLink = {
   title: string
   href: string
   icon: NavIconName
   permission: Permission
+  /** Short mono text on the right, e.g. "due". Set at render time, not in the config. */
+  badge?: string
 }
 /** A collapsible group inside a section; the tree stays at most two levels deep. */
 export type NavGroup = { title: string; items: NavLink[] }
 export type NavEntry = NavLink | NavGroup
 /** One labelled block of the sidebar. Add sections freely; empty ones are hidden. */
 export type NavSection = { label: string; entries: NavEntry[] }
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export type Crumb = { label: string; href?: string }
 
 /**
@@ -32,6 +45,30 @@ export const DASHBOARD_NAV: NavSection[] = [
         title: "Today",
         href: DASHBOARD_PATH,
         icon: "today",
+        permission: "dashboard:view",
+      },
+      {
+        title: "Habits",
+        href: HABITS_PATH,
+        icon: "habits",
+        permission: "dashboard:view",
+      },
+      {
+        title: "Tasks",
+        href: TASKS_PATH,
+        icon: "tasks",
+        permission: "dashboard:view",
+      },
+      {
+        title: "Goals",
+        href: GOALS_PATH,
+        icon: "goals",
+        permission: "dashboard:view",
+      },
+      {
+        title: "Weekly review",
+        href: REVIEW_PATH,
+        icon: "review",
         permission: "dashboard:view",
       },
     ],
@@ -94,7 +131,8 @@ export function breadcrumbTrail(
   const crumbs: Crumb[] = segments.map((segment, index) => {
     const href = `/${segments.slice(0, index + 1).join("/")}`
     return {
-      label: segment,
+      // A record id (`/habits/<uuid>`) reads as "details", not as a 36-character string.
+      label: UUID.test(segment) ? "details" : segment,
       href: links.some((link) => link.href === href) ? href : undefined,
     }
   })
