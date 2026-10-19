@@ -12,7 +12,12 @@ const sections: NavSection[] = [
   {
     label: "Workspace",
     entries: [
-      { title: "Overview", href: "/dashboard", permission: "dashboard:view" },
+      {
+        title: "Overview",
+        href: "/dashboard",
+        icon: "overview",
+        permission: "dashboard:view",
+      },
     ],
   },
   {
@@ -21,6 +26,7 @@ const sections: NavSection[] = [
       {
         title: "Account",
         href: "/dashboard/settings/account",
+        icon: "account",
         permission: "settings:view",
       },
       {
@@ -29,6 +35,7 @@ const sections: NavSection[] = [
           {
             title: "Members",
             href: "/dashboard/settings/members",
+            icon: "members",
             permission: "members:view",
           },
         ],

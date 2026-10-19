@@ -96,11 +96,14 @@ export function AppLogo({
   size = "md",
   motion = "idle",
   className,
+  textClassName,
 }: {
   variant?: "full" | "mark" | "wordmark"
   size?: Size
   motion?: Motion
   className?: string
+  /** For the wordmark only, e.g. to hide it inside a collapsed sidebar. */
+  textClassName?: string
 }) {
   return (
     <span
@@ -112,7 +115,11 @@ export function AppLogo({
       {variant === "wordmark" ? null : <LogoMark size={size} motion={motion} />}
       {variant === "mark" ? null : (
         <span
-          className={cn("font-mono font-medium tracking-tight", TEXT[size])}
+          className={cn(
+            "font-mono font-medium tracking-tight",
+            TEXT[size],
+            textClassName
+          )}
         >
           spark
         </span>

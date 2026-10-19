@@ -1,7 +1,18 @@
 import { ACCOUNT_PATH, DASHBOARD_PATH, MEMBERS_PATH } from "@/config/routes"
 import type { Permission } from "@/lib/auth/permissions"
 
-export type NavLink = { title: string; href: string; permission: Permission }
+/**
+ * Semantic icon names, resolved to Tabler icons in `components/layout/nav-icons.tsx`. Names (not
+ * components) because `entries` cross from a Server Component to the client `NavTree`.
+ */
+export type NavIconName = "overview" | "account" | "members"
+
+export type NavLink = {
+  title: string
+  href: string
+  icon: NavIconName
+  permission: Permission
+}
 /** A collapsible group inside a section; the tree stays at most two levels deep. */
 export type NavGroup = { title: string; items: NavLink[] }
 export type NavEntry = NavLink | NavGroup
@@ -17,14 +28,29 @@ export const DASHBOARD_NAV: NavSection[] = [
   {
     label: "Workspace",
     entries: [
-      { title: "Overview", href: DASHBOARD_PATH, permission: "dashboard:view" },
+      {
+        title: "Overview",
+        href: DASHBOARD_PATH,
+        icon: "overview",
+        permission: "dashboard:view",
+      },
     ],
   },
   {
     label: "Settings",
     entries: [
-      { title: "Account", href: ACCOUNT_PATH, permission: "settings:view" },
-      { title: "Members", href: MEMBERS_PATH, permission: "members:view" },
+      {
+        title: "Account",
+        href: ACCOUNT_PATH,
+        icon: "account",
+        permission: "settings:view",
+      },
+      {
+        title: "Members",
+        href: MEMBERS_PATH,
+        icon: "members",
+        permission: "members:view",
+      },
     ],
   },
 ]

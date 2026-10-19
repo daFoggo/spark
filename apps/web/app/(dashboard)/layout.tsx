@@ -35,9 +35,9 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar>
-        <ColumnHeader>
+        <ColumnHeader className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <Link href="/">
-            <AppLogo />
+            <AppLogo textClassName="group-data-[collapsible=icon]:hidden" />
           </Link>
         </ColumnHeader>
         <AppSidebarBody>
