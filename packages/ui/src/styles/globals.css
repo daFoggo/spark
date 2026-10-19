@@ -47,6 +47,10 @@
   --color-ink-3: var(--ink-3);
   --color-ink-4: var(--ink-4);
   --color-chip-fill: var(--chip-fill);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
   --color-diff-add: var(--diff-add);
   --color-diff-del: var(--diff-del);
   --color-diff-add-bg: var(--diff-add-bg);
@@ -119,7 +123,8 @@
 /* Colors follow claude.dev. Every other numeric token uses Tailwind's default scale.
    `--accent` is shadcn's hover surface; the orange brand color is `--brand`.
    Use `--brand-ink` when orange is small text (contrast-tuned per theme).
-   `--diff-*` mark status (add = success, del = blocked); `--syn-*` color code only. */
+   `--diff-*` mark status (add = success, del = blocked); `--syn-*` color code only.
+   `--heat-1..4` are the activity heatmap ramp (neutral, so orange stays once per screen). */
 :root {
   --background: #faf9f5;
   --foreground: #141413;
@@ -146,6 +151,10 @@
   --ink-3: #7b7a72;
   --ink-4: #a8a69d;
   --chip-fill: #1414130a;
+  --heat-1: color-mix(in srgb, var(--foreground) 22%, var(--background));
+  --heat-2: color-mix(in srgb, var(--foreground) 42%, var(--background));
+  --heat-3: color-mix(in srgb, var(--foreground) 66%, var(--background));
+  --heat-4: var(--foreground);
   --diff-add: #3e7a3e;
   --diff-del: #a04545;
   --diff-add-bg: #50965017;
@@ -196,6 +205,10 @@
   --ink-3: #87867f;
   --ink-4: #5e5d59;
   --chip-fill: #faf9f50d;
+  --heat-1: color-mix(in srgb, var(--foreground) 22%, var(--background));
+  --heat-2: color-mix(in srgb, var(--foreground) 42%, var(--background));
+  --heat-3: color-mix(in srgb, var(--foreground) 66%, var(--background));
+  --heat-4: var(--foreground);
   --diff-add: #9ac29a;
   --diff-del: #c29a9a;
   --diff-add-bg: #78be7812;

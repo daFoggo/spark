@@ -1,65 +1,94 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@workspace/ui/components/empty"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { PageHead } from "@/components/layout/page-head"
+import { Heatmap, HeatmapLegend } from "@/components/shared/heatmap"
 import { Metric, Metrics } from "@/components/shared/metrics"
-import { SpecItem, SpecList } from "@/components/shared/spec-list"
-import { authConfig } from "@/lib/auth/config"
-import { permissionsOf } from "@/lib/auth/permissions"
+import { getSettings } from "@/features/settings/queries"
+import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
 
-export const metadata: Metadata = { title: "Overview" }
+export const metadata: Metadata = { title: "Today" }
 
-async function Overview() {
-  const session = await requirePermission("dashboard:view")
-  const permissions = permissionsOf(session.role)
+const WEEKDAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+]
+
+async function Today() {
+  await requirePermission("dashboard:view")
+  const settings = await getSettings()
+  const today = await getToday(settings.timezone)
+  const label = new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(`${today}T00:00:00Z`))
+
   return (
     <>
+      <PageHead label={label} title="Today">
+        Habits, tasks and your log will gather here.
+      </PageHead>
       <Metrics>
-        <Metric label="Role">{session.role}</Metric>
-        <Metric label="Permissions">{permissions.length}</Metric>
-        <Metric label="Provider">{authConfig.AUTH_PROVIDER}</Metric>
+        <Metric label="Timezone">{settings.timezone}</Metric>
+        <Metric label="Week starts">{WEEKDAYS[settings.weekStart]}</Metric>
+        <Metric label="Companion">{settings.petName}</Metric>
       </Metrics>
+      <Empty className="border border-dashed">
+        <EmptyHeader>
+          <EmptyTitle>Nothing to check in yet</EmptyTitle>
+          <EmptyDescription>
+            Habits arrive in the next step. Your activity will fill the map
+            below.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
       <section className="flex flex-col gap-5">
         <h2 className="font-mono text-sm font-medium tracking-wide uppercase">
-          Granted to your role
+          Activity
         </h2>
-        <SpecList>
-          {permissions.map((permission) => (
-            <SpecItem
-              key={permission}
-              label={permission.split(":")[0] ?? permission}
-            >
-              <code className="font-mono">{permission}</code>
-            </SpecItem>
-          ))}
-        </SpecList>
+        <Heatmap
+          end={today}
+          weeks={26}
+          weekStart={settings.weekStart}
+          cells={{}}
+        />
+        <HeatmapLegend />
       </section>
     </>
   )
 }
 
-function OverviewSkeleton() {
+function TodaySkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+    <div className="flex flex-col gap-8">
+      <Skeleton className="h-20" />
       <Skeleton className="h-14" />
-      <Skeleton className="h-14" />
-      <Skeleton className="h-14" />
+      <Skeleton className="h-40" />
     </div>
   )
 }
 
 export default function DashboardPage() {
   return (
-    <>
-      <PageHead label="Dashboard" title="Overview">
-        Your session, role and what it lets you do.
-      </PageHead>
-      <Suspense fallback={<OverviewSkeleton />}>
-        <Overview />
-      </Suspense>
-    </>
+    <Suspense fallback={<TodaySkeleton />}>
+      <Today />
+    </Suspense>
   )
 }

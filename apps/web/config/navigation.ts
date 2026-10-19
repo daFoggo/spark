@@ -5,7 +5,7 @@ import type { Permission } from "@/lib/auth/permissions"
  * Semantic icon names, resolved to Tabler icons in `components/layout/nav-icons.tsx`. Names (not
  * components) because `entries` cross from a Server Component to the client `NavTree`.
  */
-export type NavIconName = "overview" | "account" | "members"
+export type NavIconName = "today" | "account" | "members"
 
 export type NavLink = {
   title: string
@@ -29,9 +29,9 @@ export const DASHBOARD_NAV: NavSection[] = [
     label: "Workspace",
     entries: [
       {
-        title: "Overview",
+        title: "Today",
         href: DASHBOARD_PATH,
-        icon: "overview",
+        icon: "today",
         permission: "dashboard:view",
       },
     ],

@@ -13,9 +13,9 @@ const sections: NavSection[] = [
     label: "Workspace",
     entries: [
       {
-        title: "Overview",
+        title: "Today",
         href: "/dashboard",
-        icon: "overview",
+        icon: "today",
         permission: "dashboard:view",
       },
     ],
@@ -51,7 +51,7 @@ describe("filterNav", () => {
 
     const noMembers = filterNav(sections, (p) => p !== "members:view")
     expect(navLinks(noMembers).map((l) => l.title)).toEqual([
-      "Overview",
+      "Today",
       "Account",
     ])
   })
@@ -61,7 +61,7 @@ describe("breadcrumbTrail", () => {
   it("appends the page title on an index route", () => {
     expect(breadcrumbTrail("/dashboard", sections)).toEqual([
       { label: "dashboard", href: "/dashboard" },
-      { label: "overview" },
+      { label: "today" },
     ])
   })
 

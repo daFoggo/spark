@@ -38,18 +38,21 @@ done. Tick items in the PR that delivers them and reference rule IDs (`HB-3`) in
 - [x] Answer the open questions (spec §8 decisions log).
 - [x] Install the official skills (`shadcn`, `supabase`, `supabase-postgres-best-practices`) into `.claude/skills` and
       `.agents/skills`; pinned in `skills-lock.json`.
-- [ ] Supabase CLI project in `apps/web/supabase/`; switch `AUTH_PROVIDER=supabase` in `.env.example` docs.
-- [ ] Migration 1: `user_settings` (+ row created on sign-up by a trigger on `auth.users`), shared `updated_at` trigger,
+- [x] Supabase CLI (devDependency of `apps/web`), project in `apps/web/supabase/`, local stack on Docker; local env in
+      `.env.development.local` (gitignored).
+- [x] Migration 1: `user_settings` (+ row created on sign-up by a trigger on `auth.users`), shared `updated_at` trigger,
       `private` schema helpers; RLS + pgTAP.
-- [ ] `lib/supabase/data.ts` (`createDataClient(accessToken)`), generated `database.types.ts` (spec §6.1).
-- [ ] `lib/dates.ts`: local today (behind `io()`), week start, ranges (TM-1…TM-4) + unit tests.
-- [ ] `lib/cache-tags.ts`: tag helpers (spec §7.3).
-- [ ] `features/settings`: read/update settings; `timezone-sync.tsx` (timezone + locale week start, TM-2, TM-4) mounted in
+- [x] `lib/supabase/data.ts` (`createDataClient(accessToken)`), generated `database.types.ts` (spec §6.1).
+- [x] `lib/dates.ts` (+ `lib/clock.ts` for the request-time read): local today (behind `io()`), week start, ranges (TM-1…TM-4) + unit tests.
+- [x] `lib/cache-tags.ts`: tag helpers (spec §7.3).
+- [x] `features/settings`: read/update settings; `timezone-sync.tsx` (timezone + locale week start, TM-2, TM-4) mounted in
       `app/(dashboard)/layout.tsx`.
-- [ ] Install the full shadcn set into `packages/ui` (`pnpm dlx shadcn@latest add --all` from `apps/web`); check
+- [x] Install the full shadcn set into `packages/ui` (minus `alert`, which has a repo variant, and the chat, code-block and
+      carousel groups, which the app does not use) (`pnpm dlx shadcn@latest add --all` from `apps/web`); check
       `pnpm check` / `pnpm build` still pass; keep `style: "base-lyra"` in both `components.json`.
-- [ ] `components/shared/heatmap.tsx` on top of shadcn `Tooltip` / `ScrollArea`; levels and tooltips as props (MT-7).
-- [ ] `config/navigation.ts`: Today (replaces Overview at `/dashboard`), Habits, Tasks, Goals, Weekly review, with icons.
+- [x] `components/shared/heatmap.tsx` (cell tooltips are native `title` for now; revisit in Phase 6) on top of shadcn `Tooltip` / `ScrollArea`; levels and tooltips as props (MT-7).
+- [x] `config/navigation.ts`: Today replaces Overview at `/dashboard`. Habits, Tasks, Goals and Weekly review entries are
+      added in the phase that creates each route, so the sidebar never links to a 404.
 - [ ] `supabase/seed.sql`: demo user + prototype dataset.
 
 Done when: signed in with Supabase locally, the dashboard shows "today" in the user's timezone and a heatmap from seeded

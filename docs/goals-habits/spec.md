@@ -229,6 +229,7 @@ timestamptz`; omitted below. Access is limited to the owner by RLS (§6.2).
 user_settings (
   user_id      uuid primary key,
   timezone     text not null default 'UTC',          -- TM-2
+  timezone_confirmed boolean not null default false, -- true once the browser reported its timezone (TM-2)
   week_start   smallint not null default 1,          -- 0..6, TM-4
   pet_name     text not null default 'Mochi',        -- PT-1
   adopted_at   date not null                         -- PT-1

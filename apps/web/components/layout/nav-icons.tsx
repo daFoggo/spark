@@ -1,5 +1,5 @@
 import {
-  IconLayoutDashboard,
+  IconSunHigh,
   IconUser,
   IconUsers,
   type Icon,
@@ -9,7 +9,7 @@ import type { NavIconName } from "@/config/navigation"
 
 /** `Record` makes TypeScript fail here when a name is added to `NavIconName` without an icon. */
 const NAV_ICONS: Record<NavIconName, Icon> = {
-  overview: IconLayoutDashboard,
+  today: IconSunHigh,
   account: IconUser,
   members: IconUsers,
 }
