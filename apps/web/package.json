@@ -33,6 +33,7 @@
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "eslint": "^10",
+    "supabase": "^2.121.0",
     "typescript": "^5",
     "vitest": "^5.0.4"
   }
