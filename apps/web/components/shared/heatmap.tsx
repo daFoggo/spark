@@ -50,12 +50,15 @@ export function Heatmap({
   weeks,
   weekStart,
   cells,
+  label = "Activity",
   className,
 }: {
   end: LocalDate
   weeks: number
   weekStart: number
   cells: Partial<Record<LocalDate, HeatCell>>
+  /** Names the grid for screen readers, e.g. "Activity". */
+  label?: string
   className?: string
 }) {
   const first = startOfWeek(addDays(end, -(weeks * 7 - 1)), weekStart)
@@ -63,6 +66,10 @@ export function Heatmap({
   const rows = Array.from({ length: Math.ceil(days.length / 7) }, (_, w) =>
     days.slice(w * 7, w * 7 + 7)
   )
+  const activeDays = days.filter((date) => {
+    const level = cells[date]?.level
+    return level !== undefined && level !== 0 && level !== "rest"
+  }).length
   const months = rows.map((week, index) => {
     const month = week[0]?.slice(5, 7)
     const previous = rows[index - 1]?.[0]?.slice(5, 7)
@@ -74,7 +81,7 @@ export function Heatmap({
       <div
         className="flex w-max flex-col gap-1.5 pb-3"
         role="img"
-        aria-label="Activity heatmap"
+        aria-label={`${label} heatmap, last ${weeks} weeks: ${activeDays} active ${activeDays === 1 ? "day" : "days"}`}
       >
         <div className="flex gap-0.75 font-mono text-xs text-ink-3">
           {months.map((month, index) => (
@@ -128,6 +135,23 @@ function Cell({ cell }: { cell: HeatCell | undefined }) {
       {cell?.extra ? (
         <span className="absolute inset-0 m-auto size-1 bg-background" />
       ) : null}
+    </span>
+  )
+}
+
+/** A short row of cells (e.g. the last 7 days) for list rows. Same levels and tooltips as `Heatmap`. */
+export function HeatStrip({
+  cells,
+  className,
+}: {
+  cells: readonly HeatCell[]
+  className?: string
+}) {
+  return (
+    <span className={cn("flex gap-0.75", className)} aria-hidden>
+      {cells.map((cell, index) => (
+        <Cell key={index} cell={cell} />
+      ))}
     </span>
   )
 }

@@ -53,3 +53,14 @@ export function dateRange(from: LocalDate, to: LocalDate): LocalDate[] {
 
 export const isLocalDate = (value: string): value is LocalDate =>
   /^\d{4}-\d{2}-\d{2}$/.test(value) && fromUtc(toUtc(value)) === value
+
+const SHORT_DAY = new Intl.DateTimeFormat("en-US", {
+  timeZone: "UTC",
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+})
+
+/** "Mon, Oct 19": for tooltips and notes. */
+export const formatDay = (date: LocalDate): string =>
+  SHORT_DAY.format(new Date(toUtc(date)))
