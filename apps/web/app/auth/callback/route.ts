@@ -3,10 +3,13 @@ import type { NextRequest } from "next/server"
 
 import { DASHBOARD_PATH, SIGN_IN_PATH } from "@/config/routes"
 import { getAuthProvider } from "@/lib/auth"
+import { publicEnv } from "@/lib/env.public"
 
 /** OAuth redirect target (PKCE): exchanges `?code=` for a session cookie. */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl
+  const { searchParams } = request.nextUrl
+  // `request.nextUrl.origin` can be the internal host behind a reverse proxy; use the public URL.
+  const origin = publicEnv.NEXT_PUBLIC_APP_URL
   const code = searchParams.get("code")
 
   if (code) {

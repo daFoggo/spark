@@ -9,6 +9,22 @@ import {
 } from "@/config/routes"
 import { updateSession } from "@/lib/auth/proxy"
 
+const CACHE_HEADERS = ["cache-control", "expires", "pragma"]
+
+/**
+ * A redirect built from scratch would drop the refreshed session cookies (single-use refresh
+ * tokens would be lost) and the cache headers that stop a CDN from caching a `Set-Cookie`.
+ */
+function redirectWithSession(url: URL, session: NextResponse) {
+  const redirect = NextResponse.redirect(url)
+  for (const cookie of session.cookies.getAll()) redirect.cookies.set(cookie)
+  for (const name of CACHE_HEADERS) {
+    const value = session.headers.get(name)
+    if (value) redirect.headers.set(name, value)
+  }
+  return redirect
+}
+
 /**
  * 1) Refresh the session (provider-specific) so Server Components see fresh tokens.
  * 2) Optimistic redirect for protected paths. Real authorization is in the DAL.
@@ -21,14 +37,10 @@ export async function proxy(request: NextRequest) {
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   )
   if (isProtected && !isAuthenticated) {
-    return NextResponse.redirect(new URL(SIGN_IN_PATH, request.url))
+    return redirectWithSession(new URL(SIGN_IN_PATH, request.url), response)
   }
   if (isAuthenticated && (AUTH_PAGES as readonly string[]).includes(pathname)) {
-    // Carry over refreshed session cookies: a redirect built from scratch would drop them,
-    // and single-use refresh tokens (Supabase) would then be lost.
-    const redirect = NextResponse.redirect(new URL(DASHBOARD_PATH, request.url))
-    for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie)
-    return redirect
+    return redirectWithSession(new URL(DASHBOARD_PATH, request.url), response)
   }
   return response
 }
