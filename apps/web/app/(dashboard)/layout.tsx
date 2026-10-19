@@ -21,6 +21,7 @@ import { AppLogo } from "@/components/shared/app-logo"
 import { DASHBOARD_NAV } from "@/config/navigation"
 
 import { SessionAccount, SessionNav } from "./_components/session-nav"
+import { TimezoneGate } from "./_components/timezone-gate"
 
 /**
  * Dashboard shell (design system §8): sidebar column + main column, each a ColumnHeader over a
@@ -70,6 +71,9 @@ export default function DashboardLayout({
           </div>
         </div>
       </SidebarInset>
+      <Suspense fallback={null}>
+        <TimezoneGate />
+      </Suspense>
     </SidebarProvider>
   )
 }
