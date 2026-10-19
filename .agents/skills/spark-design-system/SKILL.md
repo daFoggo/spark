@@ -21,7 +21,8 @@ section when a case is not covered here.
 3. shadcn components: choose a `size` / `variant` prop. Never set `h-*`, `px-*`, `py-*`, `text-*` on them via
    `className`; layout classes (`w-full`, `mt-*`, `self-*`) are fine.
 4. Style through tokens (`bg-background`, `text-ink-3`, `border-border`, `bg-brand`), never hex or `dark:` color pairs.
-   Both themes must work; dark is the default.
+   Both themes must work; dark is the default. Status: `text-diff-add` (ok) / `text-diff-del` (blocked); code:
+   `text-syn-*`. Orange (`brand`, `brand-ink`) once per screen.
 5. `font-serif` exists but is opt-in; do not apply it unless asked.
 
 ## Spacing tier lookup
@@ -59,6 +60,7 @@ children. Separate with space first, `border-b` second, a bordered box only for 
 | Secondary | `variant="outline"` |
 | Chips | `<Badge variant="default">` / `variant="outline"` (install first) |
 | Filter tabs | `<TabsList variant="line">` (install first) |
+| Form error / success | `<Alert variant="destructive">` / `variant="success"` |
 
 Add components from `apps/web`: `pnpm dlx shadcn@latest add <name>`. Keep `style: "base-lyra"` identical in
 `apps/web/components.json` and `packages/ui/components.json`.

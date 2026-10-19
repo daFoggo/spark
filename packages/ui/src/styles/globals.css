@@ -46,6 +46,15 @@
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-ink-4: var(--ink-4);
+  --color-chip-fill: var(--chip-fill);
+  --color-diff-add: var(--diff-add);
+  --color-diff-del: var(--diff-del);
+  --color-diff-add-bg: var(--diff-add-bg);
+  --color-diff-del-bg: var(--diff-del-bg);
+  --color-syn-purple: var(--syn-purple);
+  --color-syn-blue: var(--syn-blue);
+  --color-syn-green: var(--syn-green);
+  --color-syn-cyan: var(--syn-cyan);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -60,7 +69,8 @@
 
 /* Colors follow claude.dev. Every other numeric token uses Tailwind's default scale.
    `--accent` is shadcn's hover surface; the orange brand color is `--brand`.
-   Use `--brand-ink` when orange is small text (contrast-tuned per theme). */
+   Use `--brand-ink` when orange is small text (contrast-tuned per theme).
+   `--diff-*` mark status (add = success, del = blocked); `--syn-*` color code only. */
 :root {
   --background: #faf9f5;
   --foreground: #141413;
@@ -86,6 +96,15 @@
   --ink-2: #4c4b45;
   --ink-3: #7b7a72;
   --ink-4: #a8a69d;
+  --chip-fill: #1414130a;
+  --diff-add: #3e7a3e;
+  --diff-del: #a04545;
+  --diff-add-bg: #50965017;
+  --diff-del-bg: #b45a5a17;
+  --syn-purple: #914dbe;
+  --syn-blue: #3065d7;
+  --syn-green: #567527;
+  --syn-cyan: #16749a;
   --chart-1: #c15f3c;
   --chart-2: #4c4b45;
   --chart-3: #7b7a72;
@@ -127,6 +146,15 @@
   --ink-2: #b0aea5;
   --ink-3: #87867f;
   --ink-4: #5e5d59;
+  --chip-fill: #faf9f50d;
+  --diff-add: #9ac29a;
+  --diff-del: #c29a9a;
+  --diff-add-bg: #78be7812;
+  --diff-del-bg: #be787812;
+  --syn-purple: #c792ea;
+  --syn-blue: #82aaff;
+  --syn-green: #c3e88d;
+  --syn-cyan: #89ddff;
   --chart-1: #d97757;
   --chart-2: #b0aea5;
   --chart-3: #87867f;

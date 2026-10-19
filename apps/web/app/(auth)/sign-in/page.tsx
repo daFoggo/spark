@@ -1,8 +1,24 @@
-import Link from "next/link"
 import { Suspense } from "react"
 
+import { SIGN_UP_PATH } from "@/config/routes"
 import { FormError } from "@/features/auth/components/form-error"
 import { SignInForm } from "@/features/auth/components/sign-in-form"
+
+import {
+  AuthAside,
+  AuthBody,
+  AuthHeader,
+  AuthHeading,
+  AuthMain,
+  AuthPitch,
+  AuthSwitch,
+} from "../_components/auth-frame"
+import {
+  Terminal,
+  TerminalCommand,
+  TerminalOutput,
+  TerminalPrompt,
+} from "../_components/terminal"
 
 async function OAuthError({
   searchParams,
@@ -23,28 +39,46 @@ export default function SignInPage({
 }) {
   return (
     <>
-      <div className="mb-8">
-        <h1 className="mb-2 text-2xl font-medium lg:text-3xl">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">
-          Sign in to your account.
-        </p>
-      </div>
-      <div className="flex flex-col gap-4">
-        <Suspense>
-          <OAuthError searchParams={searchParams} />
-        </Suspense>
-        {/* Google is disabled for now. Enable the provider in Supabase, then use `authConfig.AUTH_PROVIDER === "supabase"`. */}
-        <SignInForm showGoogle={false} />
-      </div>
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        No account yet?{" "}
-        <Link
-          href="/sign-up"
-          className="font-medium underline underline-offset-4 hover:text-foreground"
-        >
-          Create one
-        </Link>
-      </p>
+      <AuthAside>
+        <AuthPitch title="Pick up right where you left off.">
+          Your dashboard, projects and settings are one sign-in away.
+        </AuthPitch>
+        <Terminal title="spark login">
+          <TerminalCommand step={0}>login</TerminalCommand>
+          <TerminalOutput step={1} label="session" tone="muted">
+            none found
+          </TerminalOutput>
+          <TerminalOutput step={2} label="workspace" tone="ok">
+            ready
+          </TerminalOutput>
+          <TerminalOutput step={3} label="dashboard" tone="ok">
+            ready
+          </TerminalOutput>
+          <TerminalOutput step={4} label="credentials" tone="focus">
+            waiting for you
+          </TerminalOutput>
+          <TerminalPrompt step={5} />
+        </Terminal>
+      </AuthAside>
+      <AuthMain>
+        <AuthHeader>
+          <AuthSwitch prompt="No account?" href={SIGN_UP_PATH}>
+            Sign up
+          </AuthSwitch>
+        </AuthHeader>
+        <AuthBody>
+          <AuthHeading eyebrow="Sign in" title="Welcome back">
+            Sign in to your account.
+          </AuthHeading>
+          <div className="flex flex-col gap-4">
+            <Suspense>
+              <OAuthError searchParams={searchParams} />
+            </Suspense>
+            <SignInForm />
+            {/* Google is disabled for now. Enable the provider in Supabase, then render `<GoogleSignInButton />` when `authConfig.AUTH_PROVIDER === "supabase"`. */}
+          </div>
+        </AuthBody>
+      </AuthMain>
     </>
   )
 }

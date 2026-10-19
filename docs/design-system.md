@@ -42,6 +42,14 @@ Defined in `globals.css` and exposed as utilities (`bg-background`, `text-ink-3`
 | `brand` | `#c15f3c` | `#d97757` | Orange: pixel tiles, focal chart mark, selection |
 | `brand-ink` | `#a94e2f` | `#e08a6c` | Orange used as small text (contrast-tuned per theme) |
 | `border` / `input` | ink 11% / 22% | ink 9% / 16% | Hairlines and field outlines |
+| `chip-fill` | `#1414130a` | `#faf9f50d` | Inline `code` and chip fill |
+| `diff-add` / `diff-add-bg` | `#3e7a3e` / `#50965017` | `#9ac29a` / `#78be7812` | Success, "ready", added lines (`<Alert variant="success">`) |
+| `diff-del` / `diff-del-bg` | `#a04545` / `#b45a5a17` | `#c29a9a` / `#be787812` | Blocked, removed lines; `destructive` uses the same red |
+| `syn-purple` / `syn-blue` | `#914dbe` / `#3065d7` | `#c792ea` / `#82aaff` | Code only: keywords, args / functions, programs |
+| `syn-green` / `syn-cyan` | `#567527` / `#16749a` | `#c3e88d` / `#89ddff` | Code only: strings / operators, punctuation |
+
+Values match claude.dev (re-checked 2026-10-19). Status and syntax colors are muted on purpose: they live in small
+mono text, never as fills behind body copy (the `-bg` tints are the only fills). Orange stays the single focal color.
 
 Light is not an inverted dark: `ink-2` gets much darker on paper, hairlines get slightly more alpha, panels go darker
 than the page instead of lighter.
@@ -170,6 +178,7 @@ shadcn `base-lyra`: square corners (`--radius: 0`), compact sizes, `text-xs` but
 | "Featured" chip | `<Badge variant="default">` |
 | Category chip | `<Badge variant="outline">` |
 | Filter tabs | `<Tabs>`, `<TabsList variant="line">` |
+| Form error / success notice | `<Alert variant="destructive">` / `<Alert variant="success">` |
 
 Installed today: alert, button, input, input-group, label, skeleton, spinner, textarea. Badge and Tabs are not installed
 yet; add them before use. Install new components from `apps/web` (`pnpm dlx shadcn@latest add <name>`); the CLI writes into `packages/ui` through

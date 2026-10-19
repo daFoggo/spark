@@ -22,7 +22,7 @@ export function SignUpForm() {
 
   if (state.confirmEmail) {
     return (
-      <Alert>
+      <Alert variant="success">
         <IconCircleCheck />
         <AlertTitle>Check your email</AlertTitle>
         <AlertDescription>
