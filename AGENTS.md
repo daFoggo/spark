@@ -32,6 +32,7 @@ The docs in `docs/` are the single source of truth for `apps/web`. Open the matc
 | Performance, code splitting, lazy loading, Core Web Vitals | `docs/performance-optimization.md` |
 | Redis cache, large uploads, SSE, telemetry, instant-navigation tests | `docs/advanced-patterns.md` |
 | UI: theme tokens, typography, spacing, responsive, shadcn component sizes, motion | `docs/design-system.md` |
+| Goals, habits, activities, tasks, reviews, pet: rules, schema, flows, delivery checklist | `docs/goals-habits/spec.md`, `docs/goals-habits/roadmap.md` |
 
 For a fast decision (which pattern applies) use the skill `.agents/skills/next-mono-base/SKILL.md`; it links back to the docs above.
 For any className, layout or theme work use `.agents/skills/spark-design-system/SKILL.md` (no arbitrary Tailwind values; component sizes via props).
