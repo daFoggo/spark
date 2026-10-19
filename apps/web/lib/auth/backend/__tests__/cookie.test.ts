@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { parseExpirationMs, seal, unseal, type BackendSession } from "./cookie"
+import { parseExpirationMs, seal, unseal, type BackendSession } from "../cookie"
 
 const session = (): BackendSession => ({
   userId: "u1",

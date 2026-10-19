@@ -8,7 +8,7 @@ import {
   localDate,
   startOfWeek,
   weekday,
-} from "./dates"
+} from "../dates"
 
 describe("localDate", () => {
   // 2026-10-19 18:30 UTC is already the 20th in Ho Chi Minh (UTC+7) and still the 19th in New York.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { seal, type BackendSession } from "./cookie"
+import { seal, type BackendSession } from "../cookie"
 
 // A signed HS256 JWT with the claims the backend issues (sub, email, name, iat, nbf, exp, type)
 // is about 280 characters (a modeled token of that size is used here).

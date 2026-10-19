@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { apiUrl } from "./url"
+import { apiUrl } from "../url"
 
 describe("apiUrl", () => {
   it("keeps the base path (e.g. /api/v1) with or without a trailing slash", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { hasPermission, parseRole, permissionsOf } from "./permissions"
+import { hasPermission, parseRole, permissionsOf } from "../permissions"
 
 describe("parseRole", () => {
   it("accepts known roles and falls back to member for anything else", () => {
