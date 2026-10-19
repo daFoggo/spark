@@ -33,6 +33,11 @@ export async function proxy(request: NextRequest) {
   const { response, isAuthenticated } = await updateSession(request)
 
   const { pathname } = request.nextUrl
+  // The root has no page of its own: signed-in visitors land on the dashboard, everyone else on sign-in.
+  if (pathname === "/") {
+    const target = isAuthenticated ? DASHBOARD_PATH : SIGN_IN_PATH
+    return redirectWithSession(new URL(target, request.url), response)
+  }
   const isProtected = PROTECTED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   )

@@ -190,6 +190,7 @@ pass a token as an argument (one entry per user, misses after every refresh, sto
   `AUTH_PROVIDER` you deploy.
 - Rate limiting, password reset and email verification are not part of the base; rate limiting belongs to the backend/Supabase [N23].
 - Unexpected errors render [error.tsx](../apps/web/app/error.tsx) (`retry`) and unknown URLs [not-found.tsx](../apps/web/app/not-found.tsx).
+- `/` has no page of its own: `proxy.ts` sends signed-in users to the dashboard and everyone else to sign-in.
 - Signed-in users requesting `/sign-in` or `/sign-up` are redirected to the dashboard in `proxy.ts`; the redirect copies the refreshed
   session cookies, otherwise single-use refresh tokens would be lost.
 - Forms keep non-secret values (email, name) after an error because React resets a form when its action finishes; passwords are never echoed.
