@@ -167,3 +167,30 @@ had no entry point, and the review badge showed all week. Principle 8 and AC-10 
 - Verified: `pnpm check`; empty-account Today on mobile and `?day=` pick in the browser. Not verified: checking in a back-dated habit on a real habit (no data after the reset).
 
 Done when: a habit from two days ago is one tap on the strip, Today shows only what to do, and the badge is quiet on Monday.
+
+## Phase 8: Goals lead
+
+The goal is the top of the model (principle 9) but sat in the sidebar's fourth slot and nowhere on Today. Nothing becomes
+mandatory; the goal is offered first.
+
+- [x] Spec: principle 9; the habit form asks for the goal first.
+- [x] Sidebar: Goals directly under Today.
+- [x] Today: an "Active goals" band above the habits (name, habits done today, link); habit rows name their goal.
+- [x] Onboarding: "Get started" begins with "Set a goal" (skippable); the habit form preselects the goal when opened from a goal page; empty Today offers both.
+- [x] Habits page grouped by goal, habits without a goal last.
+- [x] Design-system audit: off-tier spacing fixed (`gap-6`, `gap-12`, `p-5`); no arbitrary values or hex colors in `apps/web`. Pre-existing motion durations (`duration-300`, `duration-500`) are documented in the design system.
+
+Done when: a new user sets a goal, creates a habit for it from the goal page, and sees both on Today.
+
+## Phase 9: Less to learn
+
+Found by using the app from zero: the goal page had too many equal blocks, chapters could not be found and were dropped, "Log progress" duplicated
+ticking a habit, and the sidebar repeated the goals Today already shows.
+
+- [x] No "Log progress" button or dialog anywhere (spec 5.2); extra effort is an extra tick or a counted task.
+- [x] Goal page reordered and trimmed.
+- [x] Chapters removed: UI, actions, queries, schema, OpenAPI (`/goals/{id}/chapters`, `getGoalActivity` returns `total`), seed and pgTAP. Migration `20261020210000_drop_chapters.sql` drops the table and RPC; it is written but not pushed to the hosted project yet.
+- [x] Sidebar lists only the pages; goals live on Today and the Goals page (the inspector no longer repeats them).
+- [x] "Get started" has a button per step; Today no longer shows a second empty box next to it.
+
+Done when: a new user can go from nothing to a goal, a habit on it and a ticked day without reading the Guide.

@@ -455,44 +455,13 @@ paths:
                       - { $ref: "#/components/schemas/LocalDate" }
                       - { type: "null" }
 
-  /goals/{goalId}/chapters:
-    parameters:
-      - $ref: "#/components/parameters/goalId"
-    get:
-      operationId: listChapters
-      summary: Closed chapters, oldest first (CH-4 append-only)
-      responses:
-        "200":
-          description: Chapters
-          content:
-            application/json:
-              schema:
-                type: array
-                items: { $ref: "#/components/schemas/Chapter" }
-    post:
-      operationId: closeChapter
-      summary: Close the current chapter; snapshots its count and hours (CH-1, CH-2). 422 `CH-1` without activity
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [title]
-              properties:
-                title: { type: string, minLength: 1, maxLength: 120 }
-      responses:
-        "201": { description: Closed }
-        "422": { $ref: "#/components/responses/RuleViolation" }
-
   /goals/{goalId}/activity:
     get:
       operationId: getGoalActivity
-      summary: Activities of the goal since a date, plus the current chapter totals (CH-3)
+      summary: Activities of the goal since a date, plus how many it has in all
       parameters:
         - $ref: "#/components/parameters/goalId"
         - { name: from, in: query, required: true, schema: { type: string, format: date } }
-        - { name: afterId, in: query, required: true, schema: { type: integer, minimum: 0 } }
       responses:
         "200":
           description: Goal activity
@@ -730,17 +699,6 @@ components:
         title: { type: string, minLength: 1, maxLength: 120 }
         position: { type: integer }
         doneOn: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
-    Chapter:
-      type: object
-      required: [id, goalId, title, closedOn, lastActivityId, activityCount, hours]
-      properties:
-        id: { type: string, format: uuid }
-        goalId: { type: string, format: uuid }
-        title: { type: string, minLength: 1, maxLength: 120 }
-        closedOn: { $ref: "#/components/schemas/LocalDate" }
-        lastActivityId: { type: integer }
-        activityCount: { type: integer }
-        hours: { type: number }
     Goal:
       type: object
       required: [id, slug, name, why, becoming, targetDate, ifHardObstacle, ifHardPlan, status, checkpoints]
@@ -769,17 +727,12 @@ components:
         status: { $ref: "#/components/schemas/GoalStatus" }
     GoalActivity:
       type: object
-      required: [recent, chapter]
+      required: [recent, total]
       properties:
         recent:
           type: array
           items: { $ref: "#/components/schemas/Activity" }
-        chapter:
-          type: object
-          required: [count, hours]
-          properties:
-            count: { type: integer }
-            hours: { type: number }
+        total: { type: integer }
 
     Review:
       type: object

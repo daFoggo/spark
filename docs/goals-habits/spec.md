@@ -23,7 +23,6 @@ import/export, team workspaces.
 | Local date | The calendar date in the user's timezone. Every "today", streak and heatmap is computed on local dates. |
 | Goal | Where the user is headed. Only a name is required. |
 | Checkpoint | Optional step inside a goal, added when the next step is visible. Not a fixed plan. |
-| Chapter | A closed stretch of a goal: the user decides "this is enough", names it, and the counters restart. |
 | Habit | A schedule plus a promise ("Run on Mon/Wed/Fri"). It stores no history. |
 | Activity | One thing the user did on a local date: a habit check-in, a free log, or a logged task. |
 | Check-in | An activity with a `habit_id`, level `full` or `minimum`. |
@@ -35,19 +34,24 @@ import/export, team workspaces.
 
 ## 1. Product principles
 
-1. **No upfront planning.** A goal starts with a name. Structure (checkpoints, chapters) is added when the user wants it.
+1. **No upfront planning.** A goal starts with a name. Structure (checkpoints) is added when the user wants it.
 2. **Log first.** What the user did is the core record (Activity). Progress is shown as accumulated evidence, not as a
    percentage of an imagined plan. A percentage appears only when there is a real denominator (checkpoints).
 3. **Every link is optional.** Habits, tasks and logs work alone; linking them to a goal only groups and counts them.
+   Optional does not mean hidden: the goal is the top of the model, so the UI offers it first (see 9).
 4. **Forgiving rhythm.** One miss never breaks a streak; two in a row does ("never miss twice"). A low-energy day can log
    the minimum version and it still counts.
 5. **Few active goals.** At most 3 active goals; the rest wait in Someday.
 6. **Familiar words.** UI copy uses everyday terms (Streak, Checkpoint, "If it gets hard"), never method names
    (WOOP, implementation intention, lead/lag measure).
 7. **Fast daily loop.** Checking in a habit or adding a task takes one action and gives instant feedback.
-8. **One way to record each thing.** A habit is ticked on the day it was done (pick the day, not a form). A log is for effort
-   that has no habit (an hour of study) and is evidence for a goal. Today shows what to do; numbers and history live on
+8. **One way to record each thing.** A habit is ticked on the day it was done (pick the day, not a form). There is no
+   separate "log progress" form: more effort is another tick of a habit on a day it is not scheduled (an extra session,
+   AC-4) or a finished task counted for a goal (TK-6). Today shows what to do; numbers and history live on
    the Habits and Goals pages.
+9. **Goals lead, nothing is forced.** A goal is the highest level (goal, then habits and tasks, then check-ins and logs).
+   Onboarding starts from a goal, the habit form asks for the goal first, Today shows the active goals above the habits
+   and every habit row names its goal. A habit without a goal is still a normal habit with no warning.
 
 ---
 
@@ -55,8 +59,7 @@ import/export, team workspaces.
 
 ```
 User (settings: timezone, week_start, pet_name, adopted_at)
- ├── Goal ──┬── Checkpoint (0..n, ordered)
- │          └── Chapter    (0..n, closed stretches)
+ ├── Goal ───── Checkpoint (0..n, ordered)
  ├── Habit ───────────── goal_id? ──▶ Goal
  ├── Activity ── habit_id? ──▶ Habit
  │             ├ goal_id?  ──▶ Goal
@@ -93,7 +96,7 @@ User (settings: timezone, week_start, pet_name, adopted_at)
 - **GL-3** At most **3** goals are `active`. Creating a goal when 3 are active creates it as `someday` and says so.
   Activating a 4th is refused with "Move one to Someday first".
 - **GL-4** `done` is allowed only when the goal has a target date or at least one checkpoint (there is something to be done
-  with). Open-ended goals close chapters instead.
+  with). An open-ended goal simply stays active, or waits in Someday, until the user archives it.
 - **GL-5** `archived` hides the goal everywhere except Settings → Archive. History (activities) stays.
 - **GL-6** Deleting a goal is a soft delete (`archived`). Hard delete is out of scope.
 - **GL-7** Linked habits, tasks and activities keep their `goal_id` when a goal changes status. When a goal is archived,
@@ -106,14 +109,10 @@ User (settings: timezone, week_start, pet_name, adopted_at)
 - **CP-3** Progress = done / total. Toggling done sets/clears `done_at` (local date).
 - **CP-4** Checkpoints can be reordered, renamed and deleted. They are never auto-completed by tasks or activities.
 
-### 3.4 Chapters (CH)
+### 3.4 Chapters (removed)
 
-- **CH-1** "Close this chapter" requires at least one activity in the current chapter and a title (1–120 chars).
-- **CH-2** Closing stores `title`, `closed_on` (local date), `activity_count` and `hours` (snapshots), and
-  `last_activity_id` (the highest activity id included).
-- **CH-3** The current chapter = activities of the goal with `id > last chapter's last_activity_id`. Goal counters
-  ("This chapter", Time, Last 7 days) use the current chapter; the heatmap and timeline show all chapters.
-- **CH-4** Chapters are append-only (rename allowed, no delete, no reopen).
+Chapters (CH-1…CH-4) were dropped in Phase 9: a goal with no finish line did not need a second counter, and nobody found
+the button. Goal numbers now count everything the goal has.
 
 ### 3.5 Habits (HB)
 
@@ -259,12 +258,6 @@ checkpoints (
   title text not null, position int not null, done_on date
 )
 
-chapters (
-  id uuid primary key, goal_id uuid not null references goals on delete cascade,
-  title text not null, closed_on date not null,
-  last_activity_id bigint not null, activity_count int not null, hours numeric(6,1) not null
-)
-
 habits (
   id uuid primary key,
   goal_id uuid references goals on delete set null,
@@ -284,7 +277,7 @@ habit_schedules (                                    -- HB-4: schedule history
 )
 
 activities (
-  id bigserial primary key,                          -- monotonic: chapters use it (CH-2)
+  id bigserial primary key,                          -- monotonic
   date date not null,
   source text not null check (source in ('habit','log','task')),
   habit_id uuid references habits on delete cascade,
@@ -337,16 +330,16 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 5. On create, the row expands an optional note field (AC-8); saving calls `updateActivityNoteAction(activityId, note)`.
 6. Failure: optimistic state reverts; inline error on the row.
 
-### 5.2 Free log (Today "Log progress" button, goal page)
+### 5.2 Extra effort (no free log form)
 
-1. User opens the "Log progress" dialog (a button on Today and on a goal page), types a note, optionally picks a goal
-   (preselected on a goal page) and hours, submits. Recent logs are listed on the goal page, not on Today.
-2. `logActivityAction` validates AC-7, creates `source = log` for today (or a chosen date within AC-5; the database trigger rejects older dates).
-3. Invalidates `activities:<userId>`. Form resets; the pet bounces (PT-5).
+There is no "Log progress" button. Extra effort is recorded the same way as everything else: tick the habit on a day it is
+not scheduled ("Not scheduled today" on Today, AC-4) or finish a task and count it for its goal (TK-6). `logActivityAction`
+and AC-7 stay in the backend and the OpenAPI contract for later clients, but no screen opens them. The goal page lists the
+recent evidence (habit check-ins and counted tasks).
 
 ### 5.3 Create habit
 
-1. "New habit" opens a dialog: name, cue, minimum, schedule (days / every N days), time of day, goal.
+1. "New habit" opens a dialog: goal first (optional, preselected when opened from a goal), then name, cue, minimum, schedule (days / every N days), time of day.
 2. `createHabitAction` validates HB-1/HB-2, writes the habit + first `habit_schedules` row (`valid_from = today`).
 3. Invalidates `habits:<userId>`. Navigates to the habit's page.
 
@@ -372,7 +365,8 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 - **Change status**: the `goals` trigger enforces GL-3/GL-4; the action maps `P0001` to `{ error }` with the rule's message.
   On the goal list, Active and Someday are drop zones (`@dnd-kit/core`): drag a goal by its handle, or focus the handle and use Space and the arrow keys. A move to Active with 3 active goals is refused before the request.
 - **Checkpoints**: add (title), toggle done, rename, reorder, delete (CP-1…CP-4).
-- **Close chapter**: title in a dialog → RPC `close_chapter` (CH-1/CH-2).
+- **Goal page order**: head with "New habit" and "Edit"; numbers; habits and open tasks; checkpoints; activity map and
+  recent evidence; "If it gets hard"; status actions (Someday, Done, Archive) last.
 - Invalidate `goals:<userId>` (+ `goal:<goalId>`).
 
 ### 5.7 Weekly review
@@ -388,10 +382,10 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 
 | Page | Reads (all per user, `"use cache: private"`) |
 | :--- | :--- |
-| Today | settings (today, tz), due habits of the picked day + check-ins, today tasks, pet stats, active goals (for the log dialog and `#goal`) |
+| Today | settings (today, tz), due habits of the picked day + check-ins, today tasks, pet stats, active goals (for `#goal` and the habit form) |
 | Habits | week numbers, overall heatmap (26 w), habit list + 7-day check-ins; selected habit: 52-week check-ins, stats, recent notes |
 | Tasks | tasks for the tab (`?tab=today|later|done`) |
-| Goals | goal list; selected goal: checkpoints, chapters, linked habits + stats, open tasks, activities (26 w + recent) |
+| Goals | goal list; selected goal: checkpoints, linked habits + stats, open tasks, activities (26 w + recent) |
 | Review | week stats, per-habit week numbers, 14-day consistency, open tasks, existing review |
 
 ---
@@ -446,7 +440,7 @@ create index habits_user_id on public.habits (user_id);
 
 - One policy per operation, always `to authenticated`, `auth.uid()` wrapped in `select` (evaluated once per statement).
 - Every column used in a policy or a foreign key gets a btree index.
-- Child rows (checkpoints, chapters, habit_schedules) also carry `user_id`, so their policies need no join.
+- Child rows (checkpoints, habit_schedules) also carry `user_id`, so their policies need no join.
 - Insert policies also check that referenced rows (`goal_id`, `habit_id`, `task_id`) belong to the user, through a
   `security definer` helper in a private schema (`private.owns_goal(id)`, search_path pinned, execute granted to
   `authenticated` only).
@@ -463,7 +457,6 @@ create index habits_user_id on public.habits (user_id);
 | AC-6 goal snapshot | `toggle_check_in` copies `habits.goal_id` |
 | GL-3 max 3 active goals | `before insert or update` trigger on `goals` (`P0001 'GL-3'`) |
 | GL-4 done needs a target or checkpoint | same trigger (`P0001 'GL-4'`) |
-| CH-1 / CH-2 close chapter | RPC `close_chapter(goal_id, title)`: snapshots counts in one transaction |
 | TK-6 log a task | RPC `log_task(task_id)` |
 | RV-3 / RV-4 finish review | RPC `complete_review(week_start, reflection, choices, focus_task_ids)`: saves the review, pauses habits, moves focus tasks, all or nothing |
 | `updated_at` | shared trigger `private.set_updated_at()` |
@@ -503,7 +496,7 @@ logging a task creates an activity, a review pauses habits) are single RPC calls
 | `features/activities` | free logs, timelines, goal heatmap, treat count and last-activity date for the pet | `schemas.ts`, `server.ts`, `queries.ts`, `actions.ts`, `components/` |
 | `features/settings` | user settings (timezone, week start, pet name), timezone sync | `schemas.ts`, `server.ts`, `queries.ts`, `actions.ts`, `components/timezone-sync.tsx` |
 | `features/tasks` | tasks, quick-add parsing, carry-over | `schemas.ts`, `server.ts`, `queries.ts`, `actions.ts`, `components/` |
-| `features/goals` | goals, checkpoints, chapters | `schemas.ts`, `server.ts`, `queries.ts`, `actions.ts`, `components/` |
+| `features/goals` | goals, checkpoints | `schemas.ts`, `server.ts`, `queries.ts`, `actions.ts`, `components/` |
 | `features/reviews` | weekly review | `schemas.ts`, `server.ts`, `queries.ts`, `actions.ts`, `components/` |
 | `features/pet` | Mochi sprite + stage/mood rules (pure, props in) | `pet.ts` (pure rules), `components/` |
 
@@ -526,7 +519,7 @@ The page reads both and passes plain numbers to `features/pet` components, which
 
 | Route | Page composes |
 | :--- | :--- |
-| `/dashboard` (replaces the current overview) | Today: habits due on the picked day, tasks (today), "Log progress" button, pet card |
+| `/dashboard` (replaces the current overview) | Today: habits due on the picked day, tasks (today), pet card |
 | `/dashboard/habits`, `/dashboard/habits/[habitId]` | habit list; habit detail |
 | `/dashboard/tasks?tab=` | task tabs (URL state) |
 | `/dashboard/goals`, `/dashboard/goals/[goalId]` | goal list; goal detail + linked habits/tasks/activities |
@@ -572,7 +565,7 @@ sized skeleton. Navigation entries go to `config/navigation.ts` (with an icon ea
 | Undo after drop / delete | `Sonner` toast with an Undo action |
 | Heatmap cell details | `Tooltip`; overflow in `ScrollArea` |
 | Checkpoint progress | `Progress` |
-| "Not scheduled today", chapters history | `Collapsible` |
+| "Not scheduled today" | `Collapsible` |
 | Weekly review steps | `Tabs` or a stepper built from `Button` + `Separator` |
 | Inspector below `xl`, task details on mobile | `Sheet` |
 | Empty states | `Empty` |
