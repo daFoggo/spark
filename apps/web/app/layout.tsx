@@ -8,8 +8,8 @@ import { cn } from "@workspace/ui/lib/utils"
 
 export const metadata: Metadata = {
   title: {
-    default: "next-mono-base",
-    template: "%s | next-mono-base",
+    default: "spark",
+    template: "%s | spark",
   },
   description: "Next.js 16.4 + React 19 Monorepo Base",
 }
