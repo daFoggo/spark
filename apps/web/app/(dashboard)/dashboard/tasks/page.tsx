@@ -96,7 +96,7 @@ export default function TasksPage({
 }) {
   return (
     <>
-      <PageHead label="Tasks" title="Tasks">
+      <PageHead label="Tasks" title="Tasks" hint="task">
         Things to get done, written as they come. No dates, no pressure.
       </PageHead>
       <Suspense fallback={<Skeleton className="h-64 max-w-3xl" />}>

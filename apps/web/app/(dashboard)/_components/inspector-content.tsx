@@ -1,7 +1,9 @@
 import Link from "next/link"
 
 import { DitherMeter } from "@/components/shared/dither-meter"
+import { InfoHint } from "@/components/shared/info-hint"
 import { WeekStrip, type WeekDay } from "@/components/shared/week-strip"
+import type { HelpKey } from "@/config/help"
 import { checkpointProgress } from "@/features/goals/rules"
 import { overallCells } from "@/features/habits/stats"
 import { PetCard } from "@/features/pet/components/pet-card"
@@ -14,22 +16,28 @@ import {
   weekday,
 } from "@/lib/dates"
 
+import { BACKDATE_DAYS } from "../dashboard/_components/day"
 import { loadDashboard } from "./dashboard-data"
 
 const INITIALS = ["S", "M", "T", "W", "T", "F", "S"]
 
 function Block({
   title,
+  hint,
   children,
 }: {
   title: string
+  hint?: HelpKey
   children: React.ReactNode
 }) {
   return (
     <section className="flex flex-col gap-3">
-      <h3 className="font-mono text-xs tracking-wider text-ink-3 uppercase">
-        {title}
-      </h3>
+      <div className="flex items-center gap-1">
+        <h3 className="font-mono text-xs tracking-wider text-ink-3 uppercase">
+          {title}
+        </h3>
+        {hint ? <InfoHint topic={hint} /> : null}
+      </div>
       {children}
     </section>
   )
@@ -67,6 +75,13 @@ export async function InspectorContent() {
               cell,
               today: date === today,
               future: date > today,
+              // AC-10: today and the days back to the back-dating limit open on Today.
+              href:
+                date > today || date < addDays(today, -BACKDATE_DAYS)
+                  ? undefined
+                  : date === today
+                    ? "/dashboard"
+                    : `/dashboard?day=${date}`,
             },
           ]
         : []
@@ -82,10 +97,10 @@ export async function InspectorContent() {
 
   return (
     <>
-      <Block title="Companion">
+      <Block title="Companion" hint="pet">
         <PetCard name={settings.petName} state={pet} />
       </Block>
-      <Block title="This week">
+      <Block title="This week" hint="weeklyTarget">
         <WeekStrip days={days} />
         <p className="text-ink-2">
           {week.due === 0
@@ -99,7 +114,7 @@ export async function InspectorContent() {
           />
         ) : null}
       </Block>
-      <Block title="Active goals">
+      <Block title="Active goals" hint="goal">
         {goals.filter((goal) => goal.status === "active").length === 0 ? (
           <p className="text-ink-2">No active goals.</p>
         ) : (
@@ -128,7 +143,7 @@ export async function InspectorContent() {
           </ul>
         )}
       </Block>
-      <Block title="Up next">
+      <Block title="Up next" hint="upNext">
         {tasks.length === 0 ? (
           <p className="text-ink-2">No tasks for today.</p>
         ) : (

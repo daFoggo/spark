@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { Suspense } from "react"
 
 import { Skeleton } from "@workspace/ui/components/skeleton"
@@ -6,64 +7,80 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 import { PageHead } from "@/components/layout/page-head"
 import { getSettings } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
+import { DASHBOARD_PATH } from "@/config/routes"
 import { requirePermission } from "@/lib/dal"
 
+import { GetStarted } from "./_components/get-started"
+import { resolveDay } from "./_components/day"
 import {
-  TodayActivityMap,
   TodayHabits,
   TodayLog,
-  TodayMetrics,
   TodayPet,
   TodayTasks,
 } from "./_components/today-sections"
 
 export const metadata: Metadata = { title: "Today" }
 
-async function TodayHead() {
+type Search = Promise<{ day?: string }>
+
+async function TodayHead({ searchParams }: { searchParams: Search }) {
   await requirePermission("dashboard:view")
   const settings = await getSettings()
   const today = await getToday(settings.timezone)
+  const day = await resolveDay(searchParams, today)
   const label = new Intl.DateTimeFormat("en-US", {
     timeZone: "UTC",
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(`${today}T00:00:00Z`))
+  }).format(new Date(`${day}T00:00:00Z`))
   return (
-    <PageHead label={label} title="Today">
-      Check in, log what you did, and keep your companion fed.
+    <PageHead label={label} title={day === today ? "Today" : "Earlier"}>
+      {day === today ? (
+        "Check in what you did and keep your companion fed."
+      ) : (
+        <>
+          Filling in a day you missed. Only the last 3 days can change.{" "}
+          <Link href={DASHBOARD_PATH} className="underline underline-offset-4">
+            Back to today
+          </Link>
+        </>
+      )}
     </PageHead>
   )
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Search
+}) {
   return (
     <>
       <Suspense fallback={<Skeleton className="h-28" />}>
-        <TodayHead />
+        <TodayHead searchParams={searchParams} />
       </Suspense>
-      <Suspense fallback={<Skeleton className="h-14" />}>
-        <TodayMetrics />
+      <Suspense fallback={null}>
+        <GetStarted />
       </Suspense>
+      <Suspense fallback={<Skeleton className="h-64 max-w-3xl" />}>
+        <TodayHabits searchParams={searchParams} />
+      </Suspense>
+      <Suspense fallback={<Skeleton className="h-40 max-w-3xl" />}>
+        <TodayTasks />
+      </Suspense>
+      <div className="h-8">
+        <Suspense fallback={null}>
+          <TodayLog searchParams={searchParams} />
+        </Suspense>
+      </div>
       {/* The inspector shows the pet from xl; below that it lives here. */}
       <div className="xl:hidden">
         <Suspense fallback={<Skeleton className="h-64" />}>
           <TodayPet />
         </Suspense>
       </div>
-      <Suspense fallback={<Skeleton className="h-64 max-w-3xl" />}>
-        <TodayHabits />
-      </Suspense>
-      <Suspense fallback={<Skeleton className="h-40 max-w-3xl" />}>
-        <TodayTasks />
-      </Suspense>
-      <Suspense fallback={<Skeleton className="h-40 max-w-2xl" />}>
-        <TodayLog />
-      </Suspense>
-      <Suspense fallback={<Skeleton className="h-40" />}>
-        <TodayActivityMap />
-      </Suspense>
     </>
   )
 }

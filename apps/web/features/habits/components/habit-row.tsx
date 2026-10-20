@@ -93,7 +93,7 @@ export function HabitRow({
         </ItemTitle>
         <ItemDescription>
           {extra ? "Extra session · " : ""}
-          {habit.cue ?? "No cue yet"}
+          {habit.cue ? `When ${habit.cue}` : "No trigger yet"}
           {habit.streak > 0 ? ` · ${habit.streak} in a row` : ""}
         </ItemDescription>
       </ItemContent>

@@ -5,10 +5,12 @@ import { Suspense } from "react"
 
 import { Skeleton } from "@workspace/ui/components/skeleton"
 
+import { InfoHint } from "@/components/shared/info-hint"
+import type { HelpKey } from "@/config/help"
 import { PageHead } from "@/components/layout/page-head"
 import { Heatmap, HeatmapLegend } from "@/components/shared/heatmap"
 import { Metric, Metrics } from "@/components/shared/metrics"
-import { LogForm } from "@/features/activities/components/log-form"
+import { LogDialog } from "@/features/activities/components/log-dialog"
 import { getGoalActivity } from "@/features/activities/queries"
 import { ChapterClose } from "@/features/goals/components/chapter-close"
 import { CheckpointList } from "@/features/goals/components/checkpoint-list"
@@ -38,11 +40,20 @@ import { addDays, formatDay } from "@/lib/dates"
 
 export const metadata: Metadata = { title: "Goal" }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({
+  children,
+  hint,
+}: {
+  children: React.ReactNode
+  hint?: HelpKey
+}) {
   return (
-    <h2 className="font-mono text-sm font-medium tracking-wide uppercase">
-      {children}
-    </h2>
+    <div className="flex items-center gap-1">
+      <h2 className="font-mono text-sm font-medium tracking-wide uppercase">
+        {children}
+      </h2>
+      {hint ? <InfoHint topic={hint} /> : null}
+    </div>
   )
 }
 
@@ -109,10 +120,10 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
         status={goal.status}
         canMarkDone={canMarkDone(goal)}
       />
-      <section className="flex flex-col gap-5">
-        <SectionTitle>Log</SectionTitle>
-        <LogForm today={today} goalId={goal.id} />
-      </section>
+      <div className="flex items-center gap-1">
+        <LogDialog day={today} goalId={goal.id} variant="default" />
+        <InfoHint topic="log" />
+      </div>
       <Metrics>
         <Metric label={chapters.length > 0 ? "This chapter" : "Logged"}>
           {activity.chapter.count}
@@ -140,7 +151,7 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
         <HeatmapLegend />
       </section>
       <section className="flex flex-col gap-5">
-        <SectionTitle>Checkpoints</SectionTitle>
+        <SectionTitle hint="checkpoints">Checkpoints</SectionTitle>
         <CheckpointList goalId={goal.id} checkpoints={goal.checkpoints} />
       </section>
       {goal.ifHardObstacle || goal.ifHardPlan ? (
@@ -229,7 +240,7 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
       </section>
       <section className="flex max-w-2xl flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
-          <SectionTitle>Chapters</SectionTitle>
+          <SectionTitle hint="chapters">Chapters</SectionTitle>
           <ChapterClose goalId={goal.id} />
         </div>
         {chapters.length === 0 ? (

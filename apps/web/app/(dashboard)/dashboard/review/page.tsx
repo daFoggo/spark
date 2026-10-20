@@ -94,7 +94,11 @@ async function Review() {
 
   return (
     <>
-      <PageHead label={`Week of ${formatDay(weekStart)}`} title="Weekly review">
+      <PageHead
+        label={`Week of ${formatDay(weekStart)}`}
+        title="Weekly review"
+        hint="review"
+      >
         Five minutes to see what worked and set up next week.
       </PageHead>
       <ReviewFlow key={weekStart} data={data} />

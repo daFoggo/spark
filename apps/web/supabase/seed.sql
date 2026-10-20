@@ -50,13 +50,13 @@ begin
 
   -- Habits and their schedules (valid from the start date).
   insert into public.habits (user_id, goal_id, name, cue, minimum_version, time_of_day, starts_on)
-  values (v_user, v_ai, 'Study one hour', 'After dinner', 'Open the notes', 'evening', v_today - 120)
+  values (v_user, v_ai, 'Study one hour', 'I finish dinner', 'Open the notes', 'evening', v_today - 120)
   returning id into v_read;
   insert into public.habits (user_id, goal_id, name, cue, minimum_version, time_of_day, starts_on)
-  values (v_user, v_run, 'Run', 'After I wake up', 'Put the shoes on', 'morning', v_today - 120)
+  values (v_user, v_run, 'Run', 'I wake up', 'Put the shoes on', 'morning', v_today - 120)
   returning id into v_walk;
   insert into public.habits (user_id, name, cue, minimum_version, time_of_day, starts_on)
-  values (v_user, 'Meditate', 'After I pour my coffee', 'One minute', 'morning', v_today - 120)
+  values (v_user, 'Meditate', 'I pour my coffee', 'One minute', 'morning', v_today - 120)
   returning id into v_meds;
   insert into public.habits (user_id, name, time_of_day, starts_on)
   values (v_user, 'Drink water', 'afternoon', v_today - 120)

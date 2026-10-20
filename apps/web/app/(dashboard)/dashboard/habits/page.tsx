@@ -35,6 +35,8 @@ import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
 import { addDays } from "@/lib/dates"
 
+import { HabitsActivityMap, HabitsMetrics } from "./_components/habits-overview"
+
 export const metadata: Metadata = { title: "Habits" }
 
 async function HabitList() {
@@ -115,7 +117,7 @@ async function NewHabit() {
 export default function HabitsPage() {
   return (
     <>
-      <PageHead label="Habits" title="Habits">
+      <PageHead label="Habits" title="Habits" hint="habit">
         Small promises, kept on a schedule you choose.
       </PageHead>
       <div className="h-8">
@@ -123,8 +125,14 @@ export default function HabitsPage() {
           <NewHabit />
         </Suspense>
       </div>
+      <Suspense fallback={<Skeleton className="h-14" />}>
+        <HabitsMetrics />
+      </Suspense>
       <Suspense fallback={<Skeleton className="h-40 max-w-3xl" />}>
         <HabitList />
+      </Suspense>
+      <Suspense fallback={<Skeleton className="h-40" />}>
+        <HabitsActivityMap />
       </Suspense>
     </>
   )

@@ -71,8 +71,10 @@ async function HabitDetail({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageHead label={scheduleLabel(habit, today)} title={habit.name}>
           {habit.cue
-            ? `After I ${habit.cue}`
-            : "Add a cue to anchor this habit."}
+            ? `When ${habit.cue}`
+            : "Add a trigger to anchor this habit."}
+          {habit.fullVersion ? ` · Full: ${habit.fullVersion}` : ""}
+          {habit.minimumVersion ? ` · Minimum: ${habit.minimumVersion}` : ""}
           {paused ? " · Paused" : ""}
         </PageHead>
         <div className="flex items-center gap-2">
@@ -86,11 +88,11 @@ async function HabitDetail({
         </div>
       </div>
       <Metrics>
-        <Metric label="Current streak">
+        <Metric label="Current streak" hint="streak">
           {currentStreak(habit, byDate, today)}
         </Metric>
         <Metric label="Best streak">{bestStreak(habit, byDate, today)}</Metric>
-        <Metric label="Last 30 days">
+        <Metric label="Last 30 days" hint="consistency">
           {rate === null ? "–" : `${Math.round(rate * 100)}%`}
         </Metric>
         <Metric label="Check-ins">{checkIns.length}</Metric>

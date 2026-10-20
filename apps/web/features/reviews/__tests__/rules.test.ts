@@ -13,10 +13,19 @@ const review = (completedAt: string | null): Review => ({
 })
 
 describe("isReviewDue (RV-5)", () => {
-  it("is due until the week's review is saved", () => {
-    expect(isReviewDue(null)).toBe(true)
-    expect(isReviewDue(review(null))).toBe(true)
-    expect(isReviewDue(review("2026-10-25T10:00:00Z"))).toBe(false)
+  const start = "2026-10-19"
+
+  it("stays quiet early in the week", () => {
+    expect(isReviewDue(null, "2026-10-19", start)).toBe(false)
+    expect(isReviewDue(null, "2026-10-23", start)).toBe(false)
+  })
+
+  it("is due in the last two days until the review is saved", () => {
+    expect(isReviewDue(null, "2026-10-24", start)).toBe(true)
+    expect(isReviewDue(review(null), "2026-10-25", start)).toBe(true)
+    expect(
+      isReviewDue(review("2026-10-25T10:00:00Z"), "2026-10-25", start)
+    ).toBe(false)
   })
 })
 

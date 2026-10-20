@@ -20,8 +20,9 @@ import { startOfWeek } from "@/lib/dates"
 async function isReviewLinkDue(): Promise<boolean> {
   const settings = await getSettings()
   const today = await getToday(settings.timezone)
-  const review = await getReview(startOfWeek(today, settings.weekStart))
-  return isReviewDue(review)
+  const weekStart = startOfWeek(today, settings.weekStart)
+  const review = await getReview(weekStart)
+  return isReviewDue(review, today, weekStart)
 }
 
 /** Hides links (and whole sections) the role cannot open; pages still enforce access. */
