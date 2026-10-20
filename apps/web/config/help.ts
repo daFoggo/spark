@@ -29,7 +29,7 @@ export const HELP = {
   log: {
     group: "basics",
     title: "Log",
-    body: "For effort that is not one of your habits, like an hour of study. Use Log progress on Today or on a goal. Habits are ticked, never logged.",
+    body: "Everything you did, in one list: habit ticks and tasks you counted for a goal. There is nothing extra to fill in; more effort is another tick or a finished task.",
   },
   backdate: {
     group: "rhythm",
@@ -74,12 +74,7 @@ export const HELP = {
   checkpoints: {
     group: "basics",
     title: "Checkpoints",
-    body: "Milestones for a goal with a finish line. Progress is the share you have ticked. Goals without a finish line use chapters instead.",
-  },
-  chapters: {
-    group: "basics",
-    title: "Chapters",
-    body: "Close a chapter to freeze what you did so far (count and hours) and start fresh. Use it for open-ended goals that have no end.",
+    body: "Milestones for a goal with a finish line. Progress is the share you have ticked.",
   },
   treats: {
     group: "pet",

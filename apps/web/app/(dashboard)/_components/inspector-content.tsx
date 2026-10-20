@@ -1,10 +1,7 @@
-import Link from "next/link"
-
 import { DitherMeter } from "@/components/shared/dither-meter"
 import { InfoHint } from "@/components/shared/info-hint"
 import { WeekStrip, type WeekDay } from "@/components/shared/week-strip"
 import type { HelpKey } from "@/config/help"
-import { checkpointProgress } from "@/features/goals/rules"
 import { overallCells } from "@/features/habits/stats"
 import { PetCard } from "@/features/pet/components/pet-card"
 import { petState } from "@/features/pet/pet"
@@ -43,7 +40,7 @@ function Block({
   )
 }
 
-/** Inspector body: the pet and this week's rhythm. Goals and tasks join it in later phases. */
+/** Inspector body: the pet, this week's rhythm and the tasks to do next. */
 export async function InspectorContent() {
   const {
     settings,
@@ -53,7 +50,6 @@ export async function InspectorContent() {
     stats,
     tasks: todayTasks,
     week,
-    goals,
   } = await loadDashboard()
   const tasks = todayTasks.filter((task) => task.doneOn === null)
 
@@ -113,35 +109,6 @@ export async function InspectorContent() {
             value={(week.done / Math.max(1, week.target)) * 100}
           />
         ) : null}
-      </Block>
-      <Block title="Active goals" hint="goal">
-        {goals.filter((goal) => goal.status === "active").length === 0 ? (
-          <p className="text-ink-2">No active goals.</p>
-        ) : (
-          <ul className="flex flex-col gap-4">
-            {goals
-              .filter((goal) => goal.status === "active")
-              .map((goal) => {
-                const progress = checkpointProgress(goal.checkpoints)
-                return (
-                  <li key={goal.id} className="flex flex-col gap-2">
-                    <Link
-                      href={`/dashboard/goals/${goal.id}`}
-                      className="hover:underline"
-                    >
-                      {goal.name}
-                    </Link>
-                    {progress ? (
-                      <DitherMeter
-                        label={`${goal.name} checkpoints`}
-                        value={progress.percent}
-                      />
-                    ) : null}
-                  </li>
-                )
-              })}
-          </ul>
-        )}
       </Block>
       <Block title="Up next" hint="upNext">
         {tasks.length === 0 ? (

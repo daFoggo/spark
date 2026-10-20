@@ -24,7 +24,6 @@ import { Stagger } from "@/components/shared/stagger"
 import { AppLogo } from "@/components/shared/app-logo"
 
 import { DashboardCrumbs } from "./_components/crumbs"
-import { GoalsNav } from "./_components/goals-nav"
 import { InspectorContent } from "./_components/inspector-content"
 import { SessionAccount, SessionNav } from "./_components/session-nav"
 import { TimezoneGate } from "./_components/timezone-gate"
@@ -52,9 +51,6 @@ export default function DashboardLayout({
             {/* One AppSidebarSection per nav section (config/navigation.ts). */}
             <Suspense fallback={<NavSkeleton />}>
               <SessionNav />
-            </Suspense>
-            <Suspense fallback={null}>
-              <GoalsNav />
             </Suspense>
             <AppSidebarSection label="Account" pinned>
               <Suspense fallback={<Skeleton className="h-8" />}>

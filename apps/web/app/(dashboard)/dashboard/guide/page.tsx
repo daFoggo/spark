@@ -79,7 +79,7 @@ function Lane({
   links: { href: string; label: string }[]
 }) {
   return (
-    <div className="flex flex-1 flex-col gap-3 border p-5">
+    <div className="flex flex-1 flex-col gap-3 border p-4">
       <span className="flex items-center gap-2 font-mono text-xs tracking-wider text-ink-3 uppercase">
         <Glyph aria-hidden className="size-4 text-primary" />
         {step}
@@ -150,7 +150,7 @@ const RHYTHM: { title: string; text: string; days: Day[]; streak: number }[] = [
 async function Guide() {
   await requirePermission("dashboard:view")
   return (
-    <div className="flex max-w-5xl flex-col gap-12">
+    <div className="flex max-w-5xl flex-col gap-10">
       <section className="flex flex-col gap-5">
         <SectionTitle note="Aim is optional. Most days you only need Today.">
           How it fits together
@@ -160,15 +160,15 @@ async function Guide() {
             icon={IconTarget}
             step="1 · Aim"
             title="Goals"
-            text="Something you are working towards. A name is enough; link habits, tasks and logs to it later."
+            text="Something you are working towards. A name is enough; link habits and tasks to it later."
             links={[{ href: GOALS_PATH, label: "Open goals" }]}
           />
           <Arrow />
           <Lane
             icon={IconRepeat}
             step="2 · Do"
-            title="Habits, tasks, logs"
-            text="Tick a habit on the day you did it, tick a task, or use Log progress for effort that is not a habit. One tap each, on Today."
+            title="Habits and tasks"
+            text="Tick a habit on the day you did it, or finish a task. Did more than planned? Tick the habit again on a day it is not scheduled. One tap each, on Today."
             links={[
               { href: DASHBOARD_PATH, label: "Go to Today" },
               { href: HABITS_PATH, label: "Habits" },
