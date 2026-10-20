@@ -1,6 +1,6 @@
 -- Demo data for `supabase db reset` on a local stack (never applied to the hosted project).
 -- One demo user (demo@spark.test / demo-password-123) with the prototype's world: goals, habits with a year of
--- check-ins, free logs, tasks, a closed chapter. Dates are relative to the day the seed runs.
+-- check-ins, free logs, tasks. Dates are relative to the day the seed runs.
 
 do $$
 declare
@@ -85,17 +85,13 @@ begin
       or (s.kind = 'every' and (d::date - h.starts_on) % s.every_n = 0)
     );
 
-  -- Free logs on the open-ended goal, then a closed chapter that snapshots the first ones.
+  -- Free logs on the open-ended goal.
   insert into public.activities (user_id, date, source, goal_id, note, hours)
   select v_user, v_today - n, 'log', v_ai,
          (array['Read about embeddings', 'Built a toy RAG pipeline', 'Watched a lecture on transformers',
                 'Fixed my training loop', 'Wrote notes on attention'])[1 + n % 5],
          0.5 + (n % 4) * 0.5
   from generate_series(2, 40, 3) as n;
-
-  insert into public.chapters (user_id, goal_id, title, closed_on, last_activity_id, activity_count, hours)
-  select v_user, v_ai, 'Foundations', v_today - 14, max(id), count(*), coalesce(sum(hours), 0)
-  from public.activities where goal_id = v_ai and source = 'log' and date <= v_today - 20;
 
   alter table public.activities enable trigger activities_check_window;
 

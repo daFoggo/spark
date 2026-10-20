@@ -4,12 +4,11 @@ import {
   canActivate,
   canMarkDone,
   checkpointProgress,
-  currentChapterStart,
   goalCells,
   goalLevel,
   groupGoals,
 } from "../rules"
-import type { Chapter, Checkpoint, Goal } from "../schemas"
+import type { Checkpoint, Goal } from "../schemas"
 
 const goal = (overrides: Partial<Goal> = {}): Goal => ({
   id: "g1",
@@ -71,22 +70,6 @@ describe("goal status rules (GL-3, GL-4)", () => {
     expect(groups.active.map((g) => g.id)).toEqual(["a"])
     expect(groups.someday.map((g) => g.id)).toEqual(["b"])
     expect(groups.done.map((g) => g.id)).toEqual(["c"])
-  })
-})
-
-describe("currentChapterStart (CH-3)", () => {
-  it("starts after the highest closed activity id", () => {
-    const chapter = (lastActivityId: number): Chapter => ({
-      id: "c",
-      goalId: "g1",
-      title: "One",
-      closedOn: "2026-10-01",
-      lastActivityId,
-      activityCount: 1,
-      hours: 0,
-    })
-    expect(currentChapterStart([])).toBe(0)
-    expect(currentChapterStart([chapter(12), chapter(40)])).toBe(40)
   })
 })
 

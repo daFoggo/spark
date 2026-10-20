@@ -1,9 +1,9 @@
 import type { HeatCell, HeatLevel } from "@/components/shared/heatmap"
 import { dateRange, type LocalDate } from "@/lib/dates"
 
-import type { Chapter, Checkpoint, Goal } from "./schemas"
+import type { Checkpoint, Goal } from "./schemas"
 
-/** Pure goal rules (spec GL-3, GL-4, CP-2, CP-3, CH-3). */
+/** Pure goal rules (spec GL-3, GL-4, CP-2, CP-3). */
 
 export const ACTIVE_LIMIT = 3
 
@@ -23,17 +23,13 @@ export function checkpointProgress(
   }
 }
 
-/** GL-4: something has to be able to finish. Open-ended goals close chapters instead. */
+/** GL-4: something has to be able to finish: a target date or a checkpoint. */
 export const canMarkDone = (goal: Pick<Goal, "targetDate" | "checkpoints">) =>
   goal.targetDate !== null || goal.checkpoints.length > 0
 
 /** GL-3: can another goal be made active? */
 export const canActivate = (goals: readonly Goal[]) =>
   activeGoals(goals).length < ACTIVE_LIMIT
-
-/** CH-3: the current chapter starts after the last closed chapter's final activity. */
-export const currentChapterStart = (chapters: readonly Chapter[]): number =>
-  chapters.reduce((max, chapter) => Math.max(max, chapter.lastActivityId), 0)
 
 /** Lists on the Goals page (GL-2): archived goals are hidden everywhere (GL-5). */
 export function groupGoals(goals: readonly Goal[]) {
@@ -48,7 +44,7 @@ export function groupGoals(goals: readonly Goal[]) {
 export const goalLevel = (count: number): HeatLevel =>
   count === 0 ? 0 : count === 1 ? 2 : count === 2 ? 3 : 4
 
-/** Heatmap cells for a goal: one per day, from every activity of the goal (all chapters). */
+/** Heatmap cells for a goal: one per day, from every activity of the goal . */
 export function goalCells(
   dates: readonly LocalDate[],
   from: LocalDate,

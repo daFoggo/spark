@@ -4,10 +4,8 @@ import type { LocalDate } from "@/lib/dates"
 import { createDataClient, DataError, unwrap } from "@/lib/supabase/data"
 
 import {
-  ChapterSchema,
   CheckpointSchema,
   GoalSchema,
-  type Chapter,
   type Goal,
   type GoalForm,
   type GoalStatus,
@@ -87,32 +85,6 @@ export async function fetchGoal(
     .maybeSingle()
   if (error) throw new Error(error.message)
   return data ? toGoal(data) : null
-}
-
-export async function fetchChapters(
-  accessToken: string,
-  goalId: string
-): Promise<Chapter[]> {
-  const rows = unwrap(
-    await createDataClient(accessToken)
-      .from("chapters")
-      .select(
-        "id, goal_id, title, closed_on, last_activity_id, activity_count, hours"
-      )
-      .eq("goal_id", goalId)
-      .order("last_activity_id")
-  )
-  return rows.map((row) =>
-    ChapterSchema.parse({
-      id: row.id,
-      goalId: row.goal_id,
-      title: row.title,
-      closedOn: row.closed_on,
-      lastActivityId: row.last_activity_id,
-      activityCount: row.activity_count,
-      hours: Number(row.hours),
-    })
-  )
 }
 
 /** GL-1, GL-3: a goal from a name; with 3 active goals it becomes someday. */
@@ -220,19 +192,6 @@ export async function moveCheckpoint(
   const { error } = await createDataClient(accessToken).rpc("move_checkpoint", {
     p_checkpoint_id: checkpointId,
     p_direction: direction,
-  })
-  if (error) throw new DataError(error.code, error.message)
-}
-
-/** CH-1, CH-2: snapshots the current chapter. */
-export async function closeChapter(
-  accessToken: string,
-  goalId: string,
-  title: string
-): Promise<void> {
-  const { error } = await createDataClient(accessToken).rpc("close_chapter", {
-    p_goal_id: goalId,
-    p_title: title,
   })
   if (error) throw new DataError(error.code, error.message)
 }

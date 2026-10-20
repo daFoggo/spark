@@ -14,17 +14,6 @@ export const CheckpointSchema = z.object({
 })
 export type Checkpoint = z.infer<typeof CheckpointSchema>
 
-export const ChapterSchema = z.object({
-  id: z.string(),
-  goalId: z.string(),
-  title: z.string(),
-  closedOn: LocalDateSchema,
-  lastActivityId: z.number(),
-  activityCount: z.number(),
-  hours: z.number(),
-})
-export type Chapter = z.infer<typeof ChapterSchema>
-
 export const GoalSchema = z.object({
   id: z.string(),
   slug: z.string(),
@@ -79,10 +68,4 @@ export const CheckpointTitleSchema = z
   .string()
   .trim()
   .min(1, "Write the checkpoint first")
-  .max(120, "Keep it under 120 characters")
-
-export const ChapterTitleSchema = z
-  .string()
-  .trim()
-  .min(1, "Give the chapter a name")
   .max(120, "Keep it under 120 characters")

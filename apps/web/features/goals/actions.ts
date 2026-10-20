@@ -7,7 +7,6 @@ import { verifySession } from "@/lib/dal"
 import { DataError } from "@/lib/supabase/data"
 
 import {
-  ChapterTitleSchema,
   CheckpointTitleSchema,
   GOAL_STATUSES,
   GoalFormSchema,
@@ -17,7 +16,6 @@ import {
 } from "./schemas"
 import {
   addCheckpoint,
-  closeChapter,
   createGoal,
   deleteCheckpoint,
   moveCheckpoint,
@@ -203,24 +201,6 @@ export async function editCheckpointAction(input: {
   }
   if ("error" in result) return result
   updateTag(goalsTag(userId))
-  updateTag(goalTag(input.goalId))
-  return { saved: true }
-}
-
-/** CH-1, CH-2: close the current chapter. */
-export async function closeChapterAction(input: {
-  goalId: string
-  title: string
-}): Promise<GoalState> {
-  const { accessToken } = await verifySession()
-  const title = ChapterTitleSchema.safeParse(input.title)
-  if (!GoalIdSchema.safeParse(input.goalId).success || !title.success) {
-    return { error: title.error?.issues[0]?.message ?? "Invalid chapter" }
-  }
-  const result = await guarded(() =>
-    closeChapter(accessToken, input.goalId, title.data)
-  )
-  if ("error" in result) return result
   updateTag(goalTag(input.goalId))
   return { saved: true }
 }

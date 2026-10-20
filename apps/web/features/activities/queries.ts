@@ -36,15 +36,11 @@ export async function getActivities(
   return fetchActivities(accessToken, { from, to, source })
 }
 
-/** One goal's activity: since `from` for the heatmap and timeline, and the current chapter's totals. */
-export async function getGoalActivity(
-  goalId: string,
-  from: LocalDate,
-  afterId: number
-) {
+/** One goal's activity: since `from` for the heatmap and timeline, and the total count. */
+export async function getGoalActivity(goalId: string, from: LocalDate) {
   "use cache: private"
   cacheLife({ stale: 300, revalidate: 300, expire: 3600 })
   const { userId, accessToken } = await verifySession()
   cacheTag(activitiesTag(userId))
-  return fetchGoalActivity(accessToken, { goalId, from, afterId })
+  return fetchGoalActivity(accessToken, { goalId, from })
 }

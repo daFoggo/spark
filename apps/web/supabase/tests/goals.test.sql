@@ -1,5 +1,5 @@
 begin;
-select plan(14);
+select plan(10);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'a@example.test'),
@@ -40,28 +40,6 @@ select is(
   public.set_checkpoint_done((select id from public.checkpoints limit 1), true),
   private.today_for(auth.uid()),
   'ticking a checkpoint stamps today (CP-3)'
-);
-
--- chapters (CH-1, CH-2)
-select throws_ok(
-  $$select public.close_chapter((select id from public.goals where slug = 'become-an-ai-engineer'), 'Foundations')$$,
-  'P0001', null, 'closing a chapter with no activity is refused (CH-1)'
-);
-insert into public.activities (date, source, goal_id, note, hours)
-  select private.today_for(auth.uid()), 'log', id, 'Read', 1.5 from public.goals where slug = 'become-an-ai-engineer';
-select lives_ok(
-  $$select public.close_chapter((select id from public.goals where slug = 'become-an-ai-engineer'), 'Foundations')$$,
-  'a chapter with activity closes (CH-2)'
-);
-select is(
-  (select activity_count || '/' || hours from public.chapters),
-  '1/1.5',
-  'the chapter snapshots the count and hours'
-);
-select throws_ok(
-  $$insert into public.chapters (goal_id, title, closed_on, last_activity_id, activity_count, hours)
-    select id, 'Forged', current_date, 1, 1, 1 from public.goals limit 1$$,
-  '42501', null, 'chapters cannot be written directly (CH-4)'
 );
 
 -- isolation

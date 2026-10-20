@@ -347,26 +347,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/goals/{goalId}/chapters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                goalId: components["parameters"]["goalId"];
-            };
-            cookie?: never;
-        };
-        /** Closed chapters, oldest first (CH-4 append-only) */
-        get: operations["listChapters"];
-        put?: never;
-        /** Close the current chapter; snapshots its count and hours (CH-1, CH-2). 422 `CH-1` without activity */
-        post: operations["closeChapter"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/goals/{goalId}/activity": {
         parameters: {
             query?: never;
@@ -374,7 +354,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Activities of the goal since a date, plus the current chapter totals (CH-3) */
+        /** Activities of the goal since a date, plus how many it has in all */
         get: operations["getGoalActivity"];
         put?: never;
         post?: never;
@@ -553,17 +533,6 @@ export interface components {
             position: number;
             doneOn: components["schemas"]["LocalDate"] | null;
         };
-        Chapter: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            goalId: string;
-            title: string;
-            closedOn: components["schemas"]["LocalDate"];
-            lastActivityId: number;
-            activityCount: number;
-            hours: number;
-        };
         Goal: {
             /** Format: uuid */
             id: string;
@@ -589,10 +558,7 @@ export interface components {
         };
         GoalActivity: {
             recent: components["schemas"]["Activity"][];
-            chapter: {
-                count: number;
-                hours: number;
-            };
+            total: number;
         };
         Review: {
             /** Format: uuid */
@@ -1369,60 +1335,10 @@ export interface operations {
             };
         };
     };
-    listChapters: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                goalId: components["parameters"]["goalId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Chapters */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Chapter"][];
-                };
-            };
-        };
-    };
-    closeChapter: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                goalId: components["parameters"]["goalId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    title: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Closed */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            422: components["responses"]["RuleViolation"];
-        };
-    };
     getGoalActivity: {
         parameters: {
             query: {
                 from: string;
-                afterId: number;
             };
             header?: never;
             path: {

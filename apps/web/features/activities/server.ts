@@ -122,15 +122,15 @@ export async function deleteActivity(
 }
 
 /**
- * A goal's activity (CH-3): everything since `from` for the heatmap and timeline, plus the count and
- * hours of the current chapter (activities after the last closed chapter's final id).
+ * A goal's activity: everything since `from` for the heatmap and timeline, plus how many things
+ * the goal has in all.
  */
 export async function fetchGoalActivity(
   accessToken: string,
-  input: { goalId: string; from: LocalDate; afterId: number }
-): Promise<{ recent: Activity[]; chapter: { count: number; hours: number } }> {
+  input: { goalId: string; from: LocalDate }
+): Promise<{ recent: Activity[]; total: number }> {
   const client = createDataClient(accessToken)
-  const [recent, chapter] = await Promise.all([
+  const [recent, all] = await Promise.all([
     client
       .from("activities")
       .select(COLUMNS)
@@ -138,20 +138,10 @@ export async function fetchGoalActivity(
       .gte("date", input.from)
       .order("date", { ascending: false })
       .order("id", { ascending: false }),
-    client
-      .from("activities")
-      .select("hours")
-      .eq("goal_id", input.goalId)
-      .gt("id", input.afterId),
+    client.from("activities").select("id").eq("goal_id", input.goalId),
   ])
   return {
     recent: unwrap(recent).map(toActivity),
-    chapter: {
-      count: unwrap(chapter).length,
-      hours: unwrap(chapter).reduce(
-        (sum, row) => sum + Number(row.hours ?? 0),
-        0
-      ),
-    },
+    total: unwrap(all).length,
   }
 }
