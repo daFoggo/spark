@@ -2,6 +2,7 @@ import {
   ACCOUNT_PATH,
   DASHBOARD_PATH,
   GOALS_PATH,
+  GUIDE_PATH,
   HABITS_PATH,
   MEMBERS_PATH,
   REVIEW_PATH,
@@ -14,7 +15,14 @@ import type { Permission } from "@/lib/auth/permissions"
  * components) because `entries` cross from a Server Component to the client `NavTree`.
  */
 export type NavIconName =
-  "today" | "habits" | "tasks" | "goals" | "review" | "account" | "members"
+  | "today"
+  | "habits"
+  | "tasks"
+  | "goals"
+  | "review"
+  | "guide"
+  | "account"
+  | "members"
 
 export type NavLink = {
   title: string
@@ -74,6 +82,17 @@ export const DASHBOARD_NAV: NavSection[] = [
     ],
   },
   {
+    label: "Help",
+    entries: [
+      {
+        title: "Guide",
+        href: GUIDE_PATH,
+        icon: "guide",
+        permission: "dashboard:view",
+      },
+    ],
+  },
+  {
     label: "Settings",
     entries: [
       {
@@ -124,15 +143,17 @@ export function navLinks(sections: NavSection[]): NavLink[] {
  */
 export function breadcrumbTrail(
   pathname: string,
-  sections: NavSection[]
+  sections: NavSection[],
+  /** Names for record ids in the URL (id to name). An id without one reads as "details". */
+  labels: Readonly<Record<string, string>> = {}
 ): Crumb[] {
   const links = navLinks(sections)
   const segments = pathname.split("/").filter(Boolean)
   const crumbs: Crumb[] = segments.map((segment, index) => {
     const href = `/${segments.slice(0, index + 1).join("/")}`
     return {
-      // A record id (`/habits/<uuid>`) reads as "details", not as a 36-character string.
-      label: UUID.test(segment) ? "details" : segment,
+      // A record id (`/habits/<uuid>`) reads as its name, or "details", never as 36 characters.
+      label: UUID.test(segment) ? (labels[segment] ?? "details") : segment,
       href: links.some((link) => link.href === href) ? href : undefined,
     }
   })

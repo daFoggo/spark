@@ -80,6 +80,15 @@ describe("DASHBOARD_NAV", () => {
     expect(new Set(hrefs).size).toBe(hrefs.length)
   })
 
+  it("shows a record's name when one is known", () => {
+    const id = "29ef238d-7877-4eae-a21c-808a9e16b1e4"
+    expect(
+      breadcrumbTrail(`/dashboard/habits/${id}`, sections, { [id]: "Run" }).at(
+        -1
+      )
+    ).toEqual({ label: "Run", href: undefined })
+  })
+
   it("shows a record id as details", () => {
     expect(
       breadcrumbTrail(

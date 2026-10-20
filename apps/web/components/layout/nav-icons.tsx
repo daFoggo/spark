@@ -1,5 +1,6 @@
 import {
   IconCalendarCheck,
+  IconBook2,
   IconChecklist,
   IconRepeat,
   IconTarget,
@@ -18,6 +19,7 @@ const NAV_ICONS: Record<NavIconName, Icon> = {
   tasks: IconChecklist,
   goals: IconTarget,
   review: IconCalendarCheck,
+  guide: IconBook2,
   account: IconUser,
   members: IconUsers,
 }
