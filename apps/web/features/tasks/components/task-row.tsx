@@ -178,7 +178,9 @@ export function TaskRow({ task, today }: { task: TaskRowData; today: string }) {
       ) : null}
       {offerLog && done ? (
         <ItemFooter className="flex-wrap gap-2">
-          <span className="text-ink-2">Add to log?</span>
+          <span className="text-ink-2">
+            Count this as progress{task.goalName ? ` on ${task.goalName}` : ""}?
+          </span>
           <Button
             type="button"
             size="xs"
@@ -188,7 +190,7 @@ export function TaskRow({ task, today }: { task: TaskRowData; today: string }) {
               run(() => logTaskAction(task.id))
             }}
           >
-            Add
+            Yes, log it
           </Button>
           <Button
             type="button"
