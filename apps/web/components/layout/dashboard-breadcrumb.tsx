@@ -16,9 +16,16 @@ import {
 import { breadcrumbTrail, type NavSection } from "@/config/navigation"
 
 /** Renders `breadcrumbTrail`; below sm only the current page stays visible. */
-export function DashboardBreadcrumb({ sections }: { sections: NavSection[] }) {
+export function DashboardBreadcrumb({
+  sections,
+  labels,
+}: {
+  sections: NavSection[]
+  /** Names for record ids in the URL. */
+  labels?: Record<string, string>
+}) {
   const pathname = usePathname()
-  const crumbs = breadcrumbTrail(pathname, sections)
+  const crumbs = breadcrumbTrail(pathname, sections, labels)
   return (
     <Breadcrumb className="min-w-0 font-mono">
       <BreadcrumbList className="flex-nowrap">

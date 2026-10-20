@@ -10,7 +10,6 @@ import {
   AppSidebarSection,
 } from "@/components/layout/app-sidebar"
 import { ColumnHeader } from "@/components/layout/column-header"
-import { DashboardBreadcrumb } from "@/components/layout/dashboard-breadcrumb"
 import {
   SidebarCommand,
   ThemeCommand,
@@ -23,8 +22,8 @@ import {
 import { MainHeaderStart } from "@/components/layout/main-header-start"
 import { Stagger } from "@/components/shared/stagger"
 import { AppLogo } from "@/components/shared/app-logo"
-import { DASHBOARD_NAV } from "@/config/navigation"
 
+import { DashboardCrumbs } from "./_components/crumbs"
 import { GoalsNav } from "./_components/goals-nav"
 import { InspectorContent } from "./_components/inspector-content"
 import { SessionAccount, SessionNav } from "./_components/session-nav"
@@ -69,7 +68,7 @@ export default function DashboardLayout({
             <ColumnHeader>
               <MainHeaderStart>
                 <Suspense fallback={null}>
-                  <DashboardBreadcrumb sections={DASHBOARD_NAV} />
+                  <DashboardCrumbs />
                 </Suspense>
               </MainHeaderStart>
               <div className="ml-auto flex shrink-0 items-center gap-4">

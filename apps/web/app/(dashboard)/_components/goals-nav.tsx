@@ -12,21 +12,21 @@ const link = (title: string, id: string): NavLink => ({
 })
 
 /**
- * "I'm becoming" lists the active goals that have an identity (`becoming`); "Someday" lists the goals
- * on hold. Both are shortcuts to goal pages and hide when empty.
+ * "Goals" lists every active goal (its identity, "I'm becoming ...", when it has one, else its name);
+ * "Someday" lists the goals on hold. Both are shortcuts to goal pages and hide when empty.
  */
 export async function GoalsNav() {
   await requirePermission("dashboard:view")
   const goals = await getGoals()
-  const becoming = goals.filter((g) => g.status === "active" && g.becoming)
+  const active = goals.filter((g) => g.status === "active")
   const someday = goals.filter((g) => g.status === "someday")
 
   return (
     <>
-      {becoming.length > 0 ? (
-        <AppSidebarSection label="I'm becoming">
+      {active.length > 0 ? (
+        <AppSidebarSection label="Active goals">
           <NavTree
-            entries={becoming.map((g) => link(g.becoming ?? g.name, g.id))}
+            entries={active.map((g) => link(g.becoming ?? g.name, g.id))}
           />
         </AppSidebarSection>
       ) : null}
