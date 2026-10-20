@@ -47,7 +47,7 @@ export function UserMenu({
           {name}
         </span>
         <span className="ml-auto text-xs text-ink-3 group-data-[collapsible=icon]:hidden">
-          {role}
+          [{role}]
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent
