@@ -14,6 +14,7 @@ import {
   AuthPitch,
   AuthSwitch,
 } from "../_components/auth-frame"
+import { MochiNote } from "../_components/mochi-note"
 import {
   Terminal,
   TerminalCommand,
@@ -43,25 +44,28 @@ export default function SignInPage({
   return (
     <>
       <AuthAside>
-        <AuthPitch title="Pick up right where you left off.">
-          Your dashboard, projects and settings are one sign-in away.
+        <AuthPitch title="Pick up where you left off.">
+          Your goals, habits and tasks are one sign-in away.
         </AuthPitch>
-        <Terminal title="spark login">
-          <TerminalCommand step={0}>login</TerminalCommand>
-          <TerminalOutput step={1} label="session" tone="muted">
-            none found
+        <Terminal title="spark today">
+          <TerminalCommand step={0}>today</TerminalCommand>
+          <TerminalOutput step={1} label="goal" tone="muted">
+            I&apos;m becoming a reader
           </TerminalOutput>
-          <TerminalOutput step={2} label="workspace" tone="ok">
-            ready
+          <TerminalOutput step={2} label="habit" tone="ok">
+            Read one page, 4 in a row
           </TerminalOutput>
-          <TerminalOutput step={3} label="dashboard" tone="ok">
-            ready
+          <TerminalOutput step={3} label="task" tone="muted">
+            Pick the next book
           </TerminalOutput>
-          <TerminalOutput step={4} label="credentials" tone="focus">
+          <TerminalOutput step={4} label="session" tone="focus">
             waiting for you
           </TerminalOutput>
           <TerminalPrompt step={5} />
         </Terminal>
+        <MochiNote>
+          Mochi waits with your streak. It never gets sick or hungry.
+        </MochiNote>
       </AuthAside>
       <AuthMain>
         <AuthHeader>

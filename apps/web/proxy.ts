@@ -22,15 +22,24 @@ function redirectWithSession(url: URL, session: NextResponse) {
     const value = session.headers.get(name)
     if (value) redirect.headers.set(name, value)
   }
+  const timing = session.headers.get("server-timing")
+  if (timing) redirect.headers.set("Server-Timing", timing)
   return redirect
 }
 
 /**
  * 1) Refresh the session (provider-specific) so Server Components see fresh tokens.
  * 2) Optimistic redirect for protected paths. Real authorization is in the DAL.
+ * 3) Emits Server-Timing header for Chrome DevTools Network profiling.
  */
 export async function proxy(request: NextRequest) {
+  const start = performance.now()
   const { response, isAuthenticated } = await updateSession(request)
+  const duration = Math.max(0, performance.now() - start).toFixed(2)
+  response.headers.set(
+    "Server-Timing",
+    `proxy;dur=${duration};desc="Proxy Auth Check"`
+  )
 
   const { pathname } = request.nextUrl
   // The root has no page of its own: signed-in visitors land on the dashboard, everyone else on sign-in.

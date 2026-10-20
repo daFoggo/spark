@@ -23,7 +23,7 @@ export function HeaderCommand({
   return (
     <button
       type="button"
-      aria-label={label}
+      aria-label={`[${hotkey.toUpperCase()}] ${label}`}
       aria-pressed={pressed}
       aria-keyshortcuts={hotkey}
       onClick={onClick}

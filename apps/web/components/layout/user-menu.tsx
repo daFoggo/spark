@@ -33,7 +33,7 @@ export function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={`Account: ${name}`}
+        aria-label={`Account: ${name} [${role}]`}
         className="flex w-full items-center gap-2 px-2 py-1.5 text-left font-mono text-sm text-ink-2 transition-colors duration-150 group-data-[collapsible=icon]:justify-center hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground"
       >
         <span

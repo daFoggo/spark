@@ -123,14 +123,14 @@ export async function deleteActivity(
 
 /**
  * A goal's activity: everything since `from` for the heatmap and timeline, plus how many things
- * the goal has in all.
+ * the goal has in all. Uses a lightweight head query for total count to avoid downloading all row payloads.
  */
 export async function fetchGoalActivity(
   accessToken: string,
   input: { goalId: string; from: LocalDate }
 ): Promise<{ recent: Activity[]; total: number }> {
   const client = createDataClient(accessToken)
-  const [recent, all] = await Promise.all([
+  const [recent, totalResult] = await Promise.all([
     client
       .from("activities")
       .select(COLUMNS)
@@ -138,10 +138,16 @@ export async function fetchGoalActivity(
       .gte("date", input.from)
       .order("date", { ascending: false })
       .order("id", { ascending: false }),
-    client.from("activities").select("id").eq("goal_id", input.goalId),
+    client
+      .from("activities")
+      .select("id", { count: "exact", head: true })
+      .eq("goal_id", input.goalId),
   ])
+  if (totalResult.error) {
+    throw new Error(`activities: ${totalResult.error.message}`)
+  }
   return {
     recent: unwrap(recent).map(toActivity),
-    total: unwrap(all).length,
+    total: totalResult.count ?? 0,
   }
 }

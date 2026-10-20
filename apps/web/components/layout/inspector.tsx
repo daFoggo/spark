@@ -100,7 +100,7 @@ export function InspectorPanel({
             <button
               type="button"
               onClick={close}
-              aria-label="Close inspector"
+              aria-label="Close inspector [ESC]"
               className="font-mono text-xs text-ink-3 transition-colors duration-150 hover:text-foreground"
             >
               [ESC]

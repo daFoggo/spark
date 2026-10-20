@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, STIX_Two_Text } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { WebVitals } from "@/components/shared/web-vitals"
 import { cn } from "@workspace/ui/lib/utils"
 
 export const metadata: Metadata = {
@@ -49,7 +50,10 @@ export default function RootLayout({
       )}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <WebVitals />
+        </ThemeProvider>
       </body>
     </html>
   )

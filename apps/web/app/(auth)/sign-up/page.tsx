@@ -11,6 +11,7 @@ import {
   AuthPitch,
   AuthSwitch,
 } from "../_components/auth-frame"
+import { MochiNote } from "../_components/mochi-note"
 import {
   Terminal,
   TerminalCommand,
@@ -24,25 +25,30 @@ export default function SignUpPage() {
   return (
     <>
       <AuthAside>
-        <AuthPitch title="Start building in under a minute.">
-          One account for the dashboard and everything that comes next.
+        <AuthPitch title="One goal, one small habit.">
+          Spark keeps goals, habits and tasks together and asks for very little.
+          Set it up in a minute.
         </AuthPitch>
         <Terminal title="spark init">
-          <TerminalCommand step={0}>init --account</TerminalCommand>
-          <TerminalOutput step={1} label="workspace" tone="ok">
-            ready
+          <TerminalCommand step={0}>init</TerminalCommand>
+          <TerminalOutput step={1} label="goal" tone="ok">
+            a name is enough
           </TerminalOutput>
-          <TerminalOutput step={2} label="dashboard" tone="ok">
-            ready
+          <TerminalOutput step={2} label="habit" tone="ok">
+            small and specific
           </TerminalOutput>
-          <TerminalOutput step={3} label="settings" tone="ok">
-            ready
+          <TerminalOutput step={3} label="mochi" tone="ok">
+            adopted on day one
           </TerminalOutput>
           <TerminalOutput step={4} label="account" tone="focus">
             waiting for you
           </TerminalOutput>
           <TerminalPrompt step={5} />
         </Terminal>
+        <MochiNote>
+          Meet Mochi, a pixel cat that grows with every check-in and never
+          judges a missed day.
+        </MochiNote>
       </AuthAside>
       <AuthMain>
         <AuthHeader>

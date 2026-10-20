@@ -43,6 +43,7 @@ const nextConfig: NextConfig = {
   // Enables forbidden() / forbidden.tsx, used by requirePermission() in lib/dal.ts.
   experimental: {
     authInterrupts: true,
+    optimizePackageImports: ["@tabler/icons-react"],
   },
   async headers() {
     return [
