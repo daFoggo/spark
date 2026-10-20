@@ -123,7 +123,8 @@ Done when: tasks roll over, stale prompt works, and a linked task can be logged 
       checkpoints (CP-1…CP-4), close chapter (CH-1…CH-3).
 - [x] Goal list (Active n/3, Someday, Done) and goal detail page composing: activities (timeline, heatmap, counters,
       log form preset to the goal), habits linked (consistency), tasks linked (open), checkpoints, chapters.
-- [x] Sidebar "I'm becoming" section and the overview column's active goals.
+- [x] Sidebar "Active goals" section (every active goal; its "I'm becoming" text when set) and "Someday", plus the inspector's active goals.
+- [x] Breadcrumb shows the habit or goal name for an id in the URL (`DashboardCrumbs` passes an id-to-name map).
 - [x] Routes: `/dashboard/goals`, `/dashboard/goals/[goalId]`.
 
 - [ ] Not done yet: link or relink a task to a goal after it exists (only `#slug` at creation works), goal select inside the
@@ -152,3 +153,17 @@ Done when: finishing a review pauses the chosen habits from next week and moves 
 - [x] Supabase advisors: security clean except leaked-password protection (an Auth dashboard setting); `SECURITY DEFINER` RPCs moved to `private` with invoker wrappers. Performance: only unused-index infos on foreign keys of young tables. Query plans not checked.
 - [x] pgTAP tests for tasks, goals/checkpoints/chapters and reviews written (`supabase/tests`); not run: they need a local stack (`supabase test db`).
 - [ ] Production project: every migration is already pushed to the linked project; env vars and auth redirect URLs for a deployed domain are still to do.
+
+## Phase 7: Today and rhythm rework
+
+Found while using the app with an empty account: Today mixed doing and reading, the log duplicated ticking a habit, back-dating
+had no entry point, and the review badge showed all week. Principle 8 and AC-10 in the spec describe the result.
+
+- [x] Day picking (`?day=`, today and 3 days back, AC-10) through the inspector's week strip (no second calendar on Today); habits and check-ins follow the picked day.
+- [x] "Log progress" becomes a button + `ResponsiveDialog` on Today; the inline form goes away. The goal page keeps its form and the recent logs.
+- [x] Today drops the metrics row and the activity map; the Habits page gets the week numbers and the overall map.
+- [x] "due" badge only in the last two days of the week (RV-5).
+- [x] "When…" wording for the habit trigger (done).
+- Verified: `pnpm check`; empty-account Today on mobile and `?day=` pick in the browser. Not verified: checking in a back-dated habit on a real habit (no data after the reset).
+
+Done when: a habit from two days ago is one tap on the strip, Today shows only what to do, and the badge is quiet on Monday.

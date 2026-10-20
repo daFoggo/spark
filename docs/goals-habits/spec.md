@@ -45,6 +45,9 @@ import/export, team workspaces.
 6. **Familiar words.** UI copy uses everyday terms (Streak, Checkpoint, "If it gets hard"), never method names
    (WOOP, implementation intention, lead/lag measure).
 7. **Fast daily loop.** Checking in a habit or adding a task takes one action and gives instant feedback.
+8. **One way to record each thing.** A habit is ticked on the day it was done (pick the day, not a form). A log is for effort
+   that has no habit (an hour of study) and is evidence for a goal. Today shows what to do; numbers and history live on
+   the Habits and Goals pages.
 
 ---
 
@@ -114,7 +117,7 @@ User (settings: timezone, week_start, pet_name, adopted_at)
 
 ### 3.5 Habits (HB)
 
-- **HB-1** Required: `name` (1–80 chars), `schedule`. Optional: `cue` ("After I…", ≤ 120 chars), `full` (what a full
+- **HB-1** Required: `name` (1–80 chars), `schedule`. Optional: `cue` (shown as "When …", e.g. "I brush my teeth", ≤ 120 chars), `full` (what a full
   session is, ≤ 60), `minimum` (the low-energy version, ≤ 60), `time_of_day` (`morning` | `afternoon` | `evening`,
   default `morning`), `goal_id`.
 - **HB-2** Schedule kinds:
@@ -153,6 +156,9 @@ User (settings: timezone, week_start, pet_name, adopted_at)
   move its past check-ins.
 - **AC-7** Free log (`source = log`): `note` required (1–280 chars), `goal_id`, `hours`, `topic` optional.
 - **AC-8** A note can be added to a check-in after the fact (inline prompt after checking in, skippable).
+- **AC-10** The inspector's "This week" strip is the day picker: today and the 3 days before it (AC-5) are links, other
+  days are plain. Below `xl` the inspector opens as a sheet ([I]). The picked day (URL `?day=YYYY-MM-DD`, default today) decides which habits are due and shows their
+  check-ins, so back-dating is a tap on the day, never a form.
 - **AC-9** Deleting an activity is a hard delete (the user's own log). It lowers counters and the pet (PT-2).
 
 ### 3.7 Tasks (TK)
@@ -183,7 +189,8 @@ User (settings: timezone, week_start, pet_name, adopted_at)
   easier.
 - **RV-4** Step 3 "Next week": pick up to **3** open tasks as focus. Focus tasks are moved to `today` on the next week
   start (or immediately if the review is done on the last day).
-- **RV-5** Finishing saves the review (`completed_at`). The sidebar shows "due" until the current week's review is saved.
+- **RV-5** Finishing saves the review (`completed_at`). The sidebar shows "due" during the last two days of the week
+  (week start + 5 and + 6) until the current week's review is saved; earlier in the week it stays quiet.
 
 ### 3.9 Pet (PT)
 
@@ -322,7 +329,7 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 
 ### 5.1 Habit check-in (Today, habit list)
 
-1. User taps a habit row (full) or its "Minimum" button.
+1. User picks the day on the strip (default today), then taps a habit row (full) or its "Minimum" button.
 2. UI applies the change optimistically (`useOptimistic`): checkbox state, mini heatmap, counters, pet bounce.
 3. `checkInAction(habitId, level, date?)` → RPC `toggle_check_in` (local today from the user's timezone, AC-3, AC-5,
    AC-6) → returns the resulting level.
@@ -330,9 +337,10 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 5. On create, the row expands an optional note field (AC-8); saving calls `updateActivityNoteAction(activityId, note)`.
 6. Failure: optimistic state reverts; inline error on the row.
 
-### 5.2 Free log (Today "Log", goal page)
+### 5.2 Free log (Today "Log progress" button, goal page)
 
-1. User types a note, optionally picks a goal (preselected on a goal page) and hours, submits.
+1. User opens the "Log progress" dialog (a button on Today and on a goal page), types a note, optionally picks a goal
+   (preselected on a goal page) and hours, submits. Recent logs are listed on the goal page, not on Today.
 2. `logActivityAction` validates AC-7, creates `source = log` for today (or a chosen date within AC-5; the database trigger rejects older dates).
 3. Invalidates `activities:<userId>`. Form resets; the pet bounces (PT-5).
 
@@ -362,6 +370,7 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 - **Create**: name only, from the Goals list input. Status per GL-3. Slug generated from the name (unique per user).
 - **Edit**: name, why, becoming, target date, "if it gets hard".
 - **Change status**: the `goals` trigger enforces GL-3/GL-4; the action maps `P0001` to `{ error }` with the rule's message.
+  On the goal list, Active and Someday are drop zones (`@dnd-kit/core`): drag a goal by its handle, or focus the handle and use Space and the arrow keys. A move to Active with 3 active goals is refused before the request.
 - **Checkpoints**: add (title), toggle done, rename, reorder, delete (CP-1…CP-4).
 - **Close chapter**: title in a dialog → RPC `close_chapter` (CH-1/CH-2).
 - Invalidate `goals:<userId>` (+ `goal:<goalId>`).
@@ -379,8 +388,8 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 
 | Page | Reads (all per user, `"use cache: private"`) |
 | :--- | :--- |
-| Today | settings (today, tz), today's due habits + 7-day check-ins, today tasks, week stats, overall heatmap (26 w), pet stats, active goals (for the log form) |
-| Habits | habit list + 7-day check-ins; selected habit: 52-week check-ins, stats, recent notes |
+| Today | settings (today, tz), due habits of the picked day + check-ins, today tasks, pet stats, active goals (for the log dialog and `#goal`) |
+| Habits | week numbers, overall heatmap (26 w), habit list + 7-day check-ins; selected habit: 52-week check-ins, stats, recent notes |
 | Tasks | tasks for the tab (`?tab=today|later|done`) |
 | Goals | goal list; selected goal: checkpoints, chapters, linked habits + stats, open tasks, activities (26 w + recent) |
 | Review | week stats, per-habit week numbers, 14-day consistency, open tasks, existing review |
@@ -517,7 +526,7 @@ The page reads both and passes plain numbers to `features/pet` components, which
 
 | Route | Page composes |
 | :--- | :--- |
-| `/dashboard` (replaces the current overview) | Today: habits (due today, overall heatmap, week numbers), tasks (today), activities (log form), pet card |
+| `/dashboard` (replaces the current overview) | Today: habits due on the picked day, tasks (today), "Log progress" button, pet card |
 | `/dashboard/habits`, `/dashboard/habits/[habitId]` | habit list; habit detail |
 | `/dashboard/tasks?tab=` | task tabs (URL state) |
 | `/dashboard/goals`, `/dashboard/goals/[goalId]` | goal list; goal detail + linked habits/tasks/activities |
