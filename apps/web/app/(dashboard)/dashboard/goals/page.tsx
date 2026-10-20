@@ -13,6 +13,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { PageHead } from "@/components/layout/page-head"
 import { getActivities } from "@/features/activities/queries"
+import { GoalBoard } from "@/features/goals/components/goal-board"
 import { GoalNew } from "@/features/goals/components/goal-new"
 import { getGoals } from "@/features/goals/queries"
 import {
@@ -102,22 +103,27 @@ async function GoalLists() {
   }
   const groups = groupGoals(goals)
 
+  const board = [...groups.active, ...groups.someday].map((goal) => {
+    const progress = checkpointProgress(goal.checkpoints)
+    return {
+      id: goal.id,
+      name: goal.name,
+      status:
+        goal.status === "active" ? ("active" as const) : ("someday" as const),
+      detail: [
+        `${logged.get(goal.id) ?? 0} logged`,
+        progress ? `${progress.done}/${progress.total} checkpoints` : "",
+        goal.targetDate ? `by ${goal.targetDate}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    }
+  })
+
   return (
     <>
       <GoalNew />
-      <GoalGroup
-        title="Active"
-        count={`${groups.active.length}/${ACTIVE_LIMIT}`}
-        goals={groups.active}
-        logged={logged}
-        empty="No active goals yet. A name is enough to start."
-      />
-      <GoalGroup
-        title="Someday"
-        goals={groups.someday}
-        logged={logged}
-        empty="Things you want to do later wait here."
-      />
+      <GoalBoard goals={board} activeLimit={ACTIVE_LIMIT} />
       {groups.done.length > 0 ? (
         <GoalGroup title="Done" goals={groups.done} logged={logged} />
       ) : null}
@@ -128,7 +134,7 @@ async function GoalLists() {
 export default function GoalsPage() {
   return (
     <>
-      <PageHead label="Where you're headed" title="Goals">
+      <PageHead label="Where you're headed" title="Goals" hint="goal">
         A name is enough to start. Keep three or fewer active.
       </PageHead>
       <Suspense fallback={<Skeleton className="h-64 max-w-3xl" />}>
