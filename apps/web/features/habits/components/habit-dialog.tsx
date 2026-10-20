@@ -45,6 +45,7 @@ const TIMES: { value: TimeOfDay; label: string }[] = [
 export function HabitDialog({
   habit,
   goals = [],
+  defaultGoalId,
   label,
   variant = "default",
   size = "default",
@@ -52,6 +53,8 @@ export function HabitDialog({
   habit?: Habit
   /** Goals the habit can serve (optional). */
   goals?: { id: string; name: string }[]
+  /** Preselected goal, e.g. when opened from a goal's page. */
+  defaultGoalId?: string
   label: string
   variant?: "default" | "outline" | "ghost"
   size?: "default" | "sm"
@@ -74,7 +77,12 @@ export function HabitDialog({
         title={habit ? "Edit habit" : "New habit"}
         description="Small and specific beats ambitious. You can always change it later."
       >
-        <HabitForm habit={habit} goals={goals} onDone={() => setOpen(false)} />
+        <HabitForm
+          habit={habit}
+          goals={goals}
+          defaultGoalId={defaultGoalId}
+          onDone={() => setOpen(false)}
+        />
       </ResponsiveDialog>
     </>
   )
@@ -83,10 +91,12 @@ export function HabitDialog({
 function HabitForm({
   habit,
   goals,
+  defaultGoalId,
   onDone,
 }: {
   habit?: Habit
   goals: { id: string; name: string }[]
+  defaultGoalId?: string
   onDone: () => void
 }) {
   const router = useRouter()
@@ -116,8 +126,27 @@ function HabitForm({
   )
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form action={formAction} className="flex flex-col gap-5">
       <FieldGroup className="sm:grid sm:grid-cols-2">
+        {goals.length > 0 ? (
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="habit-goal">
+              Which goal is this for? (optional)
+            </FieldLabel>
+            <NativeSelect
+              id="habit-goal"
+              name="goalId"
+              defaultValue={habit?.goalId ?? defaultGoalId ?? ""}
+            >
+              <NativeSelectOption value="">No goal</NativeSelectOption>
+              {goals.map((goal) => (
+                <NativeSelectOption key={goal.id} value={goal.id}>
+                  {goal.name}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </Field>
+        ) : null}
         <Field className="sm:col-span-2">
           <FieldLabel htmlFor="habit-name">Name</FieldLabel>
           <Input
@@ -210,23 +239,6 @@ function HabitForm({
             </NativeSelect>
           )}
         </Field>
-        {goals.length > 0 ? (
-          <Field>
-            <FieldLabel htmlFor="habit-goal">Goal (optional)</FieldLabel>
-            <NativeSelect
-              id="habit-goal"
-              name="goalId"
-              defaultValue={habit?.goalId ?? ""}
-            >
-              <NativeSelectOption value="">No goal</NativeSelectOption>
-              {goals.map((goal) => (
-                <NativeSelectOption key={goal.id} value={goal.id}>
-                  {goal.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </Field>
-        ) : null}
         <Field>
           <FieldLabel>Time of day</FieldLabel>
           <ToggleGroup

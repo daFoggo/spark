@@ -10,18 +10,13 @@ import type { HelpKey } from "@/config/help"
 import { PageHead } from "@/components/layout/page-head"
 import { Heatmap, HeatmapLegend } from "@/components/shared/heatmap"
 import { Metric, Metrics } from "@/components/shared/metrics"
-import { LogDialog } from "@/features/activities/components/log-dialog"
 import { getGoalActivity } from "@/features/activities/queries"
-import { ChapterClose } from "@/features/goals/components/chapter-close"
 import { CheckpointList } from "@/features/goals/components/checkpoint-list"
 import { GoalDialog } from "@/features/goals/components/goal-dialog"
 import { GoalStatusActions } from "@/features/goals/components/goal-status"
-import { getChapters, getGoal } from "@/features/goals/queries"
-import {
-  canMarkDone,
-  currentChapterStart,
-  goalCells,
-} from "@/features/goals/rules"
+import { getGoal } from "@/features/goals/queries"
+import { canMarkDone, goalCells } from "@/features/goals/rules"
+import { HabitDialog } from "@/features/habits/components/habit-dialog"
 import { getCheckIns, getHabits } from "@/features/habits/queries"
 import { groupByHabit } from "@/features/habits/rows"
 import {
@@ -61,17 +56,16 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
   await requirePermission("dashboard:view")
   const { goalId } = await params
   const goalPromise = getGoal(goalId)
-  const chaptersPromise = getChapters(goalId)
   const habitsPromise = getHabits()
   const settings = await getSettings()
   const today = await getToday(settings.timezone)
-  const [goal, chapters] = await Promise.all([goalPromise, chaptersPromise])
+  const goal = await goalPromise
   if (!goal) notFound()
 
   const from = addDays(today, -26 * 7)
   const [activity, habits, checkIns, todayTasks, laterTasks] =
     await Promise.all([
-      getGoalActivity(goalId, from, currentChapterStart(chapters)),
+      getGoalActivity(goalId, from),
       habitsPromise,
       getCheckIns(addDays(today, -370), today),
       getTasks("today", today),
@@ -97,7 +91,7 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
             100
         )
   const openTasks = [...todayTasks, ...laterTasks].filter(
-    (task) => task.goalId === goalId
+    (task) => task.goalId === goalId && task.doneOn === null
   )
   const lastWeek = activity.recent.filter(
     (a) => a.date >= addDays(today, -6)
@@ -112,69 +106,31 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
           {goal.why ?? ""}
         </PageHead>
         <div className="flex flex-wrap items-center gap-2">
+          {goal.status === "active" ? (
+            <HabitDialog
+              label="New habit"
+              goals={[{ id: goal.id, name: goal.name }]}
+              defaultGoalId={goal.id}
+            />
+          ) : null}
           <GoalDialog goal={goal} />
         </div>
       </div>
-      <GoalStatusActions
-        goalId={goal.id}
-        status={goal.status}
-        canMarkDone={canMarkDone(goal)}
-      />
-      <div className="flex items-center gap-1">
-        <LogDialog day={today} goalId={goal.id} variant="default" />
-        <InfoHint topic="log" />
-      </div>
       <Metrics>
-        <Metric label={chapters.length > 0 ? "This chapter" : "Logged"}>
-          {activity.chapter.count}
-        </Metric>
-        <Metric label="Time">{activity.chapter.hours.toFixed(1)} h</Metric>
+        <Metric label="Things done">{activity.total}</Metric>
         <Metric label="Last 7 days">{lastWeek}</Metric>
         <Metric label="Habits">
           {habitRate === null ? "–" : `${habitRate}%`}
         </Metric>
       </Metrics>
-      <section className="flex flex-col gap-5">
-        <SectionTitle>Activity</SectionTitle>
-        <Heatmap
-          end={today}
-          weeks={26}
-          weekStart={settings.weekStart}
-          cells={goalCells(
-            activity.recent.map((a) => a.date),
-            from,
-            today,
-            (date, count) =>
-              `${formatDay(date)} · ${count} ${count === 1 ? "thing" : "things"}`
-          )}
-        />
-        <HeatmapLegend />
-      </section>
-      <section className="flex flex-col gap-5">
-        <SectionTitle hint="checkpoints">Checkpoints</SectionTitle>
-        <CheckpointList goalId={goal.id} checkpoints={goal.checkpoints} />
-      </section>
-      {goal.ifHardObstacle || goal.ifHardPlan ? (
-        <section className="grid max-w-2xl gap-6 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs tracking-wider text-ink-3 uppercase">
-              If it gets hard
-            </span>
-            <p className="text-ink-2">{goal.ifHardObstacle ?? "–"}</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs tracking-wider text-ink-3 uppercase">
-              Then I will
-            </span>
-            <p className="text-ink-2">{goal.ifHardPlan ?? "–"}</p>
-          </div>
-        </section>
-      ) : null}
       <section className="grid max-w-3xl gap-8 sm:grid-cols-2">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-5">
           <SectionTitle>Habits</SectionTitle>
           {linkedHabits.length === 0 ? (
-            <p className="text-ink-2">None linked.</p>
+            <p className="text-ink-2">
+              None yet. Add one with New habit: a small thing you repeat to move
+              this goal forward.
+            </p>
           ) : (
             <ul className="flex flex-col gap-2">
               {linkedHabits.map((habit) => (
@@ -199,10 +155,13 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
             </ul>
           )}
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-5">
           <SectionTitle>Open tasks</SectionTitle>
           {openTasks.length === 0 ? (
-            <p className="text-ink-2">None open.</p>
+            <p className="text-ink-2">
+              None open. On Today, type # and this goal&apos;s name in the task
+              box to link one.
+            </p>
           ) : (
             <div className="flex flex-col gap-2">
               {openTasks.map((task) => (
@@ -216,14 +175,32 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
           )}
         </div>
       </section>
-      <section className="flex max-w-2xl flex-col gap-3">
-        <SectionTitle>Recent</SectionTitle>
+      <section className="flex max-w-2xl flex-col gap-5">
+        <SectionTitle hint="checkpoints">Checkpoints</SectionTitle>
+        <CheckpointList goalId={goal.id} checkpoints={goal.checkpoints} />
+      </section>
+      <section className="flex flex-col gap-5">
+        <SectionTitle>Activity</SectionTitle>
+        <Heatmap
+          end={today}
+          weeks={26}
+          weekStart={settings.weekStart}
+          cells={goalCells(
+            activity.recent.map((a) => a.date),
+            from,
+            today,
+            (date, count) =>
+              `${formatDay(date)} · ${count} ${count === 1 ? "thing" : "things"}`
+          )}
+        />
+        <HeatmapLegend />
         {activity.recent.length === 0 ? (
           <p className="text-ink-2">
-            Nothing yet. Log the first thing you did.
+            Nothing yet. It fills in as you tick habits and finish tasks for
+            this goal.
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex max-w-2xl flex-col gap-2">
             {activity.recent.slice(0, 8).map((a) => (
               <li key={a.id} className="text-ink-2">
                 <span className="font-mono text-xs text-ink-3">
@@ -231,37 +208,33 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
                 </span>{" "}
                 {a.source === "habit"
                   ? (habitNames.get(a.habitId ?? "") ?? "Habit check-in")
-                  : (a.note ?? "Logged")}
-                {a.hours ? ` · ${a.hours} h` : ""}
+                  : (a.note ?? "Task done")}
               </li>
             ))}
           </ul>
         )}
       </section>
-      <section className="flex max-w-2xl flex-col gap-3">
-        <div className="flex items-center justify-between gap-4">
-          <SectionTitle hint="chapters">Chapters</SectionTitle>
-          <ChapterClose goalId={goal.id} />
-        </div>
-        {chapters.length === 0 ? (
-          <p className="text-ink-2">
-            No finish line needed. Close a chapter when it feels like enough,
-            name it, and keep going.
-          </p>
-        ) : (
-          <ol className="flex flex-col gap-2">
-            {chapters.map((chapter, index) => (
-              <li key={chapter.id} className="text-ink-2">
-                <span className="font-mono text-xs text-ink-3">
-                  Chapter {index + 1}
-                </span>{" "}
-                {chapter.title} · {chapter.activityCount} things ·{" "}
-                {chapter.hours} h · {formatDay(chapter.closedOn)}
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
+      {goal.ifHardObstacle || goal.ifHardPlan ? (
+        <section className="grid max-w-2xl gap-5 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <span className="font-mono text-xs tracking-wider text-ink-3 uppercase">
+              If it gets hard
+            </span>
+            <p className="text-ink-2">{goal.ifHardObstacle ?? "–"}</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-mono text-xs tracking-wider text-ink-3 uppercase">
+              Then I will
+            </span>
+            <p className="text-ink-2">{goal.ifHardPlan ?? "–"}</p>
+          </div>
+        </section>
+      ) : null}
+      <GoalStatusActions
+        goalId={goal.id}
+        status={goal.status}
+        canMarkDone={canMarkDone(goal)}
+      />
     </>
   )
 }

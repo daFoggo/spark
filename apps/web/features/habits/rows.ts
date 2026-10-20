@@ -10,7 +10,8 @@ export function habitRowData(
   checkIns: readonly CheckIn[],
   today: LocalDate,
   /** The day being checked in (AC-10); streak and strip stay relative to today. */
-  day: LocalDate = today
+  day: LocalDate = today,
+  goalName: string | null = null
 ): HabitRowData {
   const byDate = indexByDate(checkIns)
   const cells = habitCells(
@@ -25,6 +26,7 @@ export function habitRowData(
     name: habit.name,
     cue: habit.cue,
     minimumVersion: habit.minimumVersion,
+    goalName,
     streak: currentStreak(habit, byDate, today),
     level: byDate.get(day)?.level ?? null,
     strip: Object.values(cells).filter((cell) => cell !== undefined),

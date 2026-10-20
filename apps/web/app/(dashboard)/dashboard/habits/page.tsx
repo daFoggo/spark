@@ -32,6 +32,7 @@ import {
 } from "@/features/habits/stats"
 import { getSettings } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
+import { GOALS_PATH } from "@/config/routes"
 import { requirePermission } from "@/lib/dal"
 import { addDays } from "@/lib/dates"
 
@@ -70,36 +71,71 @@ async function HabitList() {
   }
 
   const grouped = groupByHabit(checkIns)
+  // Principle 9: habits sit under the goal they serve; the ones without a goal come last.
+  const sections = [
+    ...goals.map((goal) => ({
+      key: goal.id,
+      title: goal.becoming ?? goal.name,
+      href: `${GOALS_PATH}/${goal.id}`,
+      habits: habits.filter((habit) => habit.goalId === goal.id),
+    })),
+    {
+      key: "none",
+      title: "No goal",
+      href: undefined,
+      habits: habits.filter(
+        (habit) => !goals.some((goal) => goal.id === habit.goalId)
+      ),
+    },
+  ].filter((section) => section.habits.length > 0)
+  const showTitles = sections.length > 1 || sections[0]?.key !== "none"
   return (
-    <ItemGroup className="max-w-3xl gap-2">
-      {habits.map((habit) => {
-        const mine = grouped.get(habit.id) ?? []
-        const row = habitRowData(habit, mine, today)
-        const rate = consistency(habit, indexByDate(mine), today)
-        return (
-          <Item
-            key={habit.id}
-            variant="outline"
-            size="sm"
-            render={<Link href={`/dashboard/habits/${habit.id}`} />}
-          >
-            <ItemContent>
-              <ItemTitle>{habit.name}</ItemTitle>
-              <ItemDescription>
-                {scheduleLabel(habit, today)}
-                {row.streak > 0 ? ` · ${row.streak} in a row` : ""}
-                {rate !== null
-                  ? ` · ${Math.round(rate * 100)}% this month`
-                  : ""}
-              </ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <HeatStrip cells={row.strip} className="max-sm:hidden" />
-            </ItemActions>
-          </Item>
-        )
-      })}
-    </ItemGroup>
+    <div className="flex max-w-3xl flex-col gap-8">
+      {sections.map((section) => (
+        <section key={section.key} className="flex flex-col gap-3">
+          {showTitles ? (
+            <h2 className="font-mono text-sm font-medium tracking-wide uppercase">
+              {section.href ? (
+                <Link href={section.href} className="hover:underline">
+                  {section.title}
+                </Link>
+              ) : (
+                section.title
+              )}
+            </h2>
+          ) : null}
+          <ItemGroup className="gap-2">
+            {section.habits.map((habit) => {
+              const mine = grouped.get(habit.id) ?? []
+              const row = habitRowData(habit, mine, today)
+              const rate = consistency(habit, indexByDate(mine), today)
+              return (
+                <Item
+                  key={habit.id}
+                  variant="outline"
+                  size="sm"
+                  render={<Link href={`/dashboard/habits/${habit.id}`} />}
+                >
+                  <ItemContent>
+                    <ItemTitle>{habit.name}</ItemTitle>
+                    <ItemDescription>
+                      {scheduleLabel(habit, today)}
+                      {row.streak > 0 ? ` · ${row.streak} in a row` : ""}
+                      {rate !== null
+                        ? ` · ${Math.round(rate * 100)}% this month`
+                        : ""}
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <HeatStrip cells={row.strip} className="max-sm:hidden" />
+                  </ItemActions>
+                </Item>
+              )
+            })}
+          </ItemGroup>
+        </section>
+      ))}
+    </div>
   )
 }
 

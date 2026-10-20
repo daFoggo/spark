@@ -56,6 +56,12 @@ export const DASHBOARD_NAV: NavSection[] = [
         permission: "dashboard:view",
       },
       {
+        title: "Goals",
+        href: GOALS_PATH,
+        icon: "goals",
+        permission: "dashboard:view",
+      },
+      {
         title: "Habits",
         href: HABITS_PATH,
         icon: "habits",
@@ -65,12 +71,6 @@ export const DASHBOARD_NAV: NavSection[] = [
         title: "Tasks",
         href: TASKS_PATH,
         icon: "tasks",
-        permission: "dashboard:view",
-      },
-      {
-        title: "Goals",
-        href: GOALS_PATH,
-        icon: "goals",
         permission: "dashboard:view",
       },
       {

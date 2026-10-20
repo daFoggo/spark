@@ -58,7 +58,7 @@ function GoalForm({ goal, onDone }: { goal: Goal; onDone: () => void }) {
   )
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form action={formAction} className="flex flex-col gap-5">
       <FieldGroup className="sm:grid sm:grid-cols-2">
         <Field className="sm:col-span-2">
           <FieldLabel htmlFor="goal-name">Name</FieldLabel>

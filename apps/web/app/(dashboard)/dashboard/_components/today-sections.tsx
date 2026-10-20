@@ -4,18 +4,18 @@ import {
   CollapsibleTrigger,
 } from "@workspace/ui/components/collapsible"
 import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@workspace/ui/components/empty"
-import { ItemGroup } from "@workspace/ui/components/item"
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from "@workspace/ui/components/item"
+
+import Link from "next/link"
 
 import { InfoHint } from "@/components/shared/info-hint"
 import type { HelpKey } from "@/config/help"
-import { LogDialog } from "@/features/activities/components/log-dialog"
-import { HabitDialog } from "@/features/habits/components/habit-dialog"
+import { GOALS_PATH } from "@/config/routes"
 import { HabitRow } from "@/features/habits/components/habit-row"
 import { habitRowData } from "@/features/habits/rows"
 import { isDue, isPaused } from "@/features/habits/stats"
@@ -51,6 +51,52 @@ function SectionTitle({
   )
 }
 
+/**
+ * The active goals above the habits: the top of the model (principle 9). One line each, with how
+ * many of its habits are done on the picked day. Hidden until a goal exists; Get started offers one.
+ */
+export async function TodayGoals({
+  searchParams,
+}: {
+  searchParams: Promise<{ day?: string }>
+}) {
+  const { today, habits, goals, byHabit } = await loadDashboard()
+  const day = await resolveDay(searchParams, today)
+  const active = goals.filter((goal) => goal.status === "active")
+  if (active.length === 0) return null
+  return (
+    <section className="flex max-w-3xl flex-col gap-5">
+      <SectionTitle hint="goal">Active goals</SectionTitle>
+      <ItemGroup className="gap-2">
+        {active.map((goal) => {
+          const due = habits.filter(
+            (habit) => habit.goalId === goal.id && isDue(habit, day)
+          )
+          const done = due.filter((habit) => byHabit.get(habit.id)?.has(day))
+          return (
+            <Item
+              key={goal.id}
+              variant="outline"
+              size="sm"
+              render={<Link href={`${GOALS_PATH}/${goal.id}`} />}
+            >
+              <ItemContent>
+                <ItemTitle>{goal.becoming ?? goal.name}</ItemTitle>
+                <ItemDescription>
+                  {goal.becoming ? `${goal.name} · ` : ""}
+                  {due.length === 0
+                    ? "No habits due"
+                    : `${done.length}/${due.length} habits done`}
+                </ItemDescription>
+              </ItemContent>
+            </Item>
+          )
+        })}
+      </ItemGroup>
+    </section>
+  )
+}
+
 export async function TodayHabits({
   searchParams,
 }: {
@@ -59,32 +105,23 @@ export async function TodayHabits({
   const { today, habits, grouped, goals } = await loadDashboard()
   const day = await resolveDay(searchParams, today)
 
-  if (habits.length === 0) {
-    return (
-      <Empty className="border border-dashed">
-        <EmptyHeader>
-          <EmptyTitle>Nothing to check in yet</EmptyTitle>
-          <EmptyDescription>
-            Create a habit and it will show up here on the days it is due.
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <HabitDialog
-            label="New habit"
-            goals={goals.filter((goal) => goal.status === "active")}
-          />
-        </EmptyContent>
-      </Empty>
-    )
-  }
+  // With no habit yet, Get started above is the call to action.
+  if (habits.length === 0) return null
 
   const due = habits.filter((habit) => isDue(habit, day))
   // AC-4: habits that are not due stay one tap away, collapsed. Paused ones stay out of the way.
   const extra = habits.filter(
     (habit) => !isDue(habit, day) && !isPaused(habit, day)
   )
+  const goalNames = new Map(goals.map((goal) => [goal.id, goal.name]))
   const row = (habit: (typeof habits)[number]) =>
-    habitRowData(habit, grouped.get(habit.id) ?? [], today, day)
+    habitRowData(
+      habit,
+      grouped.get(habit.id) ?? [],
+      today,
+      day,
+      habit.goalId ? (goalNames.get(habit.goalId) ?? null) : null
+    )
 
   return (
     <section className="flex max-w-3xl flex-col gap-5">
@@ -160,21 +197,6 @@ export async function TodayTasks() {
         </ItemGroup>
       ) : null}
     </section>
-  )
-}
-
-export async function TodayLog({
-  searchParams,
-}: {
-  searchParams: Promise<{ day?: string }>
-}) {
-  const { today, goals } = await loadDashboard()
-  const day = await resolveDay(searchParams, today)
-  return (
-    <LogDialog
-      day={day}
-      goals={goals.filter((goal) => goal.status === "active")}
-    />
   )
 }
 

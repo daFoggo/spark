@@ -175,6 +175,8 @@ export function GoalBoard({
 
   return (
     <DndContext
+      // A fixed id keeps dnd-kit's generated aria ids equal on server and client (no hydration warning).
+      id="goal-board"
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={onDragStart}

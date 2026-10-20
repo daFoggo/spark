@@ -25,6 +25,8 @@ export type HabitRowData = {
   name: string
   cue: string | null
   minimumVersion: string | null
+  /** Name of the goal the habit serves, if any. */
+  goalName: string | null
   streak: number
   /** Today's check-in, or null. */
   level: CheckInLevel | null
@@ -93,6 +95,7 @@ export function HabitRow({
         </ItemTitle>
         <ItemDescription>
           {extra ? "Extra session · " : ""}
+          {habit.goalName ? `${habit.goalName} · ` : ""}
           {habit.cue ? `When ${habit.cue}` : "No trigger yet"}
           {habit.streak > 0 ? ` · ${habit.streak} in a row` : ""}
         </ItemDescription>

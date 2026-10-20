@@ -13,8 +13,8 @@ import { requirePermission } from "@/lib/dal"
 import { GetStarted } from "./_components/get-started"
 import { resolveDay } from "./_components/day"
 import {
+  TodayGoals,
   TodayHabits,
-  TodayLog,
   TodayPet,
   TodayTasks,
 } from "./_components/today-sections"
@@ -64,17 +64,15 @@ export default function DashboardPage({
       <Suspense fallback={null}>
         <GetStarted />
       </Suspense>
+      <Suspense fallback={null}>
+        <TodayGoals searchParams={searchParams} />
+      </Suspense>
       <Suspense fallback={<Skeleton className="h-64 max-w-3xl" />}>
         <TodayHabits searchParams={searchParams} />
       </Suspense>
       <Suspense fallback={<Skeleton className="h-40 max-w-3xl" />}>
         <TodayTasks />
       </Suspense>
-      <div className="h-8">
-        <Suspense fallback={null}>
-          <TodayLog searchParams={searchParams} />
-        </Suspense>
-      </div>
       {/* The inspector shows the pet from xl; below that it lives here. */}
       <div className="xl:hidden">
         <Suspense fallback={<Skeleton className="h-64" />}>
