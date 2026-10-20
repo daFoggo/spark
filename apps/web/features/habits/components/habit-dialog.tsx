@@ -5,14 +5,6 @@ import { useActionState, useState } from "react"
 
 import { Button } from "@workspace/ui/components/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@workspace/ui/components/dialog"
-import {
   Field,
   FieldDescription,
   FieldError,
@@ -29,6 +21,11 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@workspace/ui/components/toggle-group"
+
+import {
+  DialogActions,
+  ResponsiveDialog,
+} from "@/components/shared/responsive-dialog"
 
 import {
   createHabitAction,
@@ -70,15 +67,15 @@ export function HabitDialog({
       >
         {label}
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <HabitForm
-            habit={habit}
-            goals={goals}
-            onDone={() => setOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <ResponsiveDialog
+        open={open}
+        onOpenChange={setOpen}
+        size="lg"
+        title={habit ? "Edit habit" : "New habit"}
+        description="Small and specific beats ambitious. You can always change it later."
+      >
+        <HabitForm habit={habit} goals={goals} onDone={() => setOpen(false)} />
+      </ResponsiveDialog>
     </>
   )
 }
@@ -120,14 +117,8 @@ function HabitForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
-      <DialogHeader>
-        <DialogTitle>{habit ? "Edit habit" : "New habit"}</DialogTitle>
-        <DialogDescription>
-          Small and specific beats ambitious. You can always change it later.
-        </DialogDescription>
-      </DialogHeader>
-      <FieldGroup>
-        <Field>
+      <FieldGroup className="sm:grid sm:grid-cols-2">
+        <Field className="sm:col-span-2">
           <FieldLabel htmlFor="habit-name">Name</FieldLabel>
           <Input
             id="habit-name"
@@ -138,13 +129,13 @@ function HabitForm({
             required
           />
         </Field>
-        <Field>
-          <FieldLabel htmlFor="habit-cue">After I…</FieldLabel>
+        <Field className="sm:col-span-2">
+          <FieldLabel htmlFor="habit-cue">When…</FieldLabel>
           <Input
             id="habit-cue"
             name="cue"
             defaultValue={habit?.cue ?? ""}
-            placeholder="brush my teeth"
+            placeholder="I brush my teeth"
             maxLength={120}
           />
         </Field>
@@ -169,7 +160,7 @@ function HabitForm({
             maxLength={60}
           />
         </Field>
-        <Field>
+        <Field className="sm:col-span-2">
           <FieldLabel>Repeat</FieldLabel>
           <ToggleGroup
             aria-label="Repeat"
@@ -255,7 +246,7 @@ function HabitForm({
         </Field>
       </FieldGroup>
       {state.error ? <FieldError>{state.error}</FieldError> : null}
-      <DialogFooter>
+      <DialogActions>
         <Button type="button" variant="ghost" onClick={onDone}>
           Cancel
         </Button>
@@ -263,7 +254,7 @@ function HabitForm({
           {pending ? <Spinner /> : null}
           {habit ? "Save changes" : "Create habit"}
         </Button>
-      </DialogFooter>
+      </DialogActions>
     </form>
   )
 }

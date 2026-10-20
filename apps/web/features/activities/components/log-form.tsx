@@ -22,18 +22,24 @@ export function LogForm({
   today,
   goals = [],
   goalId,
+  onSaved,
 }: {
   today: string
   /** Goals the log can be linked to (optional). Ignored when `goalId` fixes the goal. */
   goals?: { id: string; name: string }[]
   /** Preset on a goal page: the log always belongs to this goal. */
   goalId?: string
+  /** Called after a log is saved, e.g. to close the dialog that holds the form. */
+  onSaved?: () => void
 }) {
   const formRef = useRef<HTMLFormElement>(null)
   const [state, formAction, pending] = useActionState(
     async (previous: LogState, formData: FormData) => {
       const result = await logActivityAction(today, previous, formData)
-      if (result.saved) formRef.current?.reset()
+      if (result.saved) {
+        formRef.current?.reset()
+        onSaved?.()
+      }
       return result
     },
     {}

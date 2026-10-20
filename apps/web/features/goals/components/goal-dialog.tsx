@@ -4,14 +4,6 @@ import { useActionState, useState } from "react"
 
 import { Button } from "@workspace/ui/components/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@workspace/ui/components/dialog"
-import {
   Field,
   FieldDescription,
   FieldError,
@@ -22,6 +14,10 @@ import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
 
+import {
+  DialogActions,
+  ResponsiveDialog,
+} from "@/components/shared/responsive-dialog"
 import { updateGoalAction, type GoalState } from "../actions"
 import type { Goal } from "../schemas"
 
@@ -38,11 +34,15 @@ export function GoalDialog({ goal }: { goal: Goal }) {
       >
         Edit details
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <GoalForm goal={goal} onDone={() => setOpen(false)} />
-        </DialogContent>
-      </Dialog>
+      <ResponsiveDialog
+        open={open}
+        onOpenChange={setOpen}
+        size="lg"
+        title="Edit goal"
+        description="A name is enough. Add the rest when it helps."
+      >
+        <GoalForm goal={goal} onDone={() => setOpen(false)} />
+      </ResponsiveDialog>
     </>
   )
 }
@@ -59,14 +59,8 @@ function GoalForm({ goal, onDone }: { goal: Goal; onDone: () => void }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
-      <DialogHeader>
-        <DialogTitle>Edit goal</DialogTitle>
-        <DialogDescription>
-          A name is enough. Add the rest when it helps.
-        </DialogDescription>
-      </DialogHeader>
-      <FieldGroup>
-        <Field>
+      <FieldGroup className="sm:grid sm:grid-cols-2">
+        <Field className="sm:col-span-2">
           <FieldLabel htmlFor="goal-name">Name</FieldLabel>
           <Input
             id="goal-name"
@@ -87,7 +81,7 @@ function GoalForm({ goal, onDone }: { goal: Goal; onDone: () => void }) {
           />
           <FieldDescription>Shows in the sidebar.</FieldDescription>
         </Field>
-        <Field>
+        <Field className="sm:col-span-2">
           <FieldLabel htmlFor="goal-why">Why it matters</FieldLabel>
           <Textarea
             id="goal-why"
@@ -127,7 +121,7 @@ function GoalForm({ goal, onDone }: { goal: Goal; onDone: () => void }) {
         </Field>
       </FieldGroup>
       {state.error ? <FieldError>{state.error}</FieldError> : null}
-      <DialogFooter>
+      <DialogActions>
         <Button type="button" variant="ghost" onClick={onDone}>
           Cancel
         </Button>
@@ -135,7 +129,7 @@ function GoalForm({ goal, onDone }: { goal: Goal; onDone: () => void }) {
           {pending ? <Spinner /> : null}
           Save changes
         </Button>
-      </DialogFooter>
+      </DialogActions>
     </form>
   )
 }

@@ -3,18 +3,14 @@
 import { useState, useTransition } from "react"
 
 import { Button } from "@workspace/ui/components/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@workspace/ui/components/dialog"
 import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 
+import {
+  DialogActions,
+  ResponsiveDialog,
+} from "@/components/shared/responsive-dialog"
 import { closeChapterAction } from "../actions"
 
 /**
@@ -50,50 +46,46 @@ export function ChapterClose({ goalId }: { goalId: string }) {
       >
         Close this chapter
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <form
-            className="flex flex-col gap-6"
-            onSubmit={(event) => {
-              event.preventDefault()
-              submit()
-            }}
-          >
-            <DialogHeader>
-              <DialogTitle>Close this chapter</DialogTitle>
-              <DialogDescription>
-                No finish line needed. Name what you just finished and keep
-                going.
-              </DialogDescription>
-            </DialogHeader>
-            <Field>
-              <FieldLabel htmlFor="chapter-title">Chapter name</FieldLabel>
-              <Input
-                id="chapter-title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Foundations"
-                maxLength={120}
-                required
-              />
-            </Field>
-            {error ? <FieldError>{error}</FieldError> : null}
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={pending || !title.trim()}>
-                {pending ? <Spinner /> : null}
-                Close chapter
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <ResponsiveDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Close this chapter"
+        description="No finish line needed. Name what you just finished and keep going."
+      >
+        <form
+          className="flex flex-col gap-6"
+          onSubmit={(event) => {
+            event.preventDefault()
+            submit()
+          }}
+        >
+          <Field>
+            <FieldLabel htmlFor="chapter-title">Chapter name</FieldLabel>
+            <Input
+              id="chapter-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Foundations"
+              maxLength={120}
+              required
+            />
+          </Field>
+          {error ? <FieldError>{error}</FieldError> : null}
+          <DialogActions>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={pending || !title.trim()}>
+              {pending ? <Spinner /> : null}
+              Close chapter
+            </Button>
+          </DialogActions>
+        </form>
+      </ResponsiveDialog>
     </>
   )
 }
