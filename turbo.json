@@ -1,6 +1,7 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": ["CI", "BASE_URL"],
   "tasks": {
     "build": {
       "dependsOn": [
@@ -54,6 +55,9 @@
       "dependsOn": [
         "^test"
       ]
+    },
+    "test:e2e": {
+      "cache": false
     }
   }
 }

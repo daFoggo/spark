@@ -11,7 +11,8 @@
     "format": "turbo run format",
     "typecheck": "turbo run typecheck",
     "check": "turbo run lint typecheck test",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

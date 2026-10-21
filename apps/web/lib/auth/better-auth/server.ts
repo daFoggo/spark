@@ -13,49 +13,65 @@ import type {
 } from "../types"
 import { auth } from "./auth"
 
+function isNextBailoutError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "digest" in error
+}
+
 export const betterAuthProvider: AuthProvider = {
   async getSession(): Promise<Session | null> {
-    const reqHeaders = await headers()
-    const session = await auth.api.getSession({
-      headers: reqHeaders,
-    })
-    if (!session) return null
+    try {
+      const reqHeaders = await headers()
+      const session = await auth.api.getSession({
+        headers: reqHeaders,
+      })
+      if (!session) return null
 
-    const tokenRes = await auth.api.getToken({
-      headers: reqHeaders,
-    })
-    const accessToken =
-      typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
+      const tokenRes = await auth.api.getToken({
+        headers: reqHeaders,
+      })
+      const accessToken =
+        typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
 
-    return {
-      userId: session.user.id,
-      accessToken,
-      role: parseRole((session.user as { role?: string }).role),
-      name: session.user.name ?? null,
-      email: session.user.email ?? null,
+      return {
+        userId: session.user.id,
+        accessToken,
+        role: parseRole((session.user as { role?: string }).role),
+        name: session.user.name ?? null,
+        email: session.user.email ?? null,
+      }
+    } catch (error) {
+      if (isNextBailoutError(error)) throw error
+      console.error("[betterAuthProvider] getSession error:", error)
+      return null
     }
   },
 
   async verifySessionFresh(): Promise<Session | null> {
-    const reqHeaders = await headers()
-    const session = await auth.api.getSession({
-      headers: reqHeaders,
-      query: { disableCookieCache: true },
-    })
-    if (!session) return null
+    try {
+      const reqHeaders = await headers()
+      const session = await auth.api.getSession({
+        headers: reqHeaders,
+        query: { disableCookieCache: true },
+      })
+      if (!session) return null
 
-    const tokenRes = await auth.api.getToken({
-      headers: reqHeaders,
-    })
-    const accessToken =
-      typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
+      const tokenRes = await auth.api.getToken({
+        headers: reqHeaders,
+      })
+      const accessToken =
+        typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
 
-    return {
-      userId: session.user.id,
-      accessToken,
-      role: parseRole((session.user as { role?: string }).role),
-      name: session.user.name ?? null,
-      email: session.user.email ?? null,
+      return {
+        userId: session.user.id,
+        accessToken,
+        role: parseRole((session.user as { role?: string }).role),
+        name: session.user.name ?? null,
+        email: session.user.email ?? null,
+      }
+    } catch (error) {
+      if (isNextBailoutError(error)) throw error
+      console.error("[betterAuthProvider] verifySessionFresh error:", error)
+      return null
     }
   },
 
