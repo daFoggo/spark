@@ -7,6 +7,9 @@ import type { ProxyAuthResult } from "./types"
 export async function updateSession(
   request: NextRequest
 ): Promise<ProxyAuthResult> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    return (await import("./better-auth/proxy")).updateSession(request)
+  }
   if (authConfig.AUTH_PROVIDER === "supabase") {
     return (await import("./supabase/proxy")).updateSession(request)
   }

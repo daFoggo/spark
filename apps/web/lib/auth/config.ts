@@ -21,6 +21,16 @@ const authSchema = z.discriminatedUnion("AUTH_PROVIDER", [
     NEXT_PUBLIC_SUPABASE_URL: z.url(),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   }),
+  z.object({
+    AUTH_PROVIDER: z.literal("better-auth"),
+    API_BASE_URL: z.url(),
+    API_AUDIENCE: z.url(),
+    DATABASE_URL: z.url(),
+    BETTER_AUTH_URL: z.url(),
+    BETTER_AUTH_SECRET: z.string().min(32),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+  }),
 ])
 
 export type AuthConfig = z.infer<typeof authSchema>
@@ -33,4 +43,10 @@ export const authConfig: AuthConfig = authSchema.parse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  API_AUDIENCE: process.env.API_AUDIENCE,
+  DATABASE_URL: process.env.DATABASE_URL,
+  BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+  BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
 })

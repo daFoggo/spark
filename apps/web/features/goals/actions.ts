@@ -4,6 +4,7 @@ import { updateTag } from "next/cache"
 
 import { goalTag, goalsTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
+import { isExpectedApiError } from "@/lib/errors"
 import { DataError } from "@/lib/supabase/data"
 
 import {
@@ -34,6 +35,9 @@ export type GoalState = {
 
 /** Database rules (GL-3, GL-4, CH-1…) carry their message after the rule ID. */
 function expected(error: unknown): string | null {
+  if (isExpectedApiError(error)) {
+    return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")
+  }
   if (error instanceof DataError && error.expected) {
     return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")
   }

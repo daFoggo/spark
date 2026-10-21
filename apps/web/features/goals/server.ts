@@ -1,6 +1,9 @@
 import "server-only"
 
+import { authConfig } from "@/lib/auth/config"
 import type { LocalDate } from "@/lib/dates"
+import { ApiError } from "@/lib/errors"
+import { apiFetch } from "@/lib/http"
 import { createDataClient, DataError, unwrap } from "@/lib/supabase/data"
 
 import {
@@ -62,6 +65,11 @@ function toGoal(row: GoalRow): Goal {
 
 /** Every goal that is not archived (GL-5), with its checkpoints. Active first, then by creation. */
 export async function fetchGoals(accessToken: string): Promise<Goal[]> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const raw = await apiFetch<unknown[]>("goals", { token: accessToken })
+    return raw.map((g) => GoalSchema.parse(g))
+  }
+
   const rows = unwrap(
     await createDataClient(accessToken)
       .from("goals")
@@ -78,6 +86,18 @@ export async function fetchGoal(
   accessToken: string,
   goalId: string
 ): Promise<Goal | null> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    try {
+      const raw = await apiFetch<unknown>(`goals/${goalId}`, {
+        token: accessToken,
+      })
+      return GoalSchema.parse(raw)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) return null
+      throw error
+    }
+  }
+
   const { data, error } = await createDataClient(accessToken)
     .from("goals")
     .select(GOAL_COLUMNS)
@@ -92,6 +112,15 @@ export async function createGoal(
   accessToken: string,
   name: string
 ): Promise<{ id: string; status: GoalStatus }> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    return await apiFetch<{ id: string; status: GoalStatus }>("goals", {
+      token: accessToken,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    })
+  }
+
   const rows = unwrap(
     await createDataClient(accessToken).rpc("create_goal", { p_name: name })
   )
@@ -105,6 +134,16 @@ export async function updateGoal(
   goalId: string,
   patch: Partial<GoalForm> & { status?: GoalStatus }
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`goals/${goalId}`, {
+      token: accessToken,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("goals")
@@ -127,6 +166,19 @@ export async function addCheckpoint(
   accessToken: string,
   input: { goalId: string; title: string; position: number }
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<{ id: string }>(`goals/${input.goalId}/checkpoints`, {
+      token: accessToken,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: input.title,
+        position: input.position,
+      }),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("checkpoints")
@@ -145,6 +197,16 @@ export async function renameCheckpoint(
   checkpointId: string,
   title: string
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`checkpoints/${checkpointId}`, {
+      token: accessToken,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("checkpoints")
@@ -159,6 +221,14 @@ export async function deleteCheckpoint(
   accessToken: string,
   checkpointId: string
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`checkpoints/${checkpointId}`, {
+      token: accessToken,
+      method: "DELETE",
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("checkpoints")
@@ -175,6 +245,19 @@ export async function setCheckpointDone(
   checkpointId: string,
   done: boolean
 ): Promise<LocalDate | null> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const res = await apiFetch<{ doneOn: LocalDate | null }>(
+      `checkpoints/${checkpointId}/done`,
+      {
+        token: accessToken,
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ done }),
+      }
+    )
+    return res.doneOn ?? null
+  }
+
   const { data, error } = await createDataClient(accessToken).rpc(
     "set_checkpoint_done",
     { p_checkpoint_id: checkpointId, p_done: done }
@@ -189,6 +272,16 @@ export async function moveCheckpoint(
   checkpointId: string,
   direction: -1 | 1
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`checkpoints/${checkpointId}`, {
+      token: accessToken,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ move: direction }),
+    })
+    return
+  }
+
   const { error } = await createDataClient(accessToken).rpc("move_checkpoint", {
     p_checkpoint_id: checkpointId,
     p_direction: direction,

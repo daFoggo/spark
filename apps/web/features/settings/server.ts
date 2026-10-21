@@ -1,5 +1,7 @@
 import "server-only"
 
+import { authConfig } from "@/lib/auth/config"
+import { apiFetch } from "@/lib/http"
 import { createDataClient, unwrap } from "@/lib/supabase/data"
 
 import { SettingsSchema, type Settings } from "./schemas"
@@ -8,6 +10,12 @@ const COLUMNS = "timezone, timezone_confirmed, week_start, pet_name, adopted_on"
 
 /** The signed-in user's settings. RLS limits the table to that user, so no id filter is needed. */
 export async function fetchSettings(accessToken: string): Promise<Settings> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    return SettingsSchema.parse(
+      await apiFetch<unknown>("settings", { token: accessToken })
+    )
+  }
+
   const row = unwrap(
     await createDataClient(accessToken)
       .from("user_settings")
@@ -32,6 +40,16 @@ export async function saveSettings(
     petName?: string
   }
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>("settings", {
+      token: accessToken,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("user_settings")

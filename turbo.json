@@ -19,6 +19,12 @@
       "env": [
         "AUTH_PROVIDER",
         "API_BASE_URL",
+        "API_AUDIENCE",
+        "DATABASE_URL",
+        "BETTER_AUTH_URL",
+        "BETTER_AUTH_SECRET",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
         "SESSION_COOKIE_NAME",
         "SESSION_SECRET",
         "NODE_ENV"

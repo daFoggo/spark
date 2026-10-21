@@ -107,6 +107,7 @@ paths:
             schema: { $ref: "#/components/schemas/Schedule" }
       responses:
         "204": { description: Saved }
+        "404": { description: Not found }
         "422": { $ref: "#/components/responses/RuleViolation" }
 
   /check-ins:
@@ -170,6 +171,8 @@ paths:
                 note: { type: string, maxLength: 280 }
       responses:
         "204": { description: Saved }
+        "404": { description: Not found }
+        "422": { $ref: "#/components/responses/RuleViolation" }
 
   /activities:
     get:
@@ -301,6 +304,7 @@ paths:
                     oneOf:
                       - { $ref: "#/components/schemas/LocalDate" }
                       - { type: "null" }
+        "404": { description: Not found }
         "422": { $ref: "#/components/responses/RuleViolation" }
 
   /tasks/{taskId}/log:
@@ -319,6 +323,7 @@ paths:
                 required: [activityId]
                 properties:
                   activityId: { type: integer }
+        "404": { description: Not found }
         "422": { $ref: "#/components/responses/RuleViolation" }
 
   /goals:
@@ -381,6 +386,7 @@ paths:
             schema: { $ref: "#/components/schemas/GoalPatch" }
       responses:
         "204": { description: Saved }
+        "404": { description: Not found }
         "422": { $ref: "#/components/responses/RuleViolation" }
 
   /goals/{goalId}/checkpoints:
@@ -401,6 +407,7 @@ paths:
                 position: { type: integer, minimum: 0 }
       responses:
         "201": { description: Created }
+        "404": { description: Goal not found }
         "422": { $ref: "#/components/responses/RuleViolation" }
 
   /checkpoints/{checkpointId}:
@@ -414,17 +421,25 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title: { type: string, minLength: 1, maxLength: 120 }
-                move: { type: integer, enum: [-1, 1] }
+              oneOf:
+                - type: object
+                  required: [title]
+                  properties:
+                    title: { type: string, minLength: 1, maxLength: 120 }
+                - type: object
+                  required: [move]
+                  properties:
+                    move: { type: integer, enum: [-1, 1] }
       responses:
         "204": { description: Saved }
+        "404": { description: Not found }
+        "422": { $ref: "#/components/responses/RuleViolation" }
     delete:
       operationId: deleteCheckpoint
       summary: Delete a checkpoint (CP-4)
       responses:
         "204": { description: Deleted }
+        "404": { description: Not found }
 
   /checkpoints/{checkpointId}/done:
     put:
@@ -454,6 +469,8 @@ paths:
                     oneOf:
                       - { $ref: "#/components/schemas/LocalDate" }
                       - { type: "null" }
+        "404": { description: Not found }
+        "422": { $ref: "#/components/responses/RuleViolation" }
 
   /goals/{goalId}/activity:
     get:
@@ -468,6 +485,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/GoalActivity" }
+        "404": { description: Goal not found }
 
   /reviews/{weekStart}:
     parameters:
@@ -523,15 +541,28 @@ components:
 
   responses:
     RuleViolation:
-      description: A business rule refused the change
+      description: A business rule refused the change (RFC 9457 problem details)
       content:
+        application/problem+json:
+          schema:
+            type: object
+            required: [type, title, status, detail, rule]
+            properties:
+              type: { type: string, format: uri, default: "about:blank" }
+              title: { type: string, default: "Unprocessable Content" }
+              status: { type: integer, default: 422 }
+              detail: { type: string, description: User-facing message without rule prefix }
+              rule: { type: string, description: Spec rule ID, examples: [AC-5] }
         application/json:
           schema:
             type: object
-            required: [rule, message]
+            required: [type, title, status, detail, rule]
             properties:
-              rule: { type: string, examples: [AC-5] }
-              message: { type: string }
+              type: { type: string, format: uri, default: "about:blank" }
+              title: { type: string, default: "Unprocessable Content" }
+              status: { type: integer, default: 422 }
+              detail: { type: string, description: User-facing message without rule prefix }
+              rule: { type: string, description: Spec rule ID, examples: [AC-5] }
 
   schemas:
     LocalDate: { type: string, format: date }
@@ -683,12 +714,15 @@ components:
       properties:
         title: { type: string, minLength: 1, maxLength: 200 }
         list: { $ref: "#/components/schemas/TaskList" }
+        goalId: { type: [string, "null"], format: uuid }
     TaskPatch:
       type: object
       properties:
         note: { type: [string, "null"], maxLength: 2000 }
         list: { $ref: "#/components/schemas/TaskList" }
         createdOn: { $ref: "#/components/schemas/LocalDate" }
+        goalId: { type: [string, "null"], format: uuid }
+        focusFrom: { oneOf: [{ $ref: "#/components/schemas/LocalDate" }, { type: "null" }] }
 
     Checkpoint:
       type: object

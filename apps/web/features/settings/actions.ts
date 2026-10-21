@@ -4,6 +4,7 @@ import { updateTag } from "next/cache"
 
 import { settingsTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
+import { isExpectedApiError } from "@/lib/errors"
 import { DataError } from "@/lib/supabase/data"
 
 import { DetectedLocaleSchema, UpdateSettingsSchema } from "./schemas"
@@ -27,6 +28,9 @@ export async function syncLocaleAction(input: {
       timezoneConfirmed: true,
     })
   } catch (error) {
+    if (isExpectedApiError(error)) {
+      return { error: error.message }
+    }
     // An unknown timezone name is rejected by the database (TM-2); other failures are real errors.
     if (error instanceof DataError && error.expected) {
       return { error: error.message }
@@ -57,6 +61,9 @@ export async function updateSettingsAction(
       timezoneConfirmed: true,
     })
   } catch (error) {
+    if (isExpectedApiError(error)) {
+      return { error: error.message }
+    }
     if (error instanceof DataError && error.expected) {
       return { error: error.message }
     }

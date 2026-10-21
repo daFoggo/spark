@@ -518,11 +518,16 @@ export interface components {
         TaskCreate: {
             title: string;
             list: components["schemas"]["TaskList"];
+            /** Format: uuid */
+            goalId?: string | null;
         };
         TaskPatch: {
             note?: string | null;
             list?: components["schemas"]["TaskList"];
             createdOn?: components["schemas"]["LocalDate"];
+            /** Format: uuid */
+            goalId?: string | null;
+            focusFrom?: components["schemas"]["LocalDate"] | null;
         };
         Checkpoint: {
             /** Format: uuid */
@@ -582,16 +587,47 @@ export interface components {
         };
     };
     responses: {
-        /** @description A business rule refused the change */
+        /** @description A business rule refused the change (RFC 9457 problem details) */
         RuleViolation: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": {
-                    /** @example AC-5 */
+                "application/problem+json": {
+                    /**
+                     * Format: uri
+                     * @default about:blank
+                     */
+                    type: string;
+                    /** @default Unprocessable Content */
+                    title: string;
+                    /** @default 422 */
+                    status: number;
+                    /** @description User-facing message without rule prefix */
+                    detail: string;
+                    /**
+                     * @description Spec rule ID
+                     * @example AC-5
+                     */
                     rule: string;
-                    message: string;
+                };
+                "application/json": {
+                    /**
+                     * Format: uri
+                     * @default about:blank
+                     */
+                    type: string;
+                    /** @default Unprocessable Content */
+                    title: string;
+                    /** @default 422 */
+                    status: number;
+                    /** @description User-facing message without rule prefix */
+                    detail: string;
+                    /**
+                     * @description Spec rule ID
+                     * @example AC-5
+                     */
+                    rule: string;
                 };
             };
         };
@@ -781,6 +817,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["RuleViolation"];
         };
     };
@@ -865,6 +908,14 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["RuleViolation"];
         };
     };
     listActivities: {
@@ -1096,6 +1147,13 @@ export interface operations {
                     };
                 };
             };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["RuleViolation"];
         };
     };
@@ -1120,6 +1178,13 @@ export interface operations {
                         activityId: number;
                     };
                 };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             422: components["responses"]["RuleViolation"];
         };
@@ -1226,6 +1291,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["RuleViolation"];
         };
     };
@@ -1254,6 +1326,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Goal not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["RuleViolation"];
         };
     };
@@ -1275,6 +1354,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     editCheckpoint: {
@@ -1289,9 +1375,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    title?: string;
+                    title: string;
+                } | {
                     /** @enum {integer} */
-                    move?: -1 | 1;
+                    move: -1 | 1;
                 };
             };
         };
@@ -1303,6 +1390,14 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["RuleViolation"];
         };
     };
     setCheckpointDone: {
@@ -1333,6 +1428,14 @@ export interface operations {
                     };
                 };
             };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["RuleViolation"];
         };
     };
     getGoalActivity: {
@@ -1356,6 +1459,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["GoalActivity"];
                 };
+            };
+            /** @description Goal not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

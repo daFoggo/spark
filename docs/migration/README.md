@@ -122,10 +122,10 @@ ticked in the PR that delivers it. Rule IDs and checklist IDs (`P1.3`) go in com
 
 ### Phase 0: Inventory sign-off
 
-- [ ] P0.1 Each `modules/<name>.md` "Inventory" section is checked against the code by its module agent (step 1 of the
+- [x] P0.1 Each `modules/<name>.md` "Inventory" section is checked against the code by its module agent (step 1 of the
       playbook) and the gaps it found are listed under "Open questions".
 - [x] P0.2 Open decisions Q1–Q6 answered (2026-10-21).
-- [ ] P0.3 Contract fixes agreed: `RuleViolation` → problem details (D10); 404s documented where the code can miss a
+- [x] P0.3 Contract fixes agreed: `RuleViolation` → problem details (D10); 404s documented where the code can miss a
       row; request schemas completed (`TaskCreate.goalId`, `TaskPatch.goalId/focusFrom`, `HabitPatch.archived` vs
       `archivedAt`, `editCheckpoint` as `oneOf` rename|move); every other mismatch listed in the module files.
 
