@@ -1,5 +1,6 @@
 import "server-only"
 
+import { io } from "next/cache"
 import { headers } from "next/headers"
 import { APIError } from "better-auth/api"
 
@@ -13,65 +14,54 @@ import type {
 } from "../types"
 import { auth } from "./auth"
 
-function isNextBailoutError(error: unknown): boolean {
-  return typeof error === "object" && error !== null && "digest" in error
-}
-
 export const betterAuthProvider: AuthProvider = {
   async getSession(): Promise<Session | null> {
-    try {
-      const reqHeaders = await headers()
-      const session = await auth.api.getSession({
-        headers: reqHeaders,
-      })
-      if (!session) return null
+    // Better Auth checks token/cookie expiry against Date.now(), which must not run during prerender.
+    // io() suspends only during prerender; unlike connection() it resolves inside "use cache: private"
+    // and does not block prefetches.
+    await io()
+    const reqHeaders = await headers()
+    const session = await auth.api.getSession({
+      headers: reqHeaders,
+    })
+    if (!session) return null
 
-      const tokenRes = await auth.api.getToken({
-        headers: reqHeaders,
-      })
-      const accessToken =
-        typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
+    const tokenRes = await auth.api.getToken({
+      headers: reqHeaders,
+    })
+    const accessToken =
+      typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
 
-      return {
-        userId: session.user.id,
-        accessToken,
-        role: parseRole((session.user as { role?: string }).role),
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
-      }
-    } catch (error) {
-      if (isNextBailoutError(error)) throw error
-      console.error("[betterAuthProvider] getSession error:", error)
-      return null
+    return {
+      userId: session.user.id,
+      accessToken,
+      role: parseRole((session.user as { role?: string }).role),
+      name: session.user.name ?? null,
+      email: session.user.email ?? null,
     }
   },
 
   async verifySessionFresh(): Promise<Session | null> {
-    try {
-      const reqHeaders = await headers()
-      const session = await auth.api.getSession({
-        headers: reqHeaders,
-        query: { disableCookieCache: true },
-      })
-      if (!session) return null
+    await io()
+    const reqHeaders = await headers()
+    const session = await auth.api.getSession({
+      headers: reqHeaders,
+      query: { disableCookieCache: true },
+    })
+    if (!session) return null
 
-      const tokenRes = await auth.api.getToken({
-        headers: reqHeaders,
-      })
-      const accessToken =
-        typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
+    const tokenRes = await auth.api.getToken({
+      headers: reqHeaders,
+    })
+    const accessToken =
+      typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
 
-      return {
-        userId: session.user.id,
-        accessToken,
-        role: parseRole((session.user as { role?: string }).role),
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
-      }
-    } catch (error) {
-      if (isNextBailoutError(error)) throw error
-      console.error("[betterAuthProvider] verifySessionFresh error:", error)
-      return null
+    return {
+      userId: session.user.id,
+      accessToken,
+      role: parseRole((session.user as { role?: string }).role),
+      name: session.user.name ?? null,
+      email: session.user.email ?? null,
     }
   },
 
