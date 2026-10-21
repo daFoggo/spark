@@ -9,7 +9,14 @@ import { isExpectedApiError } from "@/lib/errors"
 import { DetectedLocaleSchema, UpdateSettingsSchema } from "./schemas"
 import { saveSettings } from "./server"
 
-export type SettingsState = { error?: string; saved?: boolean }
+/** `values` echoes the fields back on error: React resets the form after an action finishes. */
+export type SettingsState = {
+  error?: string
+  saved?: boolean
+  /** Backend rule that refused the save, e.g. `TM-2` for an unknown timezone. */
+  rule?: string
+  values?: { timezone: string; weekStart: string; petName: string }
+}
 
 /** First visit: store the browser's timezone and locale week start once (TM-2, TM-4). */
 export async function syncLocaleAction(input: {
@@ -41,13 +48,17 @@ export async function updateSettingsAction(
   formData: FormData
 ): Promise<SettingsState> {
   const { userId, accessToken } = await verifySession()
-  const parsed = UpdateSettingsSchema.safeParse({
-    timezone: formData.get("timezone"),
-    petName: formData.get("petName"),
-    weekStart: formData.get("weekStart"),
-  })
+  const values = {
+    timezone: String(formData.get("timezone") ?? ""),
+    weekStart: String(formData.get("weekStart") ?? ""),
+    petName: String(formData.get("petName") ?? ""),
+  }
+  const parsed = UpdateSettingsSchema.safeParse(values)
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" }
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+      values,
+    }
   }
 
   try {
@@ -57,7 +68,11 @@ export async function updateSettingsAction(
     })
   } catch (error) {
     if (isExpectedApiError(error)) {
-      return { error: error.message }
+      const rule =
+        error.body && typeof error.body === "object" && "rule" in error.body
+          ? String(error.body.rule)
+          : undefined
+      return { error: error.message, rule, values }
     }
     throw error
   }

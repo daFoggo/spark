@@ -268,7 +268,7 @@ stack stays usable until Phase 9 only as the "before" side of parity checks (see
 - [x] Add task with `#slug` → complete → "Add to log?" → activity appears on the goal page; pet treats +1.
 - [x] Goal rules: 4th active refused (GL-3), done without target/checkpoint refused (GL-4); checkpoint add/toggle/move/rename/delete.
 - [x] Weekly review: finish with a pause and 2 focus tasks → habit paused from next week, tasks in Today per RV-4.
-- [ ] Settings: change timezone, week start, pet name; invalid timezone refused (TM-2). API verified; there is no settings
-      form in the UI (never built, PT-1), only the first-visit `TimezoneSync`.
+- [x] Settings: change timezone, week start, pet name; invalid timezone refused (TM-2). Form at
+      `/dashboard/settings/preferences`; each field persists after a reload, the TM-2 message shows inline (desktop + 375 px).
 - [x] Session expiry: delete the session row in `auth.session` → next navigation goes to sign-in without a loop, once the
       5-minute cookie cache (`session_data`) expires (by design, `modules/auth.md`).

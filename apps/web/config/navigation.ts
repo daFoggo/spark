@@ -5,6 +5,7 @@ import {
   GUIDE_PATH,
   HABITS_PATH,
   MEMBERS_PATH,
+  PREFERENCES_PATH,
   REVIEW_PATH,
   TASKS_PATH,
 } from "@/config/routes"
@@ -22,6 +23,7 @@ export type NavIconName =
   | "review"
   | "guide"
   | "account"
+  | "preferences"
   | "members"
 
 export type NavLink = {
@@ -106,6 +108,12 @@ export const DASHBOARD_NAV: NavSection[] = [
         title: "Account",
         href: ACCOUNT_PATH,
         icon: "account",
+        permission: "settings:view",
+      },
+      {
+        title: "Preferences",
+        href: PREFERENCES_PATH,
+        icon: "preferences",
         permission: "settings:view",
       },
       {

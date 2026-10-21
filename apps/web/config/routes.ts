@@ -12,6 +12,7 @@ export const GOALS_PATH = "/dashboard/goals"
 export const REVIEW_PATH = "/dashboard/review"
 export const GUIDE_PATH = "/dashboard/guide"
 export const ACCOUNT_PATH = "/dashboard/settings/account"
+export const PREFERENCES_PATH = "/dashboard/settings/preferences"
 export const MEMBERS_PATH = "/dashboard/settings/members"
 export const OAUTH_CALLBACK_PATH = "/auth/callback"
 /**
