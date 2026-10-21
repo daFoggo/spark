@@ -114,6 +114,7 @@ export function ReviewFlow({ data }: { data: ReviewData }) {
                 <li key={habit.id}>
                   <Link
                     href={`/dashboard/habits/${habit.id}`}
+                    prefetch
                     className="underline-offset-4 hover:underline"
                   >
                     {habit.name}

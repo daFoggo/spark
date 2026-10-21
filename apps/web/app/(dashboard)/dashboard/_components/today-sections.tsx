@@ -78,7 +78,7 @@ export async function TodayGoals({
               key={goal.id}
               variant="outline"
               size="sm"
-              render={<Link href={`${GOALS_PATH}/${goal.id}`} />}
+              render={<Link href={`${GOALS_PATH}/${goal.id}`} prefetch />}
             >
               <ItemContent>
                 <ItemTitle>{goal.becoming ?? goal.name}</ItemTitle>

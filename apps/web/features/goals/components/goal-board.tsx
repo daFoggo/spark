@@ -62,6 +62,7 @@ function Card({
       </button>
       <Link
         href={`/dashboard/goals/${goal.id}`}
+        prefetch
         className="flex min-w-0 flex-1 flex-col gap-0.5"
       >
         <span className="truncate font-medium">{goal.name}</span>

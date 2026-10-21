@@ -137,6 +137,7 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
                 <li key={habit.id}>
                   <Link
                     href={`/dashboard/habits/${habit.id}`}
+                    prefetch
                     className="hover:underline"
                   >
                     {habit.name}

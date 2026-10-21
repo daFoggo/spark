@@ -114,7 +114,9 @@ async function HabitList() {
                   key={habit.id}
                   variant="outline"
                   size="sm"
-                  render={<Link href={`/dashboard/habits/${habit.id}`} />}
+                  render={
+                    <Link href={`/dashboard/habits/${habit.id}`} prefetch />
+                  }
                 >
                   <ItemContent>
                     <ItemTitle>{habit.name}</ItemTitle>

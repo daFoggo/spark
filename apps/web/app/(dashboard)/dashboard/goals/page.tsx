@@ -65,7 +65,7 @@ function GoalGroup({
                 key={goal.id}
                 variant="outline"
                 size="sm"
-                render={<Link href={`/dashboard/goals/${goal.id}`} />}
+                render={<Link href={`/dashboard/goals/${goal.id}`} prefetch />}
               >
                 <ItemContent>
                   <ItemTitle>{goal.name}</ItemTitle>
