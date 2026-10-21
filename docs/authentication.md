@@ -19,7 +19,8 @@ Principles:
 2. **Tokens are refreshed transparently in `proxy.ts`**: Server Components cannot write cookies; proxy manages session extension.
 3. **Authorize next to the data** (DAL, Server Actions), not in layouts; `proxy.ts` performs optimistic redirects.
 4. **Server Actions are public endpoints**: each authenticates and validates its own input.
-5. **Per-user data uses `"use cache: private"`**; secrets never become cache keys or tags.
+5. **Per-user data uses `"use cache: private"`**; secrets never become cache keys or tags. The DAL's `getSession()` is
+   private too, so all queries in one request share a single session read and token mint (not one per cache scope).
 
 ## 2. Architecture
 

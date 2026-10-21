@@ -28,6 +28,8 @@ fix cards (`DOCS/02-guides/instant-navigation.md`). `<Suspense>` alone does not 
 `"use cache"`, or call `await io()` (from `next/cache`) first so it runs per request (`DOCS/03-api-reference/04-functions/io.md`).
 Prefer `io()` over `connection()`: `connection()` waits for a real request and also blocks prefetches; `io()` resolves
 immediately inside cache scopes and at request time, and only suspends while prerendering.
+`io()` outside a cache scope still keeps everything after it out of the App Shell (prefetch), so a clock read that feeds
+per-user reads goes in `"use cache: private"` instead (`lib/clock.ts` `getToday`): request-time, prefetchable, never shared.
 
 ## 2. Where code lives
 
@@ -107,7 +109,10 @@ early, then call it again where it renders; the second call reuses the first bec
 ### 4.3 Deduplicating within a request
 
 - `fetch` `GET` calls with the same URL and options are memoized for one render pass (not in Route Handlers).
-- Other reads: wrap in `React.cache` (the DAL does this for the session). Scope is one request; nothing is shared across requests.
+- Other reads: wrap in `React.cache`. Scope is one request; nothing is shared across requests.
+- A read that private caches call (the DAL's `getSession`) is itself `"use cache: private"`: matching private calls in one
+  request join a single fill, while `React.cache` would run once per scope (measured: 9–12 session reads per dashboard
+  request before, 1 after).
 - `React.cache` does **not** cross into a `"use cache"` scope: each cache scope has its own isolated `React.cache`.
   Pass values in as arguments instead (`DOCS/03-api-reference/01-directives/use-cache.md` → React.cache isolation).
 
@@ -227,6 +232,8 @@ Two options (`DOCS/02-guides/authentication-with-cache-components.md`):
 
    Rules: `connection()` is not allowed inside (the session helpers use `io()`, which is); keep `stale` ≥ 30 s for per-link
    prefetch and ≥ 5 min to be in the App Shell; it runs at request time, so its caller still needs `<Suspense>`.
+   A page that also reads `searchParams` (or `params`) is not in the shared App Shell: give the links to it
+   `prefetch` (per-link prefetching; sidebar: `prefetch: true` on the entry in `config/navigation.ts`).
    `cacheLife({ stale: Infinity })` gives request-scoped dedupe without lowering the route's stale time.
 
 ### 5.3 `"use cache: remote"`
@@ -414,7 +421,8 @@ Summary only; tuning is a separate task.
 - [ ] Reads throw on failure; `apiFetch` responses are Zod-parsed into DTOs.
 - [ ] Every action: `verifySession`, Zod, ownership check, minimal return, expected errors as values, others rethrown.
 - [ ] Every write invalidates what it changed (`updateTag` for the user's own change).
-- [ ] Clock and random values are cached or behind `io()`.
+- [ ] Clock and random values are cached (`"use cache: private"` when per request, like `getToday`) or behind `io()`.
+- [ ] Links to pages that read `searchParams` / `params` use `prefetch`.
 - [ ] Filters and pagination live in URL search params and render on the server; no client data library (rule in 7.3).
 - [ ] Client data: promise + `use()`; instant feedback with `useOptimistic` / `useTransition` / `useActionState`.
 

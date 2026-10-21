@@ -20,7 +20,7 @@ export async function getUserItems() {
 }
 ```
 
-In `backendProvider.getSession()`: Call `await io()` before reading `cookies()` so that `Date.now()` is not frozen into the static build shell.
+`getSession()` in `lib/dal.ts` is `"use cache: private"`: every private query in a request joins one session read (`React.cache` would run once per cache scope), and Better Auth's `Date.now()` expiry check runs per request, never in the static shell.
 
 ## 4. Role and Permission Checks
 `Session` is `{ userId, accessToken }` today: there is no `role`. To authorize by role, add the claim to the `Session` type (`lib/auth/types.ts`) and populate it in both providers from verified claims only. Put the check in a DAL helper next to `verifySession()` and call it from every `queries.ts` and `actions.ts` that touches the protected data (Server Actions are public endpoints, so a page-level check does not cover them). Hiding a nav link is a UI hint, not authorization.
