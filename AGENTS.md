@@ -37,6 +37,7 @@ The docs in `docs/` are the single source of truth for `apps/web`. Open the matc
 
 For a fast decision (which pattern applies) use the skill `.agents/skills/next-mono-base/SKILL.md`; it links back to the docs above.
 For any className, layout or theme work use `.agents/skills/spark-design-system/SKILL.md` (no arbitrary Tailwind values; component sizes via props).
+`.claude/skills/` is a copy of `.agents/skills/` (Claude Code reads it): change a skill in both, then check with `diff -rq --strip-trailing-cr .agents/skills .claude/skills`.
 
 <!-- BEGIN:turborepo-agent-rules -->
 

@@ -31,8 +31,12 @@ Mỗi mục ghi nguyên nhân đã **kiểm chứng trong source Next/Better Aut
 - `lib/clock.ts`: `getToday()` là `"use cache: private"` (cùng `cacheLife`). Không dùng `"use cache"` thường: cache public dùng
   chung giữa user cùng timezone và có thể trả ngày hôm trước sau nửa đêm. Đánh đổi: client có thể giữ ngày cũ tối đa 5 phút.
 - `config/navigation.ts` + `components/layout/nav-tree.tsx`: link Today và Tasks có `prefetch` (per-link prefetching).
+- Link list → chi tiết (`/dashboard/goals/[goalId]`, `/dashboard/habits/[habitId]`) có `prefetch`: trang chi tiết đọc `params`.
 - Better Auth `nextCookies()` nuốt lỗi `cookies().set()` trong RSC, nên đọc session trong scope private an toàn.
-- Docs và skill (`docs/data-fetching.md` §1/§4.3/§5.2/checklist, `next-mono-base`) đã cập nhật để không lặp lại lỗi.
+- Docs và skill đã cập nhật để không lặp lại lỗi: `docs/data-fetching.md`, `authentication.md`, `advanced-patterns.md`,
+  `performance-optimization.md` (font subsets), `goals-habits/spec.md` + `roadmap.md`, `migration/auth-better-auth.md`,
+  skill `next-mono-base` (luật "Never Do" trong `references/caching.md`). `.claude/skills/` là bản copy của `.agents/skills/`:
+  sửa skill thì sửa cả hai.
 
 ### Số đo (production build, `next start`, user thật, FastAPI + Postgres)
 | | Trước | Sau |
@@ -40,6 +44,7 @@ Mỗi mục ghi nguyên nhân đã **kiểm chứng trong source Next/Better Aut
 | `provider.getSession()` mỗi request (dashboard, habits, goals, tasks, review) | 9–12 | 1 |
 | Chuyển trang tới khi hết skeleton: goals / habits / review | ~370 ms | ~60–90 ms |
 | Chuyển trang tới khi hết skeleton: Today / tasks | ~365 ms | ~60–90 ms |
+| Mở trang chi tiết goal / habit lần đầu | ~360 ms | ~70–80 ms |
 
 Đo bằng Playwright (Chromium), click link sidebar, chờ `main [data-slot="skeleton"]` = 0; mọi lần đều là soft navigation.
 

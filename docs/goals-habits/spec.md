@@ -81,8 +81,8 @@ User (settings: timezone, week_start, pet_name, adopted_at)
 - **TM-1** All dates are local dates in `user.timezone` (IANA, e.g. `Asia/Ho_Chi_Minh`). Stored as `date` (no time).
 - **TM-2** The timezone is taken from the browser on first visit and saved to user settings; the user can change it in
   Settings. Until saved, the server falls back to UTC.
-- **TM-3** "Today" is computed on the server behind `io()` (clock access) from the user's timezone, never from the
-  server's local time.
+- **TM-3** "Today" is computed on the server per request (`getToday` in `lib/clock.ts`, `"use cache: private"`) from the
+  user's timezone, never from the server's local time.
 - **TM-4** A week starts on `user.week_start`, taken from the browser locale on first visit
   (`new Intl.Locale(navigator.language).getWeekInfo().firstDay`, falling back to Monday where the API is missing) and
   editable in Settings. Weekly targets, reviews and "This week" use it.

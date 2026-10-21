@@ -149,8 +149,9 @@ placeholders. `apps/api/.env.example`: `DATABASE_URL`, `AUTH_JWKS_URL` (`https:/
 | `oauth.exchangeCode` | not needed: Better Auth handles `/api/auth/callback/google` itself. Make the method optional in practice (the callback route is removed at Phase 9) | `exchangeCodeForSession` |
 
 Token cost: measure `getSession` + JWT minting on a warm server (Server-Timing). Target: no DB query per navigation
-while the cookie cache is fresh. If minting is slow, memoize per request (`React.cache` already wraps `getSession` in
-the DAL) — never cache the JWT across requests in a shared cache.
+while the cookie cache is fresh. The DAL's `getSession` is `"use cache: private"`, so every query in a request shares one
+session read and one mint (`React.cache` would repeat it once per private cache scope: 9–12 per dashboard request,
+`docs/migration/known-issues.md` §1) — never cache the JWT across requests in a shared cache.
 
 Error message text: Better Auth's messages differ from Supabase's ("Invalid email or password" vs "Invalid login
 credentials"). List both in `modules/auth.md` and decide (keep Better Auth's, or map). Use generic messages (no account

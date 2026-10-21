@@ -267,7 +267,10 @@ The browser smoothly morphs the card's thumbnail into the hero banner during nav
 - **Placeholders**: Use `placeholder="blur"` with local images or generate lightweight `blurDataURL` to eliminate Cumulative Layout Shift (CLS).
 
 ### 6.2 `next/font` Zero-CLS Typography
-Fonts configured via `next/font/google` or `next/font/local` are automatically self-hosted at build time:
+Fonts configured via `next/font/google` or `next/font/local` are automatically self-hosted at build time.
+`subsets` only picks which files are **preloaded**; every subset still gets its `@font-face` and loads on demand by
+`unicode-range`. List only the subsets the UI renders on first paint (`latin` here): a preloaded subset the page never
+uses triggers "preloaded but not used" warnings (Vietnamese user content still renders in the right font).
 ```ts
 // apps/web/app/fonts.ts
 import { Inter, JetBrains_Mono } from 'next/font/google'

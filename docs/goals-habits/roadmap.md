@@ -45,7 +45,7 @@ done. Tick items in the PR that delivers them and reference rule IDs (`HB-3`) in
 - [x] Migration 1: `user_settings` (+ row created on sign-up by a trigger on `auth.users`), shared `updated_at` trigger,
       `private` schema helpers; RLS + pgTAP.
 - [x] `lib/supabase/data.ts` (`createDataClient(accessToken)`), generated `database.types.ts` (spec §6.1).
-- [x] `lib/dates.ts` (+ `lib/clock.ts` for the request-time read): local today (behind `io()`), week start, ranges (TM-1…TM-4) + unit tests.
+- [x] `lib/dates.ts` (+ `lib/clock.ts` for the request-time read): local today (`"use cache: private"` request-time read), week start, ranges (TM-1…TM-4) + unit tests.
 - [x] `lib/cache-tags.ts`: tag helpers (spec §7.3).
 - [x] `features/settings`: read/update settings; `timezone-sync.tsx` (timezone + locale week start, TM-2, TM-4) mounted in
       `app/(dashboard)/layout.tsx`.

@@ -10,7 +10,7 @@ Use when implementing data fetching for a page, layout, or passing server data i
 | **Independent reads** | Sibling Server Components behind separate `<Suspense>`, or `Promise.all([getA(), getB()])`. |
 | **Sequential reads** | Render dependent read in a child component behind its own `<Suspense>`. |
 | **Client Component needs data** | Pass the **un-awaited promise** as a prop, read via `use(promise)`. |
-| **Sync runtime values (`Date.now()`, random)** | Call `await io()` (from `next/cache`) inside `<Suspense>`. |
+| **Sync runtime values (`Date.now()`, random)** | Today's date: `getToday()` (`"use cache: private"`, keeps dependent reads in the App Shell). Other values: `await io()` inside `<Suspense>`. |
 
 ## 3. Canonical Pattern
 

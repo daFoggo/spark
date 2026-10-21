@@ -230,10 +230,11 @@ Two options (`DOCS/02-guides/authentication-with-cache-components.md`):
    }
    ```
 
-   Rules: `connection()` is not allowed inside (the session helpers use `io()`, which is); keep `stale` ≥ 30 s for per-link
+   Rules: `connection()` is not allowed inside (`io()` is, and resolves immediately there); keep `stale` ≥ 30 s for per-link
    prefetch and ≥ 5 min to be in the App Shell; it runs at request time, so its caller still needs `<Suspense>`.
    A page that also reads `searchParams` (or `params`) is not in the shared App Shell: give the links to it
-   `prefetch` (per-link prefetching; sidebar: `prefetch: true` on the entry in `config/navigation.ts`).
+   `prefetch` (per-link prefetching; sidebar: `prefetch: true` on the entry in `config/navigation.ts`; list → detail links
+   such as `/dashboard/goals/[goalId]` set `<Link prefetch>` because a user's lists are short).
    `cacheLife({ stale: Infinity })` gives request-scoped dedupe without lowering the route's stale time.
 
 ### 5.3 `"use cache: remote"`
