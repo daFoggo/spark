@@ -238,16 +238,19 @@ stack stays usable until Phase 9 only as the "before" side of parity checks (see
 | `server.ts` exported functions | 32 | | Same signatures; only `apiFetch` inside |
 | DB tables (domain) | 8 | | `user_settings, goals, checkpoints, habits, habit_schedules, activities, tasks, reviews` |
 | RPC functions (public) | 9 | 0 | Each mapped to an endpoint + service (module files) |
-| Triggers with business rules | 4 | | `check_activity_window`, `enforce_goal_rules`, `validate_timezone`, `handle_new_user` → where now |
+| Triggers with business rules | 4 | 1 | `check_activity_window` → Python services, trigger dropped in `0008` (it resolved timezones with Postgres' tz data, which lacks browser names like `Asia/Saigon`; D11); `enforce_goal_rules` → goals service (GL-3/GL-4); `validate_timezone` → settings service (TM-2); `handle_new_user` → Alembic trigger `on_auth_user_created` (D12) |
 | pgTAP test files | 5 | 0 | Each assertion ported to pytest (module files) |
 | Vitest test files | 17 | same or more | No test deleted without a replacement |
 
 ### 7.2 Cross-cutting behaviour
 
-- [ ] Every endpoint requires a valid JWT except `/healthz`; missing/expired/forged token → 401 problem details.
-- [ ] Every endpoint scoped to the caller: another user's id → 404 (tested per endpoint).
-- [ ] A rule violation returns 422 with `rule`; the action shows `detail` without the rule prefix (same text as before).
-- [ ] Unexpected errors (5xx, network) still reach `error.tsx`; never turned into `{ error }`.
+- [x] Every endpoint requires a valid JWT except `/healthz`; missing/expired/forged token → 401 problem details. A valid token
+      whose user no longer exists → 401 too (`get_existing_user`), so a stale cookie cache ends at sign-in, not `error.tsx`.
+- [x] Every endpoint scoped to the caller: another user's id → 404 (19 id-taking operations probed with two real users on
+      the Docker stack, 2026-10-21; lists of the other user are empty).
+- [x] A rule violation returns 422 with `rule`; the action shows `detail` without the rule prefix (same text as before).
+      AC-5, GL-3, TM-2 checked live; `detail` never carries the rule ID.
+- [x] Unexpected errors (5xx, network) still reach `error.tsx`; never turned into `{ error }`.
 - [ ] A backend 401 during a render redirects through `/auth/expired`; during an action signs out and goes to `/sign-in`
       (flow 4 in `authentication.md`), with Better Auth's sign-out.
 - [ ] Cache tags and `updateTag` calls unchanged (same tag per write as the module file lists).
@@ -257,13 +260,15 @@ stack stays usable until Phase 9 only as the "before" side of parity checks (see
 
 ### 7.3 End-to-end flows (running Docker stack, desktop + 375 px)
 
-- [ ] Sign up → lands on Today → timezone synced (settings row exists with the browser timezone).
-- [ ] Sign out → sign in with email → Today. Wrong password shows the form error, values kept.
+- [x] Sign up → lands on Today → timezone synced (settings row exists with the browser timezone).
+- [x] Sign out → sign in with email → Today. Wrong password shows the form error, values kept.
 - [x] Google sign-in (new user and returning user).
-- [ ] Create goal → create habit from the goal page → check in full, minimum, undo → streak/heatmap update → reload keeps it.
-- [ ] Back-date a check-in on day −3 (allowed) and day −4 (refused with the AC-5 message).
-- [ ] Add task with `#slug` → complete → "Add to log?" → activity appears on the goal page; pet treats +1.
+- [x] Create goal → create habit from the goal page → check in full, minimum, undo → streak/heatmap update → reload keeps it.
+- [x] Back-date a check-in on day −3 (allowed) and day −4 (refused with the AC-5 message; the UI never offers it: `?day=` −4 falls back to today).
+- [x] Add task with `#slug` → complete → "Add to log?" → activity appears on the goal page; pet treats +1.
 - [x] Goal rules: 4th active refused (GL-3), done without target/checkpoint refused (GL-4); checkpoint add/toggle/move/rename/delete.
-- [ ] Weekly review: finish with a pause and 2 focus tasks → habit paused from next week, tasks in Today per RV-4.
-- [ ] Settings: change timezone, week start, pet name; invalid timezone refused (TM-2).
-- [ ] Session expiry: delete the session row in `auth.session` → next navigation goes to sign-in without a loop.
+- [x] Weekly review: finish with a pause and 2 focus tasks → habit paused from next week, tasks in Today per RV-4.
+- [ ] Settings: change timezone, week start, pet name; invalid timezone refused (TM-2). API verified; there is no settings
+      form in the UI (never built, PT-1), only the first-visit `TimezoneSync`.
+- [x] Session expiry: delete the session row in `auth.session` → next navigation goes to sign-in without a loop, once the
+      5-minute cookie cache (`session_data`) expires (by design, `modules/auth.md`).

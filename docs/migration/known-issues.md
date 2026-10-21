@@ -9,6 +9,8 @@ Mỗi mục ghi nguyên nhân đã **kiểm chứng trong source Next/Better Aut
 | 2 | `/sign-in`: "Could not validate `instant`…" | Không còn tái hiện (cả luồng sign-out); code trang đúng pattern |
 | 3 | Cảnh báo preload font `.woff2` | Đã sửa |
 | 4 | Base UI `nativeButton` ở `DashboardNotFound` | Đã sửa |
+| 5 | Check-in lỗi 500 với timezone `Asia/Saigon` (và mọi tên legacy trình duyệt trả về) | Đã sửa (backend `0008`) |
+| 6 | "Settings not found" làm sập Today khi user của session không còn trong DB | Đã sửa (backend 401) |
 
 ---
 
@@ -79,10 +81,28 @@ cho Geist và Geist Mono. Trong loader (`@next/font/dist/google/loader.js`) `sub
 
 ---
 
+## 5. Check-in lỗi 500 với `Asia/Saigon`
+
+Chromium báo timezone Việt Nam là `Asia/Saigon` (tương tự `Asia/Calcutta`, `Europe/Kiev`, `Asia/Katmandu`). Python
+`zoneinfo` chấp nhận (TM-2), nhưng tz data của Postgres trong `postgres:17` không có các tên legacy này. Trigger
+`check_activity_window` gọi `today_for()` (`NOW() AT TIME ZONE <tz>`) nên mọi insert vào `activities` báo
+`time zone "Asia/Saigon" not recognized`. Sửa: migration `0008_drop_activity_window` bỏ trigger và `today_for`; "today"
+chỉ tính trong Python (D11), AC-5 đã kiểm ở mọi đường ghi (`create_log`, `toggle_check_in`, `set_check_in_note`;
+`log_task` ghi ngày today). Luật: không dùng tên timezone của user trong SQL.
+
+## 6. "Settings not found" làm sập Today
+
+Better Auth `cookieCache` (5 phút) đọc session từ cookie, không hỏi DB. Khi user không còn trong DB (xóa tài khoản,
+reset DB), web vẫn ký JWT, API trả 404 cho `/v1/settings` và trang rơi vào `error.tsx`. Sửa: dependency
+`get_existing_user` (FastAPI) trả 401 khi `sub` không có trong `auth."user"`; `apiFetch` gặp 401 → `/auth/expired` →
+xóa cookie → `/sign-in`. Session bị thu hồi (user còn) vẫn dùng được tới hết cửa sổ cookie cache: thiết kế có chủ đích.
+
+---
+
 ## Ghi chú môi trường
 - Browser pane của Claude desktop không chạy `requestAnimationFrame`: boundary `<Suspense>` stream về nhưng không reveal/hydrate,
   link bên trong thành hard navigation. Dùng Playwright hoặc trình duyệt thật để đo.
 - `next start` trên `http://localhost` báo `ERR_SSL_PROTOCOL_ERROR` vì CSP `upgrade-insecure-requests` (chỉ bật ở production);
   hai test đầu của `e2e/smoke.spec.ts` fail vì vậy. Chạy smoke trên `next dev`, hoặc prod sau HTTPS.
 - `e2e/smoke.spec.ts` cần `admin@gmail.com` có role `admin` (link Members).
-- `spark-backend/compose.yaml` dùng port `5432`, trùng container `payment_db` của project khác.
+- Postgres của `spark-backend` map ra host port `5433` (không phải 5432) để chạy song song DB của project khác; `DATABASE_URL` trong `.env` dùng `localhost:5433`.

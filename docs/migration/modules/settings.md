@@ -57,8 +57,9 @@ Spec rules: TM-1…TM-5, PT-1.
 
 ## Mapping hints
 
-- `GET /v1/settings`, `PATCH /v1/settings` (204, 422 `TM-2`). Timezone validation in Python (`zoneinfo`) must accept the
-  same set as `pg_timezone_names` used to — test a list of common zones + `UTC` + an invalid one; or keep the DB trigger.
+- `GET /v1/settings`, `PATCH /v1/settings` (204, 422 `TM-2`). Timezone validation in Python (`zoneinfo`). Postgres never
+  resolves a user's timezone name (its tz data lacks browser names such as `Asia/Saigon`): "today" is Python only (D11),
+  the old `today_for`/`check_activity_window` were dropped in backend migration `0008`.
 - `settings.service.get_today(user)` and `get_week_start(user)` are the shared functions other modules call (README §5).
 
 ## Integration
