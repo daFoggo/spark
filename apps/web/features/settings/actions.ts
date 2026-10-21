@@ -5,7 +5,6 @@ import { updateTag } from "next/cache"
 import { settingsTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
 import { isExpectedApiError } from "@/lib/errors"
-import { DataError } from "@/lib/supabase/data"
 
 import { DetectedLocaleSchema, UpdateSettingsSchema } from "./schemas"
 import { saveSettings } from "./server"
@@ -31,10 +30,6 @@ export async function syncLocaleAction(input: {
     if (isExpectedApiError(error)) {
       return { error: error.message }
     }
-    // An unknown timezone name is rejected by the database (TM-2); other failures are real errors.
-    if (error instanceof DataError && error.expected) {
-      return { error: error.message }
-    }
     throw error
   }
   updateTag(settingsTag(userId))
@@ -48,8 +43,8 @@ export async function updateSettingsAction(
   const { userId, accessToken } = await verifySession()
   const parsed = UpdateSettingsSchema.safeParse({
     timezone: formData.get("timezone"),
-    weekStart: formData.get("weekStart"),
     petName: formData.get("petName"),
+    weekStart: formData.get("weekStart"),
   })
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" }
@@ -62,9 +57,6 @@ export async function updateSettingsAction(
     })
   } catch (error) {
     if (isExpectedApiError(error)) {
-      return { error: error.message }
-    }
-    if (error instanceof DataError && error.expected) {
       return { error: error.message }
     }
     throw error

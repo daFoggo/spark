@@ -6,7 +6,6 @@ import { activitiesTag, tasksTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
 import { isLocalDate } from "@/lib/dates"
 import { isExpectedApiError } from "@/lib/errors"
-import { DataError } from "@/lib/supabase/data"
 
 import { AddTaskSchema, TaskIdSchema, TaskNoteSchema } from "./schemas"
 import {
@@ -21,9 +20,6 @@ export type TaskState = { error?: string; saved?: boolean }
 
 function expected(error: unknown): string | null {
   if (isExpectedApiError(error)) {
-    return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")
-  }
-  if (error instanceof DataError && error.expected) {
     return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")
   }
   return null

@@ -7,7 +7,7 @@ import { authConfig } from "../config"
 
 const { Pool } = pg
 
-const cfg = authConfig.AUTH_PROVIDER === "better-auth" ? authConfig : null
+const cfg = authConfig
 
 export const auth = betterAuth({
   baseURL: cfg?.BETTER_AUTH_URL ?? "http://localhost:3000",

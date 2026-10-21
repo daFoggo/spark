@@ -5,17 +5,9 @@ const isDev = process.env.NODE_ENV === "development"
 /**
  * Content-Security-Policy without nonces: nonces force dynamic rendering of every page
  * and are incompatible with Partial Prerendering (docs: guides/content-security-policy).
- * With the Supabase provider the browser is redirected to Supabase and Google during
- * OAuth, so those origins must be allowed as form/redirect targets.
  */
 function contentSecurityPolicy(): string {
-  const formActions = ["'self'"]
-  if (process.env.AUTH_PROVIDER === "supabase") {
-    formActions.push("https://accounts.google.com")
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      formActions.push(new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin)
-    }
-  }
+  const formActions = ["'self'", "https://accounts.google.com"]
 
   const directives = [
     "default-src 'self'",

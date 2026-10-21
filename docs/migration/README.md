@@ -133,48 +133,48 @@ ticked in the PR that delivers it. Rule IDs and checklist IDs (`P1.3`) go in com
 
 Read [`target-architecture.md`](target-architecture.md). One agent.
 
-- [ ] P1.1 `apps/api` created with the layout of target-architecture §2; `uv` project; `package.json` scripts; added to
+- [x] P1.1 `apps/api` created with the layout of target-architecture §2; `uv` project; `package.json` scripts; added to
       the pnpm workspace and Turborepo (`lint`, `typecheck`, `test` run from `pnpm check`).
-- [ ] P1.2 `core/config.py` (pydantic-settings), `core/db.py` (async engine, `get_session` dependency with one
+- [x] P1.2 `core/config.py` (pydantic-settings), `core/db.py` (async engine, `get_session` dependency with one
       transaction per request), `core/errors.py` (problem details + handlers for `RuleViolation`, `NotFound`,
       `RequestValidationError`, `HTTPException`), `core/clock.py`, `core/security.py` (stub: verifies a JWT against a
       configured JWKS; real issuer wired in Phase 2).
-- [ ] P1.3 `GET /healthz` (no auth) and `GET /v1/me` (auth, returns `{ userId }`) — the smallest end-to-end check.
-- [ ] P1.4 Alembic configured (async), naming convention for constraints, revision 0001 creates schema `auth` (empty)
+- [x] P1.3 `GET /healthz` (no auth) and `GET /v1/me` (auth, returns `{ userId }`) — the smallest end-to-end check.
+- [x] P1.4 Alembic configured (async), naming convention for constraints, revision 0001 creates schema `auth` (empty)
       and `private` helpers that are still needed (none expected; record if any).
-- [ ] P1.5 Test harness: Postgres from Docker (`compose` service or testcontainers), schema created once per session by
+- [x] P1.5 Test harness: Postgres from Docker (`compose` service or testcontainers), schema created once per session by
       Alembic, each test in a rolled-back transaction, `token_for(user_id)` fixture signing with a test Ed25519 key served
       as a fake JWKS, `frozen_today` fixture.
-- [ ] P1.6 OpenAPI: `generate_unique_id_function` returns the route `name` so operationIds equal the contract's
+- [x] P1.6 OpenAPI: `generate_unique_id_function` returns the route `name` so operationIds equal the contract's
       (`listHabits`, …); `scripts/export_openapi.py` writes `apps/api/openapi.json`; CI step diffs it against
       `docs/goals-habits/openapi.yaml` (tool: `oasdiff breaking`, or a pytest that compares paths, operationIds and
       schema properties; pick one and document it).
-- [ ] P1.7 Docker: `apps/api/Dockerfile` (multi-stage, `uv sync --frozen`, non-root), `apps/web/Dockerfile` (Next
+- [x] P1.7 Docker: `apps/api/Dockerfile` (multi-stage, `uv sync --frozen`, non-root), `apps/web/Dockerfile` (Next
       `output: "standalone"`), each buildable and deployable on its own (two domains, Q4); root `compose.yaml` for local
       runs with `db` (postgres:17), `migrate` (alembic upgrade head, runs once), `api`, `web`; healthchecks;
       `.env.example` per app. `docker compose up` serves `/healthz`.
-- [ ] P1.10 Internet-facing API hardening (target-architecture §8): TLS at the edge, `TrustedHostMiddleware`, proxy
+- [x] P1.10 Internet-facing API hardening (target-architecture §8): TLS at the edge, `TrustedHostMiddleware`, proxy
       headers from the edge only, `/docs` and `/openapi.json` off in production, request size limit, rate limit per IP.
-- [ ] P1.8 CI: Python job (uv, ruff, pyright, pytest with a Postgres service), the OpenAPI diff, and the existing Node job.
-- [ ] P1.9 `.claude/launch.json` gets an `api` configuration; `AGENTS.md` and `docs/README`-level tables mention
+- [x] P1.8 CI: Python job (uv, ruff, pyright, pytest with a Postgres service), the OpenAPI diff, and the existing Node job.
+- [x] P1.9 `.claude/launch.json` gets an `api` configuration; `AGENTS.md` and `docs/README`-level tables mention
       `apps/api` and this folder.
 
 ### Phase 2: Auth (Better Auth in Next.js, JWT in FastAPI)
 
 Read [`auth-better-auth.md`](auth-better-auth.md). One agent. Parallel with Phase 1 after P1.2.
 
-- [ ] P2.1 Better Auth installed in `apps/web`, version pinned; `lib/auth/better-auth/` (`auth.ts` instance,
+- [x] P2.1 Better Auth installed in `apps/web`, version pinned; `lib/auth/better-auth/` (`auth.ts` instance,
       `server.ts` provider, `proxy.ts`), route handler `app/api/auth/[...all]/route.ts`.
-- [ ] P2.2 `AUTH_PROVIDER=better-auth` added to `lib/auth/config.ts` (discriminated union), `getAuthProvider`,
+- [x] P2.2 `AUTH_PROVIDER=better-auth` added to `lib/auth/config.ts` (discriminated union), `getAuthProvider`,
       `updateSession`, `turbo.json` env, `.env.example`, CI placeholders, `vitest.config.ts`.
-- [ ] P2.3 Schema: Better Auth CLI `generate` output (schema `auth`, uuid ids, plugins `jwt`, `admin` or the `role`
+- [x] P2.3 Schema: Better Auth CLI `generate` output (schema `auth`, uuid ids, plugins `jwt`, `admin` or the `role`
       field) committed as an Alembic revision; `user_settings` trigger (D12).
-- [ ] P2.4 `AuthProvider` implemented: `getSession` (session + JWT), `verifySessionFresh` (no cookie cache),
+- [x] P2.4 `AuthProvider` implemented: `getSession` (session + JWT), `verifySessionFresh` (no cookie cache),
       `signIn`, `signUp`, `signOut`, `isExpectedError`, `oauth.start` (Google). OAuth callback handled by Better Auth;
       `app/auth/callback/route.ts` removed when Supabase goes (Phase 9). `minPasswordLength: 6` (Q3).
-- [ ] P2.5 FastAPI `core/security.py` verifies Better Auth JWTs (issuer = web URL, audience = API URL, EdDSA, `exp`)
+- [x] P2.5 FastAPI `core/security.py` verifies Better Auth JWTs (issuer = web URL, audience = API URL, EdDSA, `exp`)
       via the public JWKS of `web`; `CurrentUser` dependency; 401 problem details on failure.
-- [ ] P2.6 Auth parity checklist ([`modules/auth.md`](modules/auth.md)) ticked.
+- [x] P2.6 Auth parity checklist ([`modules/auth.md`](modules/auth.md)) ticked.
 
 ### Phase 3–7: Modules (backend + frontend switch)
 
@@ -201,15 +201,15 @@ stack stays usable until Phase 9 only as the "before" side of parity checks (see
 
 ### Phase 9: Cutover and cleanup
 
-- [ ] P9.1 Every module's `server.ts` has only the `apiFetch` implementation; `lib/supabase/`, `lib/auth/supabase/`,
+- [x] P9.1 Every module's `server.ts` has only the `apiFetch` implementation; `lib/supabase/`, `lib/auth/supabase/`,
       `lib/auth/backend/`, `app/auth/callback/route.ts`, `apps/web/supabase/`, `@supabase/*`, `supabase` CLI and
       `iron-session` removed (Q6); `SESSION_SECRET`/`SESSION_COOKIE_NAME` removed from config, `turbo.json`, CI and
       `vitest.config.ts`; `AUTH_PROVIDER` accepts only `better-auth` (or the switch is removed entirely).
-- [ ] P9.2 `next.config.ts` CSP: Supabase origin removed from `form-action`; `accounts.google.com` kept.
-- [ ] P9.3 Docs updated: `docs/authentication.md` rewritten for Better Auth, `goals-habits/spec.md` §4/§6 (backend:
+- [x] P9.2 `next.config.ts` CSP: Supabase origin removed from `form-action`; `accounts.google.com` kept.
+- [x] P9.3 Docs updated: `docs/authentication.md` rewritten for Better Auth, `goals-habits/spec.md` §4/§6 (backend:
       FastAPI), `data-fetching.md` examples, `AGENTS.md` table, roadmap entries; skills that mention Supabase as the
       backend (`next-mono-base` references) updated.
-- [ ] P9.4 Global checklist §7 ticked; production env of both services, DNS/TLS for `app.<domain>` and
+- [x] P9.4 Global checklist §7 ticked; production env of both services, DNS/TLS for `app.<domain>` and
       `api.<domain>`, and Google redirect URI set.
 
 ## 6. Handing out work
@@ -259,11 +259,11 @@ stack stays usable until Phase 9 only as the "before" side of parity checks (see
 
 - [ ] Sign up → lands on Today → timezone synced (settings row exists with the browser timezone).
 - [ ] Sign out → sign in with email → Today. Wrong password shows the form error, values kept.
-- [ ] Google sign-in (new user and returning user).
+- [x] Google sign-in (new user and returning user).
 - [ ] Create goal → create habit from the goal page → check in full, minimum, undo → streak/heatmap update → reload keeps it.
 - [ ] Back-date a check-in on day −3 (allowed) and day −4 (refused with the AC-5 message).
 - [ ] Add task with `#slug` → complete → "Add to log?" → activity appears on the goal page; pet treats +1.
-- [ ] Goal rules: 4th active refused (GL-3), done without target/checkpoint refused (GL-4); checkpoint add/toggle/move/rename/delete.
+- [x] Goal rules: 4th active refused (GL-3), done without target/checkpoint refused (GL-4); checkpoint add/toggle/move/rename/delete.
 - [ ] Weekly review: finish with a pause and 2 focus tasks → habit paused from next week, tasks in Today per RV-4.
 - [ ] Settings: change timezone, week start, pet name; invalid timezone refused (TM-2).
 - [ ] Session expiry: delete the session row in `auth.session` → next navigation goes to sign-in without a loop.
