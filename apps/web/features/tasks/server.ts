@@ -1,6 +1,8 @@
 import "server-only"
 
+import { authConfig } from "@/lib/auth/config"
 import { addDays, type LocalDate } from "@/lib/dates"
+import { apiFetch } from "@/lib/http"
 import { createDataClient, DataError, unwrap } from "@/lib/supabase/data"
 
 import { DONE_VISIBLE_DAYS } from "./rules"
@@ -37,6 +39,14 @@ export async function fetchTasks(
   accessToken: string,
   input: { tab: TaskTab; today: LocalDate }
 ): Promise<Task[]> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const raw = await apiFetch<unknown[]>(
+      `tasks?tab=${input.tab}&today=${input.today}`,
+      { token: accessToken }
+    )
+    return raw.map((t) => TaskSchema.parse(t))
+  }
+
   const select = createDataClient(accessToken).from("tasks").select(COLUMNS)
   let query
   if (input.tab === "done") {
@@ -72,6 +82,16 @@ export async function insertTask(
   accessToken: string,
   input: { title: string; list: TaskList; goalId: string | null }
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>("tasks", {
+      token: accessToken,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("tasks")
@@ -91,6 +111,19 @@ export async function setTaskDone(
   taskId: string,
   done: boolean
 ): Promise<LocalDate | null> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const res = await apiFetch<{ doneOn: LocalDate | null }>(
+      `tasks/${taskId}/done`,
+      {
+        token: accessToken,
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ done }),
+      }
+    )
+    return res.doneOn ?? null
+  }
+
   const { data, error } = await createDataClient(accessToken).rpc(
     "set_task_done",
     { p_task_id: taskId, p_done: done }
@@ -104,6 +137,14 @@ export async function logTask(
   accessToken: string,
   taskId: string
 ): Promise<number> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const res = await apiFetch<{ activityId: number }>(`tasks/${taskId}/log`, {
+      token: accessToken,
+      method: "POST",
+    })
+    return res.activityId
+  }
+
   return unwrap(
     await createDataClient(accessToken).rpc("log_task", { p_task_id: taskId })
   )
@@ -119,6 +160,16 @@ export async function updateTask(
     focusFrom?: LocalDate | null
   }
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`tasks/${taskId}`, {
+      token: accessToken,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("tasks")
@@ -138,6 +189,14 @@ export async function deleteTask(
   accessToken: string,
   taskId: string
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`tasks/${taskId}`, {
+      token: accessToken,
+      method: "DELETE",
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("tasks")
