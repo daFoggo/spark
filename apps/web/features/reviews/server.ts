@@ -1,12 +1,40 @@
 import "server-only"
 
-import { authConfig } from "@/lib/auth/config"
+import type { LocalDate } from "@/lib/dates"
+import { ApiError } from "@/lib/errors"
+import { apiFetch } from "@/lib/http"
 
-import * as api from "./server.api"
-import * as supabase from "./server.supabase"
+import { ReviewSchema, type CompleteReviewInput, type Review } from "./schemas"
 
-/** The data path of the active stack (docs/providers.md). Typed as `api` so the two cannot drift. */
-const impl: typeof api =
-  authConfig.AUTH_PROVIDER === "supabase" ? supabase : api
+/** The review of the week starting on `weekStart`, or `null` when none was saved yet (RV-1). */
+export async function fetchReview(
+  accessToken: string,
+  weekStart: LocalDate
+): Promise<Review | null> {
+  try {
+    const raw = await apiFetch<unknown>(`reviews/${weekStart}`, {
+      token: accessToken,
+    })
+    return ReviewSchema.parse(raw)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
 
-export const { fetchReview, completeReview } = impl
+/** RV-1…RV-5: one API call saves the review, pauses habits and queues focus tasks together. */
+export async function completeReview(
+  accessToken: string,
+  input: CompleteReviewInput
+): Promise<void> {
+  await apiFetch<void>(`reviews/${input.weekStart}`, {
+    token: accessToken,
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      reflection: input.reflection,
+      choices: input.choices,
+      focusTaskIds: input.focusTaskIds,
+    }),
+  })
+}

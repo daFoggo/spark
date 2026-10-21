@@ -30,6 +30,8 @@ All principles derive from and link back to the Single Source of Truth in `docs/
 | **Lazy load / Code-split client UI** | `next/dynamic` (`{ ssr: false }`) & on-demand imports | [reads.md](references/reads.md) | [performance-optimization.md](../../../docs/performance-optimization.md#1-code-splitting--lazy-loading-lazy-loadingmd) |
 | **Prevent flash / Preserve UI state** | Inline script + `suppressHydrationWarning` / `<Activity>` | [reads.md](references/reads.md) | [performance-optimization.md](../../../docs/performance-optimization.md#4-preventing-flash-before-hydration) |
 | **Authenticate / verify session** | `verifySession()` from `@/lib/dal` (inside queries/actions) | [auth-dal.md](references/auth-dal.md) | [authentication.md §2](../../../docs/authentication.md#2-architecture) |
+| **Start on Supabase / switch stack / add a provider** | `AUTH_PROVIDER` + the kept foundation; feature data in `server.ts` | [auth-dal.md](references/auth-dal.md) | [providers.md](../../../docs/providers.md) |
+| **Page feels slow (data)** | Count sequential network awaits; start reads before the first `await`; values needed first from the session (`getCalendar()`) | [reads.md](references/reads.md) | [providers.md §5](../../../docs/providers.md#5-latency-what-was-measured-and-what-to-do) |
 | **Extract code to `packages/`** | Keep in `apps/web` unless 2+ apps or diff runtime | [project-structure.md](references/project-structure.md) | [project-structure.md §6](../../../docs/project-structure.md#6-monorepo-package-extraction-when-to-extract-to-packages) |
 | **Random, time, sync DB** | Today's date: `getToday()` (`lib/clock.ts`, `"use cache: private"`); other: `await io()` inside `<Suspense>` | [reads.md](references/reads.md) | [data-fetching.md §1](../../../docs/data-fetching.md#1-mental-model) |
 | **Client-only shared state (Zustand)** | Per-provider store factory in `features/<name>/store.ts` + provider in `components/`, mounted in `app/` (no global store, never read in Server Components) | [client-state.md](references/client-state.md) | [client-state.md](../../../docs/client-state.md) |
@@ -44,7 +46,7 @@ All principles derive from and link back to the Single Source of Truth in `docs/
 2. **Never `await` at Top-Level of Page/Layout**: Push `await cookies()`, `headers()`, `params`, `searchParams` into child components wrapped in `<Suspense>` ([docs §4.4](../../../docs/data-fetching.md#44-request-time-data)).
 3. **Always Call `cacheLife()` with `"use cache"`**: Cache keys use plain IDs only (never tokens, emails, or secrets) ([docs §5.1](../../../docs/data-fetching.md#51-use-cache)).
 4. **Prefer `io()` over `connection()`**: `io()` allows prefetching and works inside `"use cache: private"`; `connection()` blocks prefetches ([docs §1](../../../docs/data-fetching.md#1-mental-model)).
-5. **Strict Architectural Boundaries**: `features/<name>` never imports `app/` or sibling features. Only `server.ts` (→ `server.api.ts` / `server.supabase.ts`) and `lib/dal.ts` perform backend I/O ([docs](../../../docs/project-structure.md#4-dependency-direction--eslint-boundary-enforcement)).
+5. **Strict Architectural Boundaries**: `features/<name>` never imports `app/` or sibling features. Only `server.ts` (split into `server.api.ts` / `server.supabase.ts` when a repo keeps both stacks) and `lib/dal.ts` perform backend I/O ([docs](../../../docs/project-structure.md#4-dependency-direction--eslint-boundary-enforcement)).
 
 ---
 

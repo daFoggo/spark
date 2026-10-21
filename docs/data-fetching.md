@@ -106,6 +106,11 @@ Better still, put independent reads in **sibling components**, each behind its o
 A read that needs another's result (`getPlaylists(artist.id)`) is sequential by nature: render it in a child behind
 `<Suspense>` so the first result can paint. Layouts and pages of one route already render in parallel.
 
+Each sequential `await` that hits the network costs one round trip: ~5 ms to a local API, ~150 ms to a far database.
+Count them per page. A value most reads need first (the user's timezone for "today") is best carried in the session
+token (`getCalendar()`), and a not-found check can run alongside the reads it guards
+([providers.md §5](providers.md#5-latency-what-was-measured-and-what-to-do)).
+
 **Preload** when a known input is available before other blocking work: call the read without `await` (`void getItem(id)`)
 early, then call it again where it renders; the second call reuses the first because the read is deduplicated.
 

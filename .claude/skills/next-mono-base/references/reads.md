@@ -9,6 +9,8 @@ Use when implementing data fetching for a page, layout, or passing server data i
 | :--- | :--- |
 | **Independent reads** | Sibling Server Components behind separate `<Suspense>`, or `Promise.all([getA(), getB()])`. |
 | **Sequential reads** | Render dependent read in a child component behind its own `<Suspense>`. |
+| **"Today" / week start before other reads** | `const { timezone, weekStart, adoptedOn } = await getCalendar()` (from the token when the provider carries it, no round trip), then `getToday(timezone)`. Not `getSettings()` first. |
+| **Entity + reads that need it to exist** | Start the reads, `reads.catch(() => {})`, `await` the entity and `notFound()`, then `await reads` (goal page). |
 | **Client Component needs data** | Pass the **un-awaited promise** as a prop, read via `use(promise)`. |
 | **Sync runtime values (`Date.now()`, random)** | Today's date: `getToday()` (`"use cache: private"`, keeps dependent reads in the App Shell). Other values: `await io()` inside `<Suspense>`. |
 
@@ -38,6 +40,7 @@ export default function Page({ params }: PageProps<"/items/[id]">) {
 - ❌ **Never `await` at the top of a page/layout**: It blocks the entire static shell.
 - ❌ **Never call this app's own Route Handlers (`/api/...`) from Server Components**: It creates redundant network round-trips.
 - ❌ **Never swallow errors into `null` or `[]`**: Let unexpected errors throw to `error.tsx`.
+- ❌ **Never chain network awaits that do not depend on each other**: each costs one round trip (~150 ms to a far database). Count them per page ([providers.md §5](../../../../docs/providers.md#5-latency-what-was-measured-and-what-to-do)).
 
 ## 5. Source of Truth (Deep Dive)
 - Full architectural design & benchmark analysis: [docs/data-fetching.md §4](../../../../docs/data-fetching.md#4-reading-on-the-server)

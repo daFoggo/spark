@@ -13,8 +13,9 @@ One provider per deployment, chosen by `AUTH_PROVIDER`; it also picks the data p
 | `better-auth` | Self-hosted auth backed by PostgreSQL `auth` schema; issues EdDSA JWTs via JWKS for FastAPI | Secure httpOnly session cookies handled by Better Auth |
 | `supabase` | Supabase Auth via `@supabase/ssr`; ES256 JWT checked locally with `getClaims()`; data through PostgREST + RLS | `sb-<ref>-auth-token` cookies, refreshed only in `proxy.ts` |
 
-Both implement `AuthProvider` and expose `Session { userId, accessToken }`, so the DAL, Server Actions and data clients
-interact through a standard, decoupled contract.
+Both implement `AuthProvider` and expose `Session { userId, accessToken, role, name, email, calendar? }`, so the DAL,
+Server Actions and data clients interact through a standard, decoupled contract. Spark runs on `better-auth`; the
+Supabase provider is kept as a ready foundation ([providers.md](providers.md) §1).
 
 Principles:
 
@@ -45,9 +46,10 @@ Paths relative to `apps/web/`:
 - `lib/auth/better-auth/server.ts`: `betterAuthProvider` implementing `AuthProvider`.
 - `lib/auth/supabase/{server,proxy,client}.ts`: `supabaseProvider`; `getClaims()` verifies identity, `getUser()` backs
   `verifySessionFresh`, `getSession()` only forwards the already verified token. `app/auth/callback/route.ts` finishes OAuth.
-  The Custom Access Token Hook adds `timezone`, `week_start`, `adopted_on` claims, exposed as `Session.calendar`
-  (`docs/providers.md` §3); `refreshSession()` reissues the token after settings change (`refreshSessionClaims()` in the DAL).
-- `lib/supabase/data.ts`: `createDataClient(accessToken)` for feature `server.supabase.ts` files (RLS applies).
+  When a Custom Access Token Hook adds `timezone`, `week_start`, `adopted_on` claims they become `Session.calendar`
+  ([providers.md](providers.md) §5); `refreshSession()` reissues the token after settings change (`refreshSessionClaims()`
+  in the DAL).
+- `lib/supabase/data.ts`: `createDataClient(accessToken)` for feature data on the Supabase stack (RLS applies).
 - `lib/auth/better-auth/proxy.ts`: cookie refresh during routing.
 - `app/api/auth/[...all]/route.ts`: Better Auth API route handler.
 - `lib/http.ts`: `apiFetch` sending Bearer JWT to FastAPI backend (`API_BASE_URL`).

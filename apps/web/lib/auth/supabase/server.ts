@@ -18,7 +18,7 @@ function stringOrNull(value: unknown): string | null {
   return typeof value === "string" && value ? value : null
 }
 
-/** Claims added by the Custom Access Token Hook (migration `calendar_claims_hook`); absent when it is off. */
+/** Claims a Custom Access Token Hook may add (docs/providers.md §5); absent without one, then pages read settings. */
 function calendarOf(claims: Record<string, unknown>): Calendar | undefined {
   const { timezone, week_start: weekStart, adopted_on: adoptedOn } = claims
   return typeof timezone === "string" &&

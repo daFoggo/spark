@@ -6,7 +6,8 @@ validation and mutations, and knows nothing about routes.
 ```
 features/<name>/
   components/   UI shared across pages or around the feature
-  server.ts     "server-only": picks the data path of the active stack (docs/providers.md):
+  server.ts     "server-only": the only backend calls. Spark: FastAPI via lib/http.
+                A repo that keeps both stacks splits it (docs/providers.md §2.2):
     server.api.ts       FastAPI via lib/http (AUTH_PROVIDER=better-auth)
     server.supabase.ts  PostgREST + RLS via lib/supabase/data (AUTH_PROVIDER=supabase)
   queries.ts    reads for Server Components (auth via lib/dal, "use cache" here)
@@ -26,8 +27,8 @@ Create only the files a feature needs.
 - `features/*` never imports `app/` and never imports another feature (compose in `app/`).
 - Same-feature imports are relative; cross-layer imports use `@/`.
 - `components/` never imports `server.ts`, `server.*.ts`, `queries.ts`, `lib/dal` or `lib/http`.
-- Only `server.ts` imports `server.api.ts` / `server.supabase.ts`; it types the Supabase module as `typeof api`, so a
-  function missing or different on one path fails `tsc`.
+- When both stacks exist, only `server.ts` imports `server.api.ts` / `server.supabase.ts`; it types the Supabase module
+  as `typeof api`, so a function missing or different on one path fails `tsc`.
 - No barrel `index.ts`; import the file you need.
 
 See [docs/project-structure.md](../../../docs/project-structure.md) for the complete architecture guide and package extraction rules.

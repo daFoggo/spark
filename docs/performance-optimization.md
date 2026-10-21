@@ -305,4 +305,5 @@ Control third-party execution via `strategy`:
 - [ ] **Hydration Flash**: Timezones, dates, and client themes use the synchronous inline script pattern with `suppressHydrationWarning`.
 - [ ] **Transient UI**: Popovers, modals, and dropdown menus close upon navigation via `useLayoutEffect` cleanup.
 - [ ] **Images**: Hero images have `priority` and explicit `sizes` definitions; no missing dimensions.
+- [ ] **Sequential Round Trips**: Each page awaits the network as few times in a row as possible; independent reads start before the first `await`, and values needed first come from the session (`getCalendar()`). See [providers.md §5](providers.md#5-latency-what-was-measured-and-what-to-do).
 - [ ] **Zero Barrel Files**: Deep imports are used everywhere (`@/features/<name>/components/...`) to protect bundle boundaries.
