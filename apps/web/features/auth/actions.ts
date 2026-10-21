@@ -41,7 +41,8 @@ export async function signInAction(
     if (!provider.isExpectedError(error)) {
       console.error("[signInAction] unexpected error:", error)
       return {
-        error: "Unable to connect to authentication server. Please verify database connection.",
+        error:
+          "Unable to connect to authentication server. Please verify database connection.",
         values,
       }
     }
@@ -76,7 +77,8 @@ export async function signUpAction(
     if (!provider.isExpectedError(error)) {
       console.error("[signUpAction] unexpected error:", error)
       return {
-        error: "Unable to connect to authentication server. Please verify database connection.",
+        error:
+          "Unable to connect to authentication server. Please verify database connection.",
         values,
       }
     }

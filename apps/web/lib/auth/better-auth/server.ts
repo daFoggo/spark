@@ -30,7 +30,7 @@ export const betterAuthProvider: AuthProvider = {
       headers: reqHeaders,
     })
     const accessToken =
-      typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
+      typeof tokenRes === "string" ? tokenRes : (tokenRes?.token ?? "")
 
     return {
       userId: session.user.id,
@@ -54,7 +54,7 @@ export const betterAuthProvider: AuthProvider = {
       headers: reqHeaders,
     })
     const accessToken =
-      typeof tokenRes === "string" ? tokenRes : tokenRes?.token ?? ""
+      typeof tokenRes === "string" ? tokenRes : (tokenRes?.token ?? "")
 
     return {
       userId: session.user.id,
