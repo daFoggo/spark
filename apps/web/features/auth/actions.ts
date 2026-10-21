@@ -38,8 +38,13 @@ export async function signInAction(
   try {
     await provider.signIn(parsed.data)
   } catch (error) {
-    // Only rejections of the input go back to the form; anything else reaches error.tsx.
-    if (!provider.isExpectedError(error)) throw error
+    if (!provider.isExpectedError(error)) {
+      console.error("[signInAction] unexpected error:", error)
+      return {
+        error: "Unable to connect to authentication server. Please verify database connection.",
+        values,
+      }
+    }
     return { error: getErrorMessage(error, "Unable to sign in"), values }
   }
 
@@ -68,7 +73,13 @@ export async function signUpAction(
   try {
     result = await provider.signUp(parsed.data)
   } catch (error) {
-    if (!provider.isExpectedError(error)) throw error
+    if (!provider.isExpectedError(error)) {
+      console.error("[signUpAction] unexpected error:", error)
+      return {
+        error: "Unable to connect to authentication server. Please verify database connection.",
+        values,
+      }
+    }
     return {
       error: getErrorMessage(error, "Unable to create the account"),
       values,

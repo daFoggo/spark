@@ -45,4 +45,14 @@ test.describe("Smoke test & Static asset verification", () => {
     const submitBtn = page.getByRole("button", { name: /create account|sign up/i })
     await expect(submitBtn).toBeVisible()
   })
+
+  test("sign in with admin@gmail.com and 123456 succeeds", async ({ page }) => {
+    await page.goto("/sign-in")
+    await page.locator('input[type="email"], input[name="email"]').fill("admin@gmail.com")
+    await page.locator('input[type="password"]').fill("123456")
+    await page.getByRole("button", { name: /sign in/i }).click()
+
+    await page.waitForURL("**/dashboard**", { timeout: 10000 })
+    expect(page.url()).toContain("/dashboard")
+  })
 })
