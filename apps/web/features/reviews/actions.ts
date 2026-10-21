@@ -4,6 +4,7 @@ import { updateTag } from "next/cache"
 
 import { habitsTag, reviewsTag, tasksTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
+import { isExpectedApiError } from "@/lib/errors"
 import { DataError } from "@/lib/supabase/data"
 
 import { CompleteReviewSchema, type CompleteReviewInput } from "./schemas"
@@ -26,6 +27,9 @@ export async function completeReviewAction(
   try {
     await completeReview(accessToken, parsed.data)
   } catch (error) {
+    if (isExpectedApiError(error)) {
+      return { error: error.message.replace(/^[A-Z]{2}-\d+:\s*/, "") }
+    }
     if (error instanceof DataError && error.expected) {
       return { error: error.message.replace(/^[A-Z]{2}-\d+:\s*/, "") }
     }

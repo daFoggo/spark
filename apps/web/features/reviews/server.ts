@@ -1,6 +1,9 @@
 import "server-only"
 
+import { authConfig } from "@/lib/auth/config"
 import type { LocalDate } from "@/lib/dates"
+import { ApiError } from "@/lib/errors"
+import { apiFetch } from "@/lib/http"
 import { createDataClient, DataError } from "@/lib/supabase/data"
 
 import { ReviewSchema, type CompleteReviewInput, type Review } from "./schemas"
@@ -13,6 +16,18 @@ export async function fetchReview(
   accessToken: string,
   weekStart: LocalDate
 ): Promise<Review | null> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    try {
+      const raw = await apiFetch<unknown>(`reviews/${weekStart}`, {
+        token: accessToken,
+      })
+      return ReviewSchema.parse(raw)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) return null
+      throw error
+    }
+  }
+
   const { data, error } = await createDataClient(accessToken)
     .from("reviews")
     .select(COLUMNS)
@@ -35,6 +50,20 @@ export async function completeReview(
   accessToken: string,
   input: CompleteReviewInput
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`reviews/${input.weekStart}`, {
+      token: accessToken,
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reflection: input.reflection,
+        choices: input.choices,
+        focusTaskIds: input.focusTaskIds,
+      }),
+    })
+    return
+  }
+
   const { error } = await createDataClient(accessToken).rpc("complete_review", {
     p_week_start: input.weekStart,
     p_reflection: input.reflection,
