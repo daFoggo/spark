@@ -7,7 +7,8 @@ import { authConfig } from "../config"
 
 const { Pool } = pg
 
-const cfg = authConfig
+// Undefined on the Supabase stack: the module is still bundled (route handler) but never serves requests.
+const cfg = authConfig.AUTH_PROVIDER === "better-auth" ? authConfig : undefined
 
 // Better Auth instance configured for PostgreSQL and JWT plugin
 export const auth = betterAuth({

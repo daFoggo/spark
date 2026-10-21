@@ -3,8 +3,8 @@
 import { updateTag } from "next/cache"
 
 import { settingsTag } from "@/lib/cache-tags"
-import { verifySession } from "@/lib/dal"
-import { isExpectedApiError } from "@/lib/errors"
+import { refreshSessionClaims, verifySession } from "@/lib/dal"
+import { isExpectedDataError, ruleOf } from "@/lib/errors"
 
 import { DetectedLocaleSchema, UpdateSettingsSchema } from "./schemas"
 import { saveSettings } from "./server"
@@ -34,11 +34,13 @@ export async function syncLocaleAction(input: {
       timezoneConfirmed: true,
     })
   } catch (error) {
-    if (isExpectedApiError(error)) {
+    if (isExpectedDataError(error)) {
       return { error: error.message }
     }
     throw error
   }
+  // Timezone and week start also live in the token on some stacks (`Session.calendar`).
+  await refreshSessionClaims()
   updateTag(settingsTag(userId))
   return { saved: true }
 }
@@ -67,15 +69,17 @@ export async function updateSettingsAction(
       timezoneConfirmed: true,
     })
   } catch (error) {
-    if (isExpectedApiError(error)) {
-      const rule =
-        error.body && typeof error.body === "object" && "rule" in error.body
-          ? String(error.body.rule)
-          : undefined
-      return { error: error.message, rule, values }
+    if (isExpectedDataError(error)) {
+      return {
+        error: error.message.replace(/^[A-Z]{2}-\d+:\s*/, ""),
+        rule: ruleOf(error),
+        values,
+      }
     }
     throw error
   }
+  // Timezone and week start also live in the token on some stacks (`Session.calendar`).
+  await refreshSessionClaims()
   updateTag(settingsTag(userId))
   return { saved: true }
 }

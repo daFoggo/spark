@@ -25,7 +25,9 @@ Use when creating new files, adding pages/features, structuring components, or d
 
 Only create files that are needed:
 - `components/`: UI components for this domain. Receives data via props.
-- `server.ts`: `import "server-only"`. Pure backend/DB I/O. Parses DTOs with Zod.
+- `server.ts`: `import "server-only"`. Picks `server.api.ts` (FastAPI) or `server.supabase.ts` (PostgREST + RLS) by
+  `AUTH_PROVIDER`, typed `typeof api` so both paths keep the same functions. Parses DTOs with Zod.
+  Never call a backend outside these files ([providers.md](../../../../docs/providers.md)).
 - `queries.ts`: Reads for Server Components. Calls `verifySession()` from DAL + `server.ts`. Manages `"use cache"`.
 - `actions.ts`: `"use server"`. Validates with Zod, checks auth via DAL, mutates via `server.ts`, calls `updateTag()`.
 - `schemas.ts`: Zod schemas & TypeScript types. Safe for client & server.

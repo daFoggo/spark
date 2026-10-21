@@ -8,6 +8,13 @@ const isDev = process.env.NODE_ENV === "development"
  */
 function contentSecurityPolicy(): string {
   const formActions = ["'self'", "https://accounts.google.com"]
+  // Supabase OAuth sends the browser to the project's auth server before Google.
+  if (
+    process.env.AUTH_PROVIDER === "supabase" &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL
+  ) {
+    formActions.push(new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin)
+  }
 
   const directives = [
     "default-src 'self'",

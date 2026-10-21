@@ -5,7 +5,7 @@ import { getGoals } from "@/features/goals/queries"
 import { getCheckIns, getHabits } from "@/features/habits/queries"
 import { groupByHabit } from "@/features/habits/rows"
 import { indexByDate, weekProgress } from "@/features/habits/stats"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar, getSettings } from "@/features/settings/queries"
 import { getTasks } from "@/features/tasks/queries"
 import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
@@ -24,14 +24,16 @@ export const loadDashboard = cache(async () => {
   await requirePermission("dashboard:view")
   const habitsPromise = getHabits()
   const goalsPromise = getGoals()
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
-  const [habits, checkIns, stats, tasks, goals] = await Promise.all([
+  const settingsPromise = getSettings()
+  const { timezone, weekStart, adoptedOn } = await getCalendar()
+  const today = await getToday(timezone)
+  const [habits, checkIns, stats, tasks, goals, settings] = await Promise.all([
     habitsPromise,
     getCheckIns(addDays(today, -HISTORY_DAYS), today),
-    getActivityStats(settings.adoptedOn, today),
+    getActivityStats(adoptedOn, today),
     getTasks("today", today),
     goalsPromise,
+    settingsPromise,
   ])
   const grouped = groupByHabit(checkIns)
   const byHabit = new Map(
@@ -40,7 +42,7 @@ export const loadDashboard = cache(async () => {
   const week = weekProgress(
     habits,
     byHabit,
-    startOfWeek(today, settings.weekStart),
+    startOfWeek(today, weekStart),
     today
   )
   return {

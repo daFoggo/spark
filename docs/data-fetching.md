@@ -36,8 +36,10 @@ per-user reads goes in `"use cache: private"` instead (`lib/clock.ts` `getToday`
 ```
 app/**/page.tsx, layout.tsx      compose only; await nothing at the top level
   └─ features/<x>/queries.ts     reads for Server Components: auth via lib/dal, cache directives here
-       └─ features/<x>/server.ts "server-only" I/O, parses responses with Zod
+       └─ features/<x>/server.ts "server-only" I/O, parses responses with Zod; picks server.api.ts or
+            │                    server.supabase.ts by AUTH_PROVIDER (docs/providers.md)
             └─ lib/http.ts       apiFetch: JSON or throws ApiError, never returns fallback data
+               lib/supabase/data createDataClient: PostgREST as the user (RLS), throws DataError
 features/<x>/actions.ts          "use server" mutations: verifySession, Zod, write, invalidate
 features/<x>/schemas.ts          Zod schemas + types, safe on client and server
 lib/dal.ts                       getSession / verifySession / verifySessionFresh
@@ -73,7 +75,8 @@ data; do not render the same data from a Server Component and a client fetch.
 
 ### 4.1 Basics
 
-Server Components can `await` any I/O. Here every backend call goes through a feature `server.ts` → `apiFetch`:
+Server Components can `await` any I/O. Here every backend call goes through a feature `server.ts` → `apiFetch` (the
+Supabase stack's `server.supabase.ts` returns the same DTOs through `createDataClient`):
 
 ```ts
 // features/<x>/server.ts

@@ -23,7 +23,7 @@ import {
   toughestWeekday,
   weekdayRates,
 } from "@/features/habits/stats"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
 import { addDays, formatDay } from "@/lib/dates"
@@ -47,8 +47,8 @@ async function HabitDetail({
 }) {
   await requirePermission("dashboard:view")
   const { habitId } = await params
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
+  const { timezone, weekStart } = await getCalendar()
+  const today = await getToday(timezone)
   const [habit, checkIns, goals] = await Promise.all([
     getHabit(habitId),
     getCheckIns(addDays(today, -370), today, habitId),
@@ -104,7 +104,7 @@ async function HabitDetail({
         <Heatmap
           end={today}
           weeks={52}
-          weekStart={settings.weekStart}
+          weekStart={weekStart}
           cells={habitCells(
             habit,
             byDate,

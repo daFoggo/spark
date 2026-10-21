@@ -12,7 +12,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { PageHead } from "@/components/layout/page-head"
 import { getGoals } from "@/features/goals/queries"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar } from "@/features/settings/queries"
 import { TaskAdd } from "@/features/tasks/components/task-add"
 import { TaskRow } from "@/features/tasks/components/task-row"
 import { TaskTabs } from "@/features/tasks/components/task-tabs"
@@ -50,8 +50,8 @@ async function TaskList({
   await requirePermission("dashboard:view")
   const goalsPromise = getGoals()
   const tab = asTab((await searchParams).tab)
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
+  const { timezone } = await getCalendar()
+  const today = await getToday(timezone)
   const [tasks, goals] = await Promise.all([getTasks(tab, today), goalsPromise])
   const goalNames = new Map(goals.map((goal) => [goal.id, goal.name]))
 

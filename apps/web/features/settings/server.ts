@@ -1,29 +1,12 @@
 import "server-only"
 
-import { apiFetch } from "@/lib/http"
+import { authConfig } from "@/lib/auth/config"
 
-import { SettingsSchema, type Settings } from "./schemas"
+import * as api from "./server.api"
+import * as supabase from "./server.supabase"
 
-/** The signed-in user's settings. */
-export async function fetchSettings(accessToken: string): Promise<Settings> {
-  return SettingsSchema.parse(
-    await apiFetch<unknown>("settings", { token: accessToken })
-  )
-}
+/** The data path of the active stack (docs/providers.md). Typed as `api` so the two cannot drift. */
+const impl: typeof api =
+  authConfig.AUTH_PROVIDER === "supabase" ? supabase : api
 
-export async function saveSettings(
-  accessToken: string,
-  patch: {
-    timezone?: string
-    timezoneConfirmed?: boolean
-    weekStart?: number
-    petName?: string
-  }
-): Promise<void> {
-  await apiFetch<void>("settings", {
-    token: accessToken,
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
-  })
-}
+export const { fetchSettings, saveSettings } = impl

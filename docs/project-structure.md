@@ -40,7 +40,7 @@ next-mono-base/
 │       │   ├── layout/                     # App sidebar, header, global nav
 │       │   └── providers/                  # ThemeProvider, Toaster, etc.
 │       ├── lib/                            # Application-level infrastructure (Server-only / DAL)
-│       │   ├── auth/                       # Provider implementations (backend session, Supabase)
+│       │   ├── auth/                       # Provider implementations (Better Auth, Supabase)
 │       │   ├── dal.ts                      # Data Access Layer (verifySession, getSession)
 │       │   ├── env.ts                      # Validated environment variables (Zod)
 │       │   ├── http.ts                     # Backend HTTP client (apiFetch)
@@ -76,7 +76,7 @@ features/<name>/
 ├── components/         # UI components (Client or Server) specific to this domain
 │   ├── <name>-table.tsx
 │   └── <name>-filters.tsx
-├── server.ts           # [server-only] Raw I/O with DB/backend; parses DTOs with Zod
+├── server.ts           # [server-only] Picks server.api.ts / server.supabase.ts (docs/providers.md); DTOs via Zod
 ├── queries.ts          # Reads for Server Components; verifies session via DAL; "use cache"
 ├── actions.ts          # [use server] Mutations; validates input; checks auth; calls updateTag()
 ├── schemas.ts          # Zod schemas & TypeScript types; safe for both client and server

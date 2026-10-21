@@ -6,10 +6,10 @@ import { forbidden, redirect } from "next/navigation"
 
 import { SESSION_EXPIRED_PATH } from "@/config/routes"
 
-import { getAuthProvider, type Session } from "./auth"
+import { getAuthProvider, type Calendar, type Session } from "./auth"
 import { hasPermission, type Permission } from "./auth/permissions"
 
-export type { Session }
+export type { Calendar, Session }
 
 /**
  * Data Access Layer entry point. `"use cache: private"` (not React `cache`, which each cache scope
@@ -53,3 +53,12 @@ export const verifySessionFresh = cache(async (): Promise<Session> => {
   if (!session) redirect(SESSION_EXPIRED_PATH)
   return session
 })
+
+/**
+ * After a Server Action changes data the provider copies into the token (`Session.calendar`):
+ * reissues the token so the next request reads the new values. No-op for providers without it.
+ */
+export async function refreshSessionClaims(): Promise<void> {
+  const provider = await getAuthProvider()
+  await provider.refreshSession?.()
+}

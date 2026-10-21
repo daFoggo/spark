@@ -28,7 +28,8 @@ The docs in `docs/` are the single source of truth for `apps/web`. Open the matc
 | Data fetching, caching, mutations, Server Actions | `docs/data-fetching.md` |
 | Routes, layouts, parallel and intercepting routes | `docs/routing-and-layouts.md` |
 | Client-only shared state (Zustand) | `docs/client-state.md` |
-| Auth, sessions, DAL (`AUTH_PROVIDER=better-auth`; env template `apps/web/.env.example`) | `docs/authentication.md` |
+| Auth, sessions, DAL (`AUTH_PROVIDER=better-auth\|supabase`; env template `apps/web/.env.example`) | `docs/authentication.md` |
+| Switching stack (Better Auth + FastAPI or Supabase), adding a provider, the provider seams | `docs/providers.md` |
 | Performance, code splitting, lazy loading, Core Web Vitals | `docs/performance-optimization.md` |
 | Redis cache, large uploads, SSE, telemetry, instant-navigation tests | `docs/advanced-patterns.md` |
 | UI: theme tokens, typography, spacing, responsive, shadcn component sizes, motion | `docs/design-system.md` |

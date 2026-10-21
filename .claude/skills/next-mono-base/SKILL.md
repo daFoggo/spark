@@ -44,7 +44,7 @@ All principles derive from and link back to the Single Source of Truth in `docs/
 2. **Never `await` at Top-Level of Page/Layout**: Push `await cookies()`, `headers()`, `params`, `searchParams` into child components wrapped in `<Suspense>` ([docs §4.4](../../../docs/data-fetching.md#44-request-time-data)).
 3. **Always Call `cacheLife()` with `"use cache"`**: Cache keys use plain IDs only (never tokens, emails, or secrets) ([docs §5.1](../../../docs/data-fetching.md#51-use-cache)).
 4. **Prefer `io()` over `connection()`**: `io()` allows prefetching and works inside `"use cache: private"`; `connection()` blocks prefetches ([docs §1](../../../docs/data-fetching.md#1-mental-model)).
-5. **Strict Architectural Boundaries**: `features/<name>` never imports `app/` or sibling features. Only `server.ts` and `lib/dal.ts` perform backend I/O ([docs](../../../docs/project-structure.md#4-dependency-direction--eslint-boundary-enforcement)).
+5. **Strict Architectural Boundaries**: `features/<name>` never imports `app/` or sibling features. Only `server.ts` (→ `server.api.ts` / `server.supabase.ts`) and `lib/dal.ts` perform backend I/O ([docs](../../../docs/project-structure.md#4-dependency-direction--eslint-boundary-enforcement)).
 
 ---
 
@@ -55,6 +55,6 @@ When facing complex edge cases, always consult the full architecture docs:
 - [docs/routing-and-layouts.md](../../../docs/routing-and-layouts.md) — Parallel Routes, Intercepting Routes, Route Groups, and Layout/Template lifecycle.
 - [docs/data-fetching.md](../../../docs/data-fetching.md) — Core reading, caching, streaming, and mutation model.
 - [docs/performance-optimization.md](../../../docs/performance-optimization.md) — Code splitting, lazy loading, package bundling, hydration flash prevention, and Core Web Vitals.
-- [docs/authentication.md](../../../docs/authentication.md) — Session lifecycle, token refresh in proxy, Supabase & backend providers.
+- [docs/authentication.md](../../../docs/authentication.md) — Session lifecycle, token refresh in proxy, Better Auth & Supabase providers ([providers.md](../../../docs/providers.md) to switch).
 - [docs/client-state.md](../../../docs/client-state.md) — Zustand: per-request store factory, provider placement in the feature layout, selectors, middleware notes.
 - [docs/advanced-patterns.md](../../../docs/advanced-patterns.md) — Distributed Redis cache, large uploads, SSE, OpenTelemetry & Playwright instant tests.

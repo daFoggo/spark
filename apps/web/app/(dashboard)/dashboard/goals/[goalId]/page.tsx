@@ -25,7 +25,7 @@ import {
   indexByDate,
   scheduleLabel,
 } from "@/features/habits/stats"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar } from "@/features/settings/queries"
 import { TaskRow } from "@/features/tasks/components/task-row"
 import { getTasks } from "@/features/tasks/queries"
 import { taskRowData } from "@/features/tasks/rows"
@@ -57,20 +57,23 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
   const { goalId } = await params
   const goalPromise = getGoal(goalId)
   const habitsPromise = getHabits()
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
+  const { timezone, weekStart } = await getCalendar()
+  const today = await getToday(timezone)
+
+  // Started with the goal read, not after it. A missing goal is checked first: the API also refuses
+  // its activity, and that error must not replace the 404 (the catch only marks `reads` as handled).
+  const from = addDays(today, -26 * 7)
+  const reads = Promise.all([
+    getGoalActivity(goalId, from),
+    habitsPromise,
+    getCheckIns(addDays(today, -370), today),
+    getTasks("today", today),
+    getTasks("later", today),
+  ])
+  reads.catch(() => {})
   const goal = await goalPromise
   if (!goal) notFound()
-
-  const from = addDays(today, -26 * 7)
-  const [activity, habits, checkIns, todayTasks, laterTasks] =
-    await Promise.all([
-      getGoalActivity(goalId, from),
-      habitsPromise,
-      getCheckIns(addDays(today, -370), today),
-      getTasks("today", today),
-      getTasks("later", today),
-    ])
+  const [activity, habits, checkIns, todayTasks, laterTasks] = await reads
 
   const linkedHabits = habits.filter((habit) => habit.goalId === goalId)
   const grouped = groupByHabit(checkIns)
@@ -185,7 +188,7 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
         <Heatmap
           end={today}
           weeks={26}
-          weekStart={settings.weekStart}
+          weekStart={weekStart}
           cells={goalCells(
             activity.recent.map((a) => a.date),
             from,

@@ -30,7 +30,7 @@ import {
   indexByDate,
   scheduleLabel,
 } from "@/features/habits/stats"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
 import { GOALS_PATH } from "@/config/routes"
 import { requirePermission } from "@/lib/dal"
@@ -43,8 +43,8 @@ export const metadata: Metadata = { title: "Habits" }
 async function HabitList() {
   await requirePermission("dashboard:view")
   const goalsPromise = getGoals()
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
+  const { timezone } = await getCalendar()
+  const today = await getToday(timezone)
   const [habits, checkIns, goals] = await Promise.all([
     getHabits(),
     getCheckIns(addDays(today, -29), today),

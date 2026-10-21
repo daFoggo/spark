@@ -11,16 +11,16 @@ import { SignOutMenuItem } from "@/features/auth/components/sign-out-menu-item"
 import { hasPermission } from "@/lib/auth/permissions"
 import { getReview } from "@/features/reviews/queries"
 import { isReviewDue } from "@/features/reviews/rules"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
 import { getSession } from "@/lib/dal"
 import { startOfWeek } from "@/lib/dates"
 
 /** RV-5: the review link says "due" until this week's review is saved. */
 async function isReviewLinkDue(): Promise<boolean> {
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
-  const weekStart = startOfWeek(today, settings.weekStart)
+  const calendar = await getCalendar()
+  const today = await getToday(calendar.timezone)
+  const weekStart = startOfWeek(today, calendar.weekStart)
   const review = await getReview(weekStart)
   return isReviewDue(review, today, weekStart)
 }

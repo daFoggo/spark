@@ -5,7 +5,7 @@ import { updateTag } from "next/cache"
 import { activitiesTag, tasksTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
 import { isLocalDate } from "@/lib/dates"
-import { isExpectedApiError } from "@/lib/errors"
+import { isExpectedDataError } from "@/lib/errors"
 
 import { AddTaskSchema, TaskIdSchema, TaskNoteSchema } from "./schemas"
 import {
@@ -19,7 +19,7 @@ import {
 export type TaskState = { error?: string; saved?: boolean }
 
 function expected(error: unknown): string | null {
-  if (isExpectedApiError(error)) {
+  if (isExpectedDataError(error)) {
     return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")
   }
   return null

@@ -5,7 +5,7 @@ import { Suspense } from "react"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { PageHead } from "@/components/layout/page-head"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
 import { DASHBOARD_PATH } from "@/config/routes"
 import { requirePermission } from "@/lib/dal"
@@ -25,8 +25,8 @@ type Search = Promise<{ day?: string }>
 
 async function TodayHead({ searchParams }: { searchParams: Search }) {
   await requirePermission("dashboard:view")
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
+  const { timezone } = await getCalendar()
+  const today = await getToday(timezone)
   const day = await resolveDay(searchParams, today)
   const label = new Intl.DateTimeFormat("en-US", {
     timeZone: "UTC",

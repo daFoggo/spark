@@ -15,7 +15,7 @@ import {
 } from "@/features/reviews/components/review-flow"
 import { getReview } from "@/features/reviews/queries"
 import { suggestEasier } from "@/features/reviews/rules"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar } from "@/features/settings/queries"
 import { getTasks } from "@/features/tasks/queries"
 import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
@@ -27,9 +27,9 @@ async function Review() {
   await requirePermission("dashboard:view")
   const habitsPromise = getHabits()
   const goalsPromise = getGoals()
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
-  const weekStart = startOfWeek(today, settings.weekStart)
+  const calendar = await getCalendar()
+  const today = await getToday(calendar.timezone)
+  const weekStart = startOfWeek(today, calendar.weekStart)
 
   const [
     review,

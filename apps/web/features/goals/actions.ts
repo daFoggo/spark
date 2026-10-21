@@ -4,7 +4,7 @@ import { updateTag } from "next/cache"
 
 import { goalTag, goalsTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
-import { isExpectedApiError } from "@/lib/errors"
+import { isExpectedDataError } from "@/lib/errors"
 
 import {
   CheckpointTitleSchema,
@@ -34,7 +34,7 @@ export type GoalState = {
 
 /** Database rules (GL-3, GL-4, CH-1…) carry their message after the rule ID. */
 function expected(error: unknown): string | null {
-  if (isExpectedApiError(error)) {
+  if (isExpectedDataError(error)) {
     return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")
   }
   return null

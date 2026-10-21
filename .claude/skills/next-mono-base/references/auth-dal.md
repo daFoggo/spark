@@ -31,5 +31,5 @@ export async function getUserItems() {
 - ❌ **Never attempt to write cookies in Server Components**: Cookies can only be mutated in `proxy.ts`, Server Actions, or Route Handlers.
 
 ## 6. Source of Truth (Deep Dive)
-- Complete provider design (`backend` vs `supabase`): [docs/authentication.md §1-5](../../../../docs/authentication.md#1-overview)
+- Complete provider design (`better-auth` vs `supabase`): [docs/authentication.md §1-2](../../../../docs/authentication.md#1-overview), switching: [docs/providers.md](../../../../docs/providers.md)
 - Proxy token refresh flow: [docs/authentication.md §4](../../../../docs/authentication.md#4-provider-backend)

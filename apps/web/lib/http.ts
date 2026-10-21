@@ -77,7 +77,7 @@ export async function apiFetch<T>(
  * A Server Action can only soft-navigate to a page (redirecting it to that route leaves the
  * client stuck on the old UI), so it signs out itself and goes straight to sign-in.
  */
-async function endRejectedSession(): Promise<never> {
+export async function endRejectedSession(): Promise<never> {
   if ((await headers()).has("next-action")) {
     try {
       await (await getAuthProvider()).signOut()

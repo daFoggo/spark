@@ -13,6 +13,18 @@ export type Session = {
   role: Role
   name: string | null
   email: string | null
+  /** Set when the provider copies the calendar preferences into the token (saves a settings read). */
+  calendar?: Calendar
+}
+
+/**
+ * The dates the app counts from: timezone (IANA) and week start (0 = Sunday .. 6 = Saturday), spec
+ * TM-2, TM-4; `adoptedOn` (`YYYY-MM-DD`, PT-1) never changes after sign-up.
+ */
+export type Calendar = {
+  timezone: string
+  weekStart: number
+  adoptedOn: string
 }
 
 export type Credentials = {
@@ -39,6 +51,11 @@ export interface AuthProvider {
   /** Creates an account. Throws when the data is rejected (e.g. email already used). */
   signUp(input: SignUpInput): Promise<SignUpResult>
   signOut(): Promise<void>
+  /**
+   * Reissues the token so the claims copied from user data (`calendar`) are current. Only providers
+   * that set `calendar` implement it; call it from the Server Action that changed that data.
+   */
+  refreshSession?(): Promise<void>
   /**
    * True when `signIn` / `signUp` / `oauth.start` failed because the identity system rejected the
    * input (wrong password, email taken, weak password, rate limit): safe to show in the form.

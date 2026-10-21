@@ -5,7 +5,7 @@ import { updateTag } from "next/cache"
 import { activitiesTag, checkinsTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
 import { isLocalDate } from "@/lib/dates"
-import { isExpectedApiError } from "@/lib/errors"
+import { isExpectedDataError } from "@/lib/errors"
 
 import { ActivityIdSchema, LogFormSchema } from "./schemas"
 import { deleteActivity, insertLog } from "./server"
@@ -36,7 +36,7 @@ export async function logActivityAction(
   try {
     await insertLog(accessToken, { ...parsed.data, date })
   } catch (error) {
-    if (isExpectedApiError(error)) {
+    if (isExpectedDataError(error)) {
       return { error: error.message.replace(/^[A-Z]{2}-\d+:\s*/, "") }
     }
     throw error

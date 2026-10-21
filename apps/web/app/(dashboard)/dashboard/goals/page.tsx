@@ -22,7 +22,7 @@ import {
   groupGoals,
 } from "@/features/goals/rules"
 import type { Goal } from "@/features/goals/schemas"
-import { getSettings } from "@/features/settings/queries"
+import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
 import { addDays } from "@/lib/dates"
@@ -89,8 +89,8 @@ function GoalGroup({
 async function GoalLists() {
   await requirePermission("dashboard:view")
   const goalsPromise = getGoals()
-  const settings = await getSettings()
-  const today = await getToday(settings.timezone)
+  const { timezone } = await getCalendar()
+  const today = await getToday(timezone)
   const [goals, activities] = await Promise.all([
     goalsPromise,
     getActivities(addDays(today, -182), today),
