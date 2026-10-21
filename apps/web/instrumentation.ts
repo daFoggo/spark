@@ -15,10 +15,12 @@ export const onRequestError: Instrumentation.onRequestError = async (
       ? String((err as { digest?: unknown }).digest)
       : undefined
 
-  // Filter out normal Next.js control-flow throws (redirect() and notFound() throw internal symbols)
+  // Filter out normal Next.js control-flow and prerender bail-out throws
   if (
     errorMessage.includes("NEXT_REDIRECT") ||
-    errorMessage.includes("NEXT_NOT_FOUND")
+    errorMessage.includes("NEXT_NOT_FOUND") ||
+    digest === "DYNAMIC_SERVER_USAGE" ||
+    digest === "HANGING_PROMISE_REJECTION"
   ) {
     return
   }
@@ -30,7 +32,7 @@ export const onRequestError: Instrumentation.onRequestError = async (
     method: request.method,
     routeType: context.routeType, // 'render' | 'route' | 'action' | 'proxy'
     routerKind: context.routerKind, // 'App Router' | 'Pages Router'
-    timestamp: new Date().toISOString(),
+    timestamp: performance.now(),
   }
 
   console.error("[SERVER_ERROR]", JSON.stringify(payload))

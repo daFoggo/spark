@@ -9,6 +9,7 @@ const { Pool } = pg
 
 const cfg = authConfig
 
+// Better Auth instance configured for PostgreSQL and JWT plugin
 export const auth = betterAuth({
   baseURL: cfg?.BETTER_AUTH_URL ?? "http://localhost:3000",
   secret:
@@ -18,7 +19,7 @@ export const auth = betterAuth({
     options: "-c search_path=auth",
   }),
   advanced: {
-    database: { generateId: "uuid" },
+    database: { generateId: "uuid", validateSchema: false },
     useSecureCookies: process.env.NODE_ENV === "production",
   },
   trustedOrigins: cfg?.BETTER_AUTH_URL

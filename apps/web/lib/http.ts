@@ -25,14 +25,23 @@ export async function apiFetch<T>(
   path: string,
   { token, headers, ...init }: ApiFetchOptions = {}
 ): Promise<T> {
-  const res = await fetch(apiUrl(env.API_BASE_URL, path), {
-    ...init,
-    headers: {
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-  })
+  let res: Response
+  try {
+    res = await fetch(apiUrl(env.API_BASE_URL, path), {
+      ...init,
+      headers: {
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+    })
+  } catch (error) {
+    throw new ApiError(
+      503,
+      `Backend service unreachable (${env.API_BASE_URL}). Please verify that FastAPI backend is running on port 8000.`,
+      error
+    )
+  }
 
   if (!res.ok) {
     // A token the session still holds was rejected: end the session.

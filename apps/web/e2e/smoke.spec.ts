@@ -46,7 +46,12 @@ test.describe("Smoke test & Static asset verification", () => {
     await expect(submitBtn).toBeVisible()
   })
 
-  test("sign in with admin@gmail.com and 123456 succeeds", async ({ page }) => {
+  test("sign in with admin@gmail.com and 123456 succeeds and renders dashboard", async ({ page }) => {
+    const consoleErrors: string[] = []
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text())
+    })
+
     await page.goto("/sign-in")
     await page.locator('input[type="email"], input[name="email"]').fill("admin@gmail.com")
     await page.locator('input[type="password"]').fill("123456")
@@ -54,5 +59,17 @@ test.describe("Smoke test & Static asset verification", () => {
 
     await page.waitForURL("**/dashboard**", { timeout: 10000 })
     expect(page.url()).toContain("/dashboard")
+
+    // Verify dashboard heading
+    await expect(page.getByRole("heading", { name: /today/i })).toBeVisible()
+
+    // Verify navigation links
+    await expect(page.getByRole("link", { name: /habits/i }).first()).toBeVisible()
+    await expect(page.getByRole("link", { name: /goals/i }).first()).toBeVisible()
+    await expect(page.getByRole("link", { name: /tasks/i }).first()).toBeVisible()
+
+    // Ensure no fatal error boundary triggered
+    const errorBoundary = page.locator("text=Something went wrong")
+    await expect(errorBoundary).toHaveCount(0)
   })
 })
