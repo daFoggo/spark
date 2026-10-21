@@ -5,6 +5,7 @@ import { updateTag } from "next/cache"
 import { activitiesTag, checkinsTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
 import { isLocalDate } from "@/lib/dates"
+import { isExpectedApiError } from "@/lib/errors"
 import { DataError } from "@/lib/supabase/data"
 
 import { ActivityIdSchema, LogFormSchema } from "./schemas"
@@ -36,6 +37,9 @@ export async function logActivityAction(
   try {
     await insertLog(accessToken, { ...parsed.data, date })
   } catch (error) {
+    if (isExpectedApiError(error)) {
+      return { error: error.message.replace(/^[A-Z]{2}-\d+:\s*/, "") }
+    }
     // AC-5 is enforced by the database; show its reason.
     if (error instanceof DataError && error.expected) {
       return { error: error.message.replace(/^[A-Z]{2}-\d+:\s*/, "") }

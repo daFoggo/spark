@@ -1,7 +1,9 @@
 import "server-only"
 
-import { createDataClient, unwrap } from "@/lib/supabase/data"
+import { authConfig } from "@/lib/auth/config"
 import type { LocalDate } from "@/lib/dates"
+import { apiFetch } from "@/lib/http"
+import { createDataClient, unwrap } from "@/lib/supabase/data"
 
 import { ActivitySchema, type Activity, type ActivityStats } from "./schemas"
 
@@ -15,6 +17,13 @@ export async function fetchActivityStats(
   accessToken: string,
   input: { adoptedOn: LocalDate; today: LocalDate }
 ): Promise<ActivityStats> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    return await apiFetch<ActivityStats>(
+      `activities/stats?adoptedOn=${input.adoptedOn}&today=${input.today}`,
+      { token: accessToken }
+    )
+  }
+
   const client = createDataClient(accessToken)
   const [treats, today, latest] = await Promise.all([
     client
@@ -69,6 +78,15 @@ export async function fetchActivities(
   accessToken: string,
   range: { from: LocalDate; to: LocalDate; source?: Activity["source"] }
 ): Promise<Activity[]> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const params = new URLSearchParams({ from: range.from, to: range.to })
+    if (range.source) params.set("source", range.source)
+    const raw = await apiFetch<unknown[]>(`activities?${params.toString()}`, {
+      token: accessToken,
+    })
+    return raw.map((a) => ActivitySchema.parse(a))
+  }
+
   let query = createDataClient(accessToken)
     .from("activities")
     .select(COLUMNS)
@@ -90,6 +108,22 @@ export async function insertLog(
     goalId?: string
   }
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<{ id: number }>("activities/logs", {
+      token: accessToken,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: input.date,
+        note: input.note,
+        hours: input.hours,
+        topic: input.topic,
+        goalId: input.goalId ?? null,
+      }),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("activities")
@@ -111,6 +145,14 @@ export async function deleteActivity(
   accessToken: string,
   id: number
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`activities/${id}`, {
+      token: accessToken,
+      method: "DELETE",
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("activities")
@@ -129,6 +171,17 @@ export async function fetchGoalActivity(
   accessToken: string,
   input: { goalId: string; from: LocalDate }
 ): Promise<{ recent: Activity[]; total: number }> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const res = await apiFetch<{ recent: unknown[]; total: number }>(
+      `goals/${input.goalId}/activity?from=${input.from}`,
+      { token: accessToken }
+    )
+    return {
+      recent: res.recent.map((a) => ActivitySchema.parse(a)),
+      total: res.total,
+    }
+  }
+
   const client = createDataClient(accessToken)
   const [recent, totalResult] = await Promise.all([
     client
