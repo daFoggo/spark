@@ -1,7 +1,10 @@
 import "server-only"
 
-import { createDataClient, DataError, unwrap } from "@/lib/supabase/data"
+import { authConfig } from "@/lib/auth/config"
 import type { LocalDate } from "@/lib/dates"
+import { ApiError } from "@/lib/errors"
+import { apiFetch } from "@/lib/http"
+import { createDataClient, DataError, unwrap } from "@/lib/supabase/data"
 
 import {
   CheckInSchema,
@@ -60,6 +63,11 @@ function toHabit(row: HabitRow): Habit {
 
 /** Habits that are not archived (HB-6), oldest first. */
 export async function fetchHabits(accessToken: string): Promise<Habit[]> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const raw = await apiFetch<unknown[]>("habits", { token: accessToken })
+    return raw.map((h) => HabitSchema.parse(h))
+  }
+
   const rows = unwrap(
     await createDataClient(accessToken)
       .from("habits")
@@ -76,6 +84,18 @@ export async function fetchHabit(
   accessToken: string,
   habitId: string
 ): Promise<Habit | null> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    try {
+      const raw = await apiFetch<unknown>(`habits/${habitId}`, {
+        token: accessToken,
+      })
+      return HabitSchema.parse(raw)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) return null
+      throw error
+    }
+  }
+
   const { data, error } = await createDataClient(accessToken)
     .from("habits")
     .select(HABIT_COLUMNS)
@@ -90,6 +110,15 @@ export async function fetchCheckIns(
   accessToken: string,
   range: { from: LocalDate; to: LocalDate; habitId?: string }
 ): Promise<CheckIn[]> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const params = new URLSearchParams({ from: range.from, to: range.to })
+    if (range.habitId) params.set("habitId", range.habitId)
+    const raw = await apiFetch<unknown[]>(`check-ins?${params.toString()}`, {
+      token: accessToken,
+    })
+    return raw.map((c) => CheckInSchema.parse(c))
+  }
+
   let query = createDataClient(accessToken)
     .from("activities")
     .select("id, habit_id, date, level, note")
@@ -117,6 +146,19 @@ export async function toggleCheckIn(
   accessToken: string,
   input: { habitId: string; date: LocalDate; level: CheckInLevel }
 ): Promise<CheckInLevel | null> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const res = await apiFetch<{ level: CheckInLevel | null }>(
+      `habits/${input.habitId}/check-ins/${input.date}`,
+      {
+        token: accessToken,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ level: input.level }),
+      }
+    )
+    return res.level ?? null
+  }
+
   const { data, error } = await createDataClient(accessToken).rpc(
     "toggle_check_in",
     { p_habit_id: input.habitId, p_date: input.date, p_level: input.level }
@@ -131,6 +173,28 @@ export async function createHabit(
   accessToken: string,
   form: HabitForm
 ): Promise<string> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const schedule =
+      form.kind === "days"
+        ? { kind: "days", weekdays: form.weekdays }
+        : { kind: "every", everyN: form.everyN }
+    const res = await apiFetch<{ id: string }>("habits", {
+      token: accessToken,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: form.name,
+        cue: form.cue ?? null,
+        fullVersion: form.fullVersion ?? null,
+        minimumVersion: form.minimumVersion ?? null,
+        timeOfDay: form.timeOfDay,
+        goalId: form.goalId ?? null,
+        schedule,
+      }),
+    })
+    return res.id
+  }
+
   return unwrap(
     await createDataClient(accessToken).rpc("create_habit", {
       p_name: form.name,
@@ -152,6 +216,20 @@ export async function setHabitSchedule(
   habitId: string,
   form: Pick<HabitForm, "kind" | "weekdays" | "everyN">
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    const schedule =
+      form.kind === "days"
+        ? { kind: "days", weekdays: form.weekdays }
+        : { kind: "every", everyN: form.everyN }
+    await apiFetch<void>(`habits/${habitId}/schedule`, {
+      token: accessToken,
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(schedule),
+    })
+    return
+  }
+
   const { error } = await createDataClient(accessToken).rpc(
     "set_habit_schedule",
     {
@@ -181,6 +259,27 @@ export async function updateHabit(
     archivedAt?: string | null
   }
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`habits/${habitId}`, {
+      token: accessToken,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: patch.name,
+        cue: patch.cue,
+        fullVersion: patch.fullVersion,
+        minimumVersion: patch.minimumVersion,
+        timeOfDay: patch.timeOfDay,
+        goalId: patch.goalId,
+        pausedFrom: patch.pausedFrom,
+        pausedUntil: patch.pausedUntil,
+        archived:
+          patch.archivedAt !== undefined ? patch.archivedAt !== null : undefined,
+      }),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("habits")
@@ -206,6 +305,16 @@ export async function saveCheckInNote(
   accessToken: string,
   input: { habitId: string; date: LocalDate; note: string }
 ): Promise<void> {
+  if (authConfig.AUTH_PROVIDER === "better-auth") {
+    await apiFetch<void>(`habits/${input.habitId}/check-ins/${input.date}`, {
+      token: accessToken,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: input.note || "" }),
+    })
+    return
+  }
+
   unwrap(
     await createDataClient(accessToken)
       .from("activities")

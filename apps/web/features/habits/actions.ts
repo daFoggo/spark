@@ -6,6 +6,7 @@ import { z } from "zod"
 import { checkinsTag, activitiesTag, habitsTag } from "@/lib/cache-tags"
 import { verifySession } from "@/lib/dal"
 import { addDays, isLocalDate } from "@/lib/dates"
+import { isExpectedApiError } from "@/lib/errors"
 import { DataError } from "@/lib/supabase/data"
 
 import {
@@ -28,6 +29,9 @@ const fail = (message: string): ActionState => ({ error: message })
 
 /** Rule violations raised by the database carry the rule ID ("AC-5: only the last 3 days…"). */
 function expected(error: unknown): string | null {
+  if (isExpectedApiError(error)) {
+    return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")
+  }
   if (error instanceof DataError && error.expected) {
     return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")
   }
