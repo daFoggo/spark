@@ -14,13 +14,15 @@ export const metadata: Metadata = {
   description: "Next.js 16.4 + React 19 Monorepo Base",
 }
 
+// `subsets` only picks which files are preloaded; every subset keeps its @font-face, so Vietnamese
+// text in user content still loads on demand (unicode-range) without a preload the English UI never uses.
 const fontSans = Geist({
-  subsets: ["latin", "vietnamese"],
+  subsets: ["latin"],
   variable: "--font-sans",
 })
 
 const fontMono = Geist_Mono({
-  subsets: ["latin", "vietnamese"],
+  subsets: ["latin"],
   variable: "--font-mono",
 })
 

@@ -1,6 +1,7 @@
 import "server-only"
 
 import { cache } from "react"
+import { cacheLife } from "next/cache"
 import { forbidden, redirect } from "next/navigation"
 
 import { SESSION_EXPIRED_PATH } from "@/config/routes"
@@ -10,11 +11,18 @@ import { hasPermission, type Permission } from "./auth/permissions"
 
 export type { Session }
 
-/** Data Access Layer entry point. Memoized per request via React `cache`. */
-export const getSession = cache(async (): Promise<Session | null> => {
+/**
+ * Data Access Layer entry point. `"use cache: private"` (not React `cache`, which each cache scope
+ * isolates) so every query's private scope joins one session read per request, and the read
+ * (cookies + Better Auth's `Date.now()` expiry check) can run in the per-session App Shell.
+ * Never stored on the server across production requests.
+ */
+export async function getSession(): Promise<Session | null> {
+  "use cache: private"
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 })
   const provider = await getAuthProvider()
   return provider.getSession()
-})
+}
 
 /** Call close to the data (queries, actions), not in layouts. */
 export const verifySession = cache(async (): Promise<Session> => {

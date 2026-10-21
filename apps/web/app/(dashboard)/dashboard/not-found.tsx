@@ -22,7 +22,9 @@ export default function DashboardNotFound() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button render={<Link href={DASHBOARD_PATH} />}>Back to Today</Button>
+        <Button render={<Link href={DASHBOARD_PATH} />} nativeButton={false}>
+          Back to Today
+        </Button>
       </EmptyContent>
     </Empty>
   )

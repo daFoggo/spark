@@ -31,6 +31,11 @@ export type NavLink = {
   permission: Permission
   /** Short mono text on the right, e.g. "due". Set at render time, not in the config. */
   badge?: string
+  /**
+   * Per-link prefetching (`<Link prefetch>`) for pages that read `searchParams`: URL data is not in
+   * the shared App Shell, so without it their data waits for the click. Costs one server call per link.
+   */
+  prefetch?: true
 }
 /** A collapsible group inside a section; the tree stays at most two levels deep. */
 export type NavGroup = { title: string; items: NavLink[] }
@@ -54,6 +59,7 @@ export const DASHBOARD_NAV: NavSection[] = [
         href: DASHBOARD_PATH,
         icon: "today",
         permission: "dashboard:view",
+        prefetch: true,
       },
       {
         title: "Goals",
@@ -72,6 +78,7 @@ export const DASHBOARD_NAV: NavSection[] = [
         href: TASKS_PATH,
         icon: "tasks",
         permission: "dashboard:view",
+        prefetch: true,
       },
       {
         title: "Weekly review",

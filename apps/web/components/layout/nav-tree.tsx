@@ -65,6 +65,7 @@ function TreeLink({ link }: { link: NavLink }) {
         render={
           <Link
             href={link.href}
+            prefetch={link.prefetch}
             aria-current={current ? "page" : undefined}
             data-current={current || undefined}
             // The mobile sidebar is a Sheet: close it once the user picks a page.
