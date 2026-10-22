@@ -10,9 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Build-time placeholders: the auth config is validated when routes are collected.
-      AUTH_PROVIDER: backend
-      API_BASE_URL: http://localhost:8000
-      SESSION_SECRET: ci-only-placeholder-secret-0123456789abcdef
+      AUTH_PROVIDER: better-auth
+      API_BASE_URL: http://localhost:8000/v1
+      BETTER_AUTH_SECRET: ci-only-placeholder-secret-0123456789abcdef
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5433/spark
     steps:
       - uses: actions/checkout@v4
         with:
