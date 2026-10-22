@@ -76,16 +76,23 @@ Outcome (plan `docs/superpowers/plans/2026-10-23-audit-fixes.md`, tasks 1-7, all
 
 Parked, not fixed:
 
-- The parity case "signing out ends the session" fails with the Next dev overlay. It failed before these tasks and is
-  still uninvestigated.
+- The parity case "signing out ends the session" fails under `next dev`. Cause (diagnosed from the Next source, not
+  reproduced with a browser): `next dev` runs `assessUpgrade` (`next/dist/server/lib/router-server.js` ~180,
+  `lib/upgrade/nudge.js`) and flags Next 16.4.0 as having a known security vulnerability. The devtools then show an issue
+  pill at bottom-left (the default `devIndicators` position) that covers the account button in the sidebar, so
+  Playwright's click is intercepted by `<nextjs-portal>`. Not a code regression. Options: upgrade Next to the patched
+  version (needs the user's go-ahead, separate commit), move `devIndicators` to bottom-right, or run e2e on `next start`.
 - `next dev` prints a Next 16.4.0 notice to run `next upgrade --agent=security`; not acted on.
 - Not touched on purpose (judged low value): robots, sitemap and an expired-session page; the dither-meter style;
   `activities/actions.ts`.
 
-## 5. Commits on `main` (all pushed)
+## 5. Commits on `main`
 
-`b847dad` refactor (Supabase + packages), `2d2fe58` docs, `cb487a4` Members removal, `53890fe` hnd1, `f18bbf2` smoke test,
-`8291728` db:clean-test-users, `54d2dfe` Vercel skills. The audit fixes were not committed when this was written.
+Pushed earlier: `b847dad` refactor (Supabase + packages), `2d2fe58` docs, `cb487a4` Members removal, `53890fe` hnd1,
+`f18bbf2` smoke test, `8291728` db:clean-test-users, `54d2dfe` Vercel skills.
+
+Audit fixes, pushed together with the commit `chore: finish audit follow-ups` that records them: `8a91a18`, `b980ee2`,
+`c3c5147`, `6edb1d0`, `f208829`, `fc0492b`, `75811ae`, `75b4154`, `d609364`, `b2e2527`.
 
 ## 6. Known gaps
 

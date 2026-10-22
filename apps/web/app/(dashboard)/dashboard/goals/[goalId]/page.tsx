@@ -61,11 +61,14 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
   if (!GoalIdSchema.safeParse(goalId).success) notFound()
   const goalPromise = getGoal(goalId)
   const habitsPromise = getHabits()
+  // May reject before they are awaited; marked handled, still awaited below.
+  goalPromise.catch(() => {})
+  habitsPromise.catch(() => {})
   const { timezone, weekStart } = await getCalendar()
   const today = await getToday(timezone)
 
-  // Started with the goal read, not after it. A missing goal is checked first: the database also
-  // refuses its activity, and that error must not replace the 404 (the catch only marks `reads` as handled).
+  // Started with the goal read, not after it. A missing goal is checked first: a failed read of the
+  // rest must not replace the 404 (the catch only marks `reads` as handled).
   const from = addDays(today, -26 * 7)
   const reads = Promise.all([
     getGoalActivity(goalId, from),

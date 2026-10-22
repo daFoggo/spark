@@ -16,6 +16,8 @@ When the two disagree, this file wins.
    breakpoints come from Tailwind's default scale. No arbitrary values (`mt-[54px]`, `text-[13px]`, `grid-cols-[auto_1fr]`).
    If no step fits, use the nearest one. **One exception: the logo.** Its frame-by-frame keyframes live as
    `--animate-spark-*` tokens in `globals.css` and are used only by `AppLogo` (see [Logo](#logo)).
+   **Second exception: `app/global-error.tsx`.** It uses inline system-color styles (`Canvas`, `CanvasText`) because
+   `global-error` replaces the root layout, so global CSS and the theme tokens are not loaded there.
 2. **Smallest text is `text-xs`.** Weights are `font-normal` and `font-medium` only.
 3. **Components keep their own sizes.** Pick a `size` / `variant` prop (`<Button size="sm">`). Never override height,
    padding or font size through `className`. Layout classes such as `w-full` or `mt-*` are fine. If no size fits, add a

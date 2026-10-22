@@ -51,7 +51,8 @@ export function parseAuthConfig(env: AuthEnv): AuthConfig {
     BETTER_AUTH_URL: env.BETTER_AUTH_URL,
     BETTER_AUTH_SECRET:
       env.BETTER_AUTH_SECRET || (building ? BUILD_SECRET : undefined),
-    DATABASE_URL: env.DATABASE_URL || (building ? BUILD_DATABASE_URL : undefined),
+    DATABASE_URL:
+      env.DATABASE_URL || (building ? BUILD_DATABASE_URL : undefined),
     GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
     NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL,

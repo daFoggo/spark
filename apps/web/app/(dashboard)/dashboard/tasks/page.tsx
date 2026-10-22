@@ -49,6 +49,8 @@ async function TaskList({
 }) {
   await requirePermission("dashboard:view")
   const goalsPromise = getGoals()
+  // May reject before Promise.all attaches; marked handled, still awaited below.
+  goalsPromise.catch(() => {})
   const tab = asTab((await searchParams).tab)
   const { timezone } = await getCalendar()
   const today = await getToday(timezone)

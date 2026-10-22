@@ -110,9 +110,7 @@ export function GoalStatusActions({
           <AlertDialogFooter>
             <AlertDialogCancel>Keep it</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() =>
-                change("archived", () => router.push(GOALS_PATH))
-              }
+              onClick={() => change("archived", () => router.push(GOALS_PATH))}
             >
               Archive
             </AlertDialogAction>

@@ -234,10 +234,10 @@ import { Button } from '@workspace/ui/components/button'
 
 export default function CasesError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string }
-  reset: () => void
+  retry: () => void
 }) {
   return (
     <div className="p-6 text-center space-y-4">
@@ -269,7 +269,7 @@ export default function GlobalError({
     <html>
       <body>
         <h2>Application Error</h2>
-        <button onClick={() => reset()}>Restart</button>
+        <button onClick={() => retry()}>Restart</button>
       </body>
     </html>
   )

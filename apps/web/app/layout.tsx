@@ -11,7 +11,8 @@ export const metadata: Metadata = {
     default: "spark",
     template: "%s | spark",
   },
-  description: "Spark turns goals into daily habits, tasks and check-ins, with a cat that grows as you follow through.",
+  description:
+    "Spark turns goals into daily habits, tasks and check-ins, with a cat that grows as you follow through.",
 }
 
 // `subsets` only picks which files are preloaded; every subset keeps its @font-face, so Vietnamese

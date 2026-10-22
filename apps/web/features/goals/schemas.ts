@@ -70,6 +70,10 @@ export const CheckpointTitleSchema = z
   .min(1, "Write the checkpoint first")
   .max(120, "Keep it under 120 characters")
 
-export const CheckpointPositionSchema = z.number().int().nonnegative().max(2_147_483_647)
+export const CheckpointPositionSchema = z
+  .number()
+  .int()
+  .nonnegative()
+  .max(2_147_483_647)
 
 export const CheckpointMoveSchema = z.literal(-1).or(z.literal(1))

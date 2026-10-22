@@ -14,7 +14,10 @@ describe("parseAuthConfig", () => {
 
   it("throws for better-auth without a database url outside the production build", () => {
     expect(() =>
-      parseAuthConfig({ AUTH_PROVIDER: "better-auth", BETTER_AUTH_SECRET: SECRET })
+      parseAuthConfig({
+        AUTH_PROVIDER: "better-auth",
+        BETTER_AUTH_SECRET: SECRET,
+      })
     ).toThrow()
   })
 

@@ -90,6 +90,8 @@ function GoalGroup({
 async function GoalLists() {
   await requirePermission("dashboard:view")
   const goalsPromise = getGoals()
+  // May reject before Promise.all attaches; marked handled, still awaited below.
+  goalsPromise.catch(() => {})
   const { timezone } = await getCalendar()
   const today = await getToday(timezone)
   const [goals, activities] = await Promise.all([

@@ -9,9 +9,12 @@ describe("CheckpointPositionSchema", () => {
     expect(CheckpointPositionSchema.safeParse(2_147_483_647).success).toBe(true)
   })
 
-  it.each([-1, 1.5, Number.NaN, Infinity, 2 ** 31, "2", null])("rejects %s", (value) => {
-    expect(CheckpointPositionSchema.safeParse(value).success).toBe(false)
-  })
+  it.each([-1, 1.5, Number.NaN, Infinity, 2 ** 31, "2", null])(
+    "rejects %s",
+    (value) => {
+      expect(CheckpointPositionSchema.safeParse(value).success).toBe(false)
+    }
+  )
 })
 
 describe("CheckpointMoveSchema", () => {

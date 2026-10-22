@@ -27,6 +27,9 @@ async function Review() {
   await requirePermission("dashboard:view")
   const habitsPromise = getHabits()
   const goalsPromise = getGoals()
+  // May reject before Promise.all attaches; marked handled, still awaited below.
+  habitsPromise.catch(() => {})
+  goalsPromise.catch(() => {})
   const calendar = await getCalendar()
   const today = await getToday(calendar.timezone)
   const weekStart = startOfWeek(today, calendar.weekStart)
