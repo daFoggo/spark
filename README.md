@@ -8,6 +8,8 @@ Next.js 16 + Turborepo + pnpm monorepo base with shadcn/ui.
 apps/
   web/                    Next.js app (runnable)
 packages/
+  auth/                   @workspace/auth - auth adapters (Supabase default, Better Auth foundation)
+  db/                     @workspace/db - Supabase client, errors, types; migrations, pgTAP tests, seed
   ui/                     @workspace/ui — shared shadcn/ui components, styles
   eslint-config/          @workspace/eslint-config
   typescript-config/      @workspace/typescript-config
@@ -24,6 +26,7 @@ pnpm dev                          # all apps
 pnpm turbo run dev --filter=web   # one app
 pnpm build
 pnpm check                        # lint + typecheck
+pnpm --filter @workspace/db db:push   # apply migrations (also db:types, db:test)
 ```
 
 ## Adding shadcn components

@@ -28,13 +28,12 @@ The docs in `docs/` are the single source of truth for `apps/web`. Open the matc
 | Data fetching, caching, mutations, Server Actions | `docs/data-fetching.md` |
 | Routes, layouts, parallel and intercepting routes | `docs/routing-and-layouts.md` |
 | Client-only shared state (Zustand) | `docs/client-state.md` |
-| Auth, sessions, DAL (`AUTH_PROVIDER=better-auth\|supabase`; env template `apps/web/.env.example`) | `docs/authentication.md` |
-| Stacks: Better Auth + FastAPI (Spark today) or Supabase (foundation kept; Spark's version in `91c11f0`), starting a project on Supabase, provider seams, per-provider rules, latency | `docs/providers.md` |
+| Auth, sessions, DAL (`AUTH_PROVIDER=supabase\|better-auth`, adapters in `packages/auth`; env template `apps/web/.env.example`) | `docs/authentication.md` |
+| Supabase (default) vs the Better Auth foundation, `packages/auth` / `packages/db`, schema workflow, provider seams, latency | `docs/providers.md` |
 | Performance, code splitting, lazy loading, Core Web Vitals | `docs/performance-optimization.md` |
 | Redis cache, large uploads, SSE, telemetry, instant-navigation tests | `docs/advanced-patterns.md` |
 | UI: theme tokens, typography, spacing, responsive, shadcn component sizes, motion | `docs/design-system.md` |
 | Goals, habits, activities, tasks, reviews, pet: rules, schema, flows, delivery checklist | `docs/goals-habits/spec.md`, `docs/goals-habits/roadmap.md` |
-| Migration to Better Auth + FastAPI + PostgreSQL + Docker (plan, playbook, per-module checklists) | `docs/migration/README.md` |
 
 For a fast decision (which pattern applies) use the skill `.agents/skills/next-mono-base/SKILL.md`; it links back to the docs above.
 For any className, layout or theme work use `.agents/skills/spark-design-system/SKILL.md` (no arbitrary Tailwind values; component sizes via props).

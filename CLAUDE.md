@@ -8,7 +8,7 @@ Adapted from the four principles in [andrej-karpathy-skills](https://github.com/
 ## 1. Think before coding
 - State assumptions. If a request has several readings, surface them instead of silently picking one.
 - If a simpler approach exists, say so. If something is unclear, stop and ask.
-- Unknown backend/auth contract? Read the OpenAPI (`/openapi.json`) or the docs first; do not guess endpoints.
+- Unknown schema/auth contract? Read `packages/db/supabase/migrations`, the generated types (`@workspace/db/types`) or the docs first; do not guess tables or columns.
 - Next.js in this repo is not the version you remember: read `node_modules/next/dist/docs/` before writing Next code (see AGENTS.md).
 
 ## 2. Simplicity first

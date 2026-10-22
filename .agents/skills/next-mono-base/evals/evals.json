@@ -54,7 +54,7 @@
     {
       "id": 5,
       "name": "cache-token-key-review",
-      "prompt": "Review this code a teammate wrote for the profile card: `async function getProfile(token: string) { \"use cache\"; return apiFetch(\"me\", { token }) }` and they also call `cacheTag(token)` inside it. What's wrong and how should it look?",
+      "prompt": "Review this code a teammate wrote for the profile card: `async function getProfile(token: string) { \"use cache\"; return fetchMe(token) }` and they also call `cacheTag(token)` inside it. What's wrong and how should it look?",
       "expectations": [
         "The answer flags that cache keys and cacheTag values are stored in plain text, so passing the access token as an argument or tag leaks it",
         "The answer flags the missing cacheLife call",
@@ -82,7 +82,7 @@
       "expectations": [
         "The answer rejects the useEffect + fetch workaround and does not add TanStack Query or SWR",
         "The data is read on the server in the page or a Server Component (app/ composes) using queries.ts and handed to the component as props, or as an un-awaited promise read with use()",
-        "The answer explains that components/ and feature components must not import server.ts, queries.ts, lib/dal or lib/http, and why (server secrets and client bundles)",
+        "The answer explains that components/ and feature components must not import server.ts, queries.ts, lib/dal or lib/data, and why (server secrets and client bundles)",
         "The answer keeps queries.ts/server.ts server-side and mentions Suspense for the streamed part"
       ]
     },

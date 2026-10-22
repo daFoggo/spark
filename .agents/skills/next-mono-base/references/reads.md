@@ -20,7 +20,8 @@ Use when implementing data fetching for a page, layout, or passing server data i
 // features/<domain>/server.ts
 import "server-only"
 export async function fetchItems(token: string) {
-  return ItemsSchema.parse(await apiFetch("items", { token }))
+  const db = createDataClient(token)
+  return ItemsSchema.parse(unwrap(await db.from("items").select("*")))
 }
 
 // app/(dashboard)/<domain>/page.tsx

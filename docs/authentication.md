@@ -5,58 +5,60 @@ Applies to Next.js 16.4 with Cache Components enabled.
 
 ## 1. Overview
 
-One provider per deployment, chosen by `AUTH_PROVIDER`; it also picks the data path (the whole "stack", see
-[providers.md](providers.md) for switching and the seams):
+One provider per deployment, chosen by `AUTH_PROVIDER` (default `supabase`). The adapters live in `packages/auth`
+(`@workspace/auth`) and are bound to Spark by `apps/web/config/auth.ts` and `apps/web/lib/auth.ts`
+(see [providers.md](providers.md) for the seams):
 
 | Provider | Description | Session lives in |
 |---|---|---|
-| `better-auth` | Self-hosted auth backed by PostgreSQL `auth` schema; issues EdDSA JWTs via JWKS for FastAPI | Secure httpOnly session cookies handled by Better Auth |
-| `supabase` | Supabase Auth via `@supabase/ssr`; ES256 JWT checked locally with `getClaims()`; data through PostgREST + RLS | `sb-<ref>-auth-token` cookies, refreshed only in `proxy.ts` |
+| `supabase` (default) | Supabase Auth via `@supabase/ssr`; ES256 JWT checked locally with `getClaims()`; data through PostgREST + RLS | Cookies named from `AUTH_OPTIONS.cookieName` (`spark-auth`), refreshed only in `proxy.ts` |
+| `better-auth` | Identity foundation only: Better Auth backed by a PostgreSQL `auth` schema, EdDSA JWTs via JWKS. No data path behind it since FastAPI was dropped | Secure httpOnly session cookie handled by Better Auth |
 
 Both implement `AuthProvider` and expose `Session { userId, accessToken, role, name, email, calendar? }`, so the DAL,
-Server Actions and data clients interact through a standard, decoupled contract. Spark runs on `better-auth`; the
-Supabase provider is kept as a ready foundation ([providers.md](providers.md) §1).
+Server Actions and data clients interact through a standard, decoupled contract.
 
 Principles:
 
-1. **No network call to learn who the user is on each request**: sessions are validated locally via the session cookie and verified via cached JWKS on the FastAPI backend.
+1. **No network call to learn who the user is on each request**: sessions are validated locally (`getClaims()` verifies
+   the JWT against cached JWKS; Better Auth decrypts its cookie).
 2. **Tokens are refreshed transparently in `proxy.ts`**: Server Components cannot write cookies; proxy manages session extension.
 3. **Authorize next to the data** (DAL, Server Actions), not in layouts; `proxy.ts` performs optimistic redirects.
 4. **Server Actions are public endpoints**: each authenticates and validates its own input.
 5. **Per-user data uses `"use cache: private"`**; secrets never become cache keys or tags. The DAL's `getSession()` is
-   private too, so all queries in one request share a single session read and token mint (not one per cache scope).
+   private too, so all queries in one request share a single session read (not one per cache scope).
 
 ## 2. Architecture
 
 ```
-Browser ─cookie─▶ proxy.ts ─▶ updateSession (Better Auth): decrypt/refresh, set cookies, isAuthenticated
-                     ▼
-   Server Component / Action / Route Handler ─▶ lib/dal.ts (getSession · verifySession · verifySessionFresh)
-                     ▼
-        getAuthProvider() ─▶ lib/auth/{better-auth,supabase}/server.ts
-                     ▼
-         apiFetch ─Bearer JWT─▶ FastAPI Backend (/v1/*)
-                                  ▼
-                              JWKS (EdDSA) verification at backend
+Browser -cookie-> proxy.ts -> @workspace/auth/proxy updateSession (refresh, set cookies, isAuthenticated)
+                     v
+   Server Component / Action / Route Handler -> lib/dal.ts (getSession, verifySession, verifySessionFresh)
+                     v
+        lib/auth.ts getAuthProvider() -> @workspace/auth/server (supabase | better-auth)
+                     v
+        features/<x>/server.ts -> lib/data.ts createDataClient(accessToken) -> PostgREST as the user (RLS)
 ```
 
-Paths relative to `apps/web/`:
-- `proxy.ts`: updates session cookies via Better Auth handler.
-- `lib/auth/better-auth/auth.ts`: Better Auth instance with Postgres pool (`search_path=auth`), JWT plugin with EdDSA JWKS, `nextCookies()`.
-- `lib/auth/better-auth/server.ts`: `betterAuthProvider` implementing `AuthProvider`.
-- `lib/auth/supabase/{server,proxy,client}.ts`: `supabaseProvider`; `getClaims()` verifies identity, `getUser()` backs
-  `verifySessionFresh`, `getSession()` only forwards the already verified token. `app/auth/callback/route.ts` finishes OAuth.
-  When a Custom Access Token Hook adds `timezone`, `week_start`, `adopted_on` claims they become `Session.calendar`
-  ([providers.md](providers.md) §5); `refreshSession()` reissues the token after settings change (`refreshSessionClaims()`
-  in the DAL).
-- `lib/supabase/data.ts`: `createDataClient(accessToken)` for feature data on the Supabase stack (RLS applies).
-- `lib/auth/better-auth/proxy.ts`: cookie refresh during routing.
-- `app/api/auth/[...all]/route.ts`: Better Auth API route handler.
-- `lib/http.ts`: `apiFetch` sending Bearer JWT to FastAPI backend (`API_BASE_URL`).
+Paths relative to `apps/web/` unless prefixed by `packages/`:
+- `config/auth.ts`: `AUTH_OPTIONS` (cookie name `spark-auth`, so Spark never collides with another app on the host).
+- `lib/auth.ts`: binds `@workspace/auth/server` to `AUTH_OPTIONS`; re-exports the session types.
+- `proxy.ts`: calls `@workspace/auth/proxy` to refresh the session cookies; keeps the `/` redirect.
+- `lib/dal.ts`: `getSession`, `verifySession`, `verifySessionFresh`, `refreshSessionClaims`.
+- `lib/data.ts`: `createDataClient(accessToken)` wrapping `@workspace/db/server`; a `401` on a request that carried a
+  token calls `endRejectedSession` (renders redirect to `/auth/expired`, actions sign out).
+- `app/api/auth/[...all]/route.ts`: Better Auth handler (`@workspace/auth/better-auth-handler`); 404 on the Supabase provider.
+- `app/auth/callback/route.ts`: finishes OAuth (`exchangeCodeForSession`) on Supabase.
+- `packages/auth/src/supabase/{server,proxy}.ts`: `supabaseProvider`; `getClaims()` verifies identity, `getUser()` backs
+  `verifySessionFresh`, `getSession()` only forwards the already verified token.
+- `packages/auth/src/better-auth/*`: Better Auth instance with Postgres pool (`search_path=auth`), JWT plugin, `nextCookies()`.
+- `packages/auth/src/{config,permissions,types}.ts`: validated env, roles (`member`, `admin`) and `requirePermission`, the `AuthProvider` contract.
 
-## 3. JWT & JWKS Verification in FastAPI
+When a Custom Access Token Hook adds `timezone`, `week_start`, `adopted_on` claims they become `Session.calendar`
+([providers.md](providers.md) §5); `refreshSession()` reissues the token after settings change (`refreshSessionClaims()`
+in the DAL).
 
-FastAPI (`spark-backend`) verifies JWTs using PyJWKClient / PyJWT:
-1. `GET /api/auth/jwks` serves the public Ed25519 keys published by Better Auth.
-2. FastAPI caches keys and validates `sub`, `aud` (`API_AUDIENCE`), `iss` (`BETTER_AUTH_URL`), and `exp`.
-3. Injected `CurrentUser(id, email, role)` dependency is available across all protected endpoints.
+## 3. Roles and the database
+
+`role` comes from verified claims only (`app_metadata.role`, never `user_metadata`). RLS policies in
+`packages/db/supabase/migrations` own the data rules; the app-side `requirePermission()` is a second check, not a
+replacement. Better Auth's JWT is not accepted by PostgREST, which is why that provider has no data path.

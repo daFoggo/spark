@@ -40,11 +40,10 @@ next-mono-base/
 │       │   ├── layout/                     # App sidebar, header, global nav
 │       │   └── providers/                  # ThemeProvider, Toaster, etc.
 │       ├── lib/                            # Application-level infrastructure (Server-only / DAL)
-│       │   ├── auth/                       # Provider implementations (Better Auth, Supabase)
+│       │   ├── auth.ts                     # Binds @workspace/auth to config/auth.ts (AUTH_OPTIONS)
 │       │   ├── dal.ts                      # Data Access Layer (verifySession, getSession)
-│       │   ├── env.ts                      # Validated environment variables (Zod)
-│       │   ├── http.ts                     # Backend HTTP client (apiFetch)
-│       │   ├── errors.ts                   # Domain & API error classes
+│       │   ├── data.ts                     # createDataClient over @workspace/db/server (+ 401 hook)
+│       │   ├── errors.ts                   # DataError helpers
 │       │   └── utils.ts                    # General helpers
 │       ├── config/                         # Static site metadata, navigation items, constants
 │       ├── hooks/                          # App-wide reusable React hooks (client-only)
@@ -53,6 +52,8 @@ next-mono-base/
 │       └── eslint.config.js                # Boundary enforcement rules
 ├── packages/
 │   ├── ui/                                 # Primitive shadcn/ui components (@workspace/ui)
+│   ├── auth/                               # Auth adapters: Supabase, Better Auth (@workspace/auth)
+│   ├── db/                                 # Supabase client, errors, types, migrations/tests/seed (@workspace/db)
 │   ├── eslint-config/                      # Shared ESLint flat configurations
 │   └── typescript-config/                  # Shared tsconfig base files
 ├── docs/                                   # Single Source of Truth architecture documentation
@@ -76,7 +77,7 @@ features/<name>/
 ├── components/         # UI components (Client or Server) specific to this domain
 │   ├── <name>-table.tsx
 │   └── <name>-filters.tsx
-├── server.ts           # [server-only] The only backend I/O; DTOs via Zod. Two stacks: picks server.api.ts / server.supabase.ts (docs/providers.md)
+├── server.ts           # [server-only] The only data I/O (Supabase via lib/data); DTOs via Zod
 ├── queries.ts          # Reads for Server Components; verifies session via DAL; "use cache"
 ├── actions.ts          # [use server] Mutations; validates input; checks auth; calls updateTag()
 ├── schemas.ts          # Zod schemas & TypeScript types; safe for both client and server
@@ -91,11 +92,11 @@ features/<name>/
 
 | File | Directive | Allowed Imports | Forbidden Imports | Primary Responsibility |
 | :--- | :--- | :--- | :--- | :--- |
-| `server.ts` | `import "server-only"` | `lib/http`, `lib/env`, DB clients, Zod | `lib/dal`, `next/headers`, `cookies()`, `app/` | Pure I/O. Does not know about user sessions or request caches. Returns typed DTOs. |
+| `server.ts` | `import "server-only"` | `lib/data`, `@workspace/db/*`, Zod | `lib/dal`, `next/headers`, `cookies()`, `app/` | Pure I/O. Does not know about user sessions or request caches. Returns typed DTOs. |
 | `queries.ts` | None / `"use cache"` | `lib/dal`, `./server`, `./schemas` | `app/`, other features | Data reader for Server Components. Calls `verifySession()`, invokes `server.ts`, manages cache lifetimes. |
 | `actions.ts` | `"use server"` | `lib/dal`, `./server`, `./schemas`, `next/cache` | `app/`, other features | Form/action mutations. Calls `verifySession()`, validates with Zod, writes via `server.ts`, calls `updateTag()`. |
 | `schemas.ts` | None | `zod` | Any server-only module | Single Source of Truth for domain models, form input schemas, and inferred TypeScript types. |
-| `components/` | None or `"use client"`| `@workspace/ui`, `./schemas`, `actions.ts` | `server.ts`, `queries.ts`, `lib/dal`, `lib/http` | Presentational and interactive UI. Receives query data via props or un-awaited promises. |
+| `components/` | None or `"use client"`| `@workspace/ui`, `./schemas`, `actions.ts` | `server.ts`, `queries.ts`, `lib/dal`, `lib/data` | Presentational and interactive UI. Receives query data via props or un-awaited promises. |
 
 ---
 
@@ -134,7 +135,7 @@ When Feature A needs to render a component owned by Feature B (for example, a `D
    ```
 2. **Promote to `apps/web/components/shared/` (If Ubiquitous)**:
    If a component is a pure presentational UI element used everywhere (e.g. `UserAvatar` or `StatusBadge`), place it in `apps/web/components/shared/`.
-   *Requirement*: It must only accept pure props and must **never** import `server.ts`, `queries.ts`, `@/lib/dal`, or `@/lib/http`.
+   *Requirement*: It must only accept pure props and must **never** import `server.ts`, `queries.ts`, `@/lib/dal`, or `@/lib/data`.
 
 ---
 
@@ -177,7 +178,7 @@ flowchart TD
     App["app/ (Routing & Composition)"]
     Features["features/* (Domain Slices)"]
     Components["components/ (App Shell & Layout)"]
-    Lib["lib/ (DAL, HTTP, Env)"]
+    Lib["lib/ (DAL, data client, auth binding)"]
     UI["@workspace/ui (Primitive UI)"]
 
     App --> Features
@@ -201,10 +202,10 @@ flowchart TD
    - `features/A` must never import from `features/B` or `@/features/**`.
    - *Reason*: Prevents circular dependencies and spaghetti coupling between domains. If two features need to interact on screen, compose them together in `app/**/page.tsx`.
 3. **Feature Components Never Import Server-Only Modules**:
-   - `features/*/components/**` cannot import `server.ts`, `queries.ts`, `@/lib/dal`, `@/lib/http`, or `@/lib/auth`.
+   - `features/*/components/**` cannot import `server.ts`, `queries.ts`, `@/lib/dal`, `@/lib/data`, or `@/lib/auth`.
    - *Reason*: Protects client component bundles from leaking server secrets or failing compilation.
 4. **Shared Components Never Import Server-Only Modules**:
-   - `components/**` cannot import `@/lib/dal`, `@/lib/http`, or `@/lib/auth`.
+   - `components/**` cannot import `@/lib/dal`, `@/lib/data`, `@/lib/auth`, or `@workspace/db/server` / `@workspace/auth/{server,config,better-auth-handler}`.
    - *Reason*: Shell components (`layout/`, `providers/`) are frequently Client Components or render across auth boundaries.
 5. **No Barrel Files (`index.ts`)**:
    - Always deep-import the exact file needed:
@@ -285,6 +286,14 @@ Extract code into `packages/<name>` **ONLY** when at least one of these 4 condit
    - Example: A public SDK or npm package shipped to third parties.
 4. **Zero-Business-Logic Infrastructure**:
    - Example: Design system components (`packages/ui`), ESLint configs (`packages/eslint-config`), TypeScript configs (`packages/typescript-config`).
+   - In this repo: `packages/auth` and `packages/db`. Honest justification: they are **infrastructure without business
+     logic** (auth adapters, the Supabase client, `unwrap`/`DataError`, migrations, generated types; Spark's rules stay in
+     `features/` and in the SQL of the migrations) and they are **ready for a second app** (the same shape as the reference
+     repo `noi-that-khanh-linh`, where `apps/web` and `apps/admin` both consume them). Today `apps/web` is the only
+     consumer, so condition 1 is not met yet; the split is a deliberate bet on that second app, not a rule that other
+     code may follow. Business code (`features/`) is never extracted on this basis. They are Just-in-Time packages:
+     TypeScript source behind `exports`, compiled by each app's Turbopack, relative imports inside the package (no
+     `@/`), no tsconfig `paths`.
 
 ### Anti-Patterns: When NOT to Extract a Package
 
@@ -305,6 +314,8 @@ Extract code into `packages/<name>` **ONLY** when at least one of these 4 condit
 | Where do I put domain-specific UI, queries, or actions? | `apps/web/features/<name>/` |
 | Where do I put the App Header, Sidebar, or Global Nav? | `apps/web/components/layout/` |
 | Where do I put app-wide providers (Theme, Toaster)? | `apps/web/components/providers/` |
-| Where do I put backend HTTP clients, auth providers, or DAL? | `apps/web/lib/` |
+| Where do I put the data client wrapper, auth binding, or DAL? | `apps/web/lib/` |
+| Where do I put migrations, RLS tests, seed, generated DB types? | `packages/db/supabase`, `packages/db/src` |
+| Where do I put auth provider adapters? | `packages/auth/src` (bound per app in `config/auth.ts` + `lib/auth.ts`) |
 | Where do I put primitive UI components (Button, Dialog, Input)? | `packages/ui/src/components/` |
 | Where do I put shared Zod schemas if needed by 2+ apps? | `packages/<name>/src/schemas.ts` (Only when 2nd app exists) |

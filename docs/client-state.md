@@ -47,7 +47,7 @@ app/**/page.tsx | layout.tsx                     composes: mounts the provider, 
 | Concern | Location | Why |
 |---|---|---|
 | Store factory, state and action types | `features/<x>/store.ts` | Pure TypeScript; safe on the client |
-| Provider and context hook | `features/<x>/components/` | Client Component; ESLint already keeps `components/` away from `server.ts`, `queries.ts`, `lib/dal`, `lib/http` |
+| Provider and context hook | `features/<x>/components/` | Client Component; ESLint already keeps `components/` away from `server.ts`, `queries.ts`, `lib/dal`, `lib/data` |
 | Where the provider is mounted | `app/` page or route layout | `app/` composes; features stay route-agnostic. Render providers as deep as possible (`DOCS/01-getting-started/05-server-and-client-components.md`, "Context providers") |
 | Server or request values for the store | Fetched in `queries.ts`, passed as `initState` props | The store never fetches |
 | Actions that write to the backend | `actions.ts` (Server Actions), not store actions | Store actions only change client state |

@@ -36,18 +36,17 @@ per-user reads goes in `"use cache: private"` instead (`lib/clock.ts` `getToday`
 ```
 app/**/page.tsx, layout.tsx      compose only; await nothing at the top level
   └─ features/<x>/queries.ts     reads for Server Components: auth via lib/dal, cache directives here
-       └─ features/<x>/server.ts "server-only" I/O, parses responses with Zod; picks server.api.ts or
-            │                    server.supabase.ts by AUTH_PROVIDER (docs/providers.md)
-            └─ lib/http.ts       apiFetch: JSON or throws ApiError, never returns fallback data
-               lib/supabase/data createDataClient: PostgREST as the user (RLS), throws DataError
+       └─ features/<x>/server.ts "server-only" I/O, parses responses with Zod
+            └─ lib/data.ts       createDataClient(accessToken) over @workspace/db/server: PostgREST as the user (RLS),
+                                 unwrap throws DataError, never returns fallback data
 features/<x>/actions.ts          "use server" mutations: verifySession, Zod, write, invalidate
 features/<x>/schemas.ts          Zod schemas + types, safe on client and server
 lib/dal.ts                       getSession / verifySession / verifySessionFresh
 ```
 
 This is the **Data Access Layer** approach Next recommends for new projects: server-only, authorizes, returns minimal
-DTOs; only the DAL and `lib/env.ts` read secrets (`DOCS/02-guides/data-security.md`). ESLint enforces the boundaries
-(`features/` never import `app/` or each other; `components/` never import `server.ts`, `queries.ts`, `lib/dal`, `lib/http`).
+DTOs; only the DAL and `@workspace/db/env` / `@workspace/auth/config` read secrets (`DOCS/02-guides/data-security.md`). ESLint enforces the boundaries
+(`features/` never import `app/` or each other; `components/` never import `server.ts`, `queries.ts`, `lib/dal`, `lib/data`).
 For complete project structure conventions, feature anatomy, and package extraction rules, see [project-structure.md](project-structure.md).
 
 ## 3. Choosing how to read data
@@ -75,18 +74,19 @@ data; do not render the same data from a Server Component and a client fetch.
 
 ### 4.1 Basics
 
-Server Components can `await` any I/O. Here every backend call goes through a feature `server.ts` → `apiFetch` (the
-Supabase stack's `server.supabase.ts` returns the same DTOs through `createDataClient`):
+Server Components can `await` any I/O. Here every database call goes through a feature `server.ts` → `createDataClient`
+(PostgREST as the user, RLS applies; migrations in `packages/db/supabase`):
 
 ```ts
 // features/<x>/server.ts
 import "server-only"
 export async function fetchThing(token: string, id: string) {
-  return ThingSchema.parse(await apiFetch<unknown>(`things/${id}`, { token }))
+  const db = createDataClient(token)
+  return ThingSchema.parse(unwrap(await db.from("things").select("*").eq("id", id).single()))
 }
 ```
 
-- `apiFetch` throws `ApiError` on any non-2xx. A `401` on a request that carried a token ends the session: renders redirect
+- `unwrap` throws `DataError` on any PostgREST error. A `401` on a request that carried a token ends the session (`endRejectedSession` in `lib/data.ts`): renders redirect
   to `/auth/expired` (a route, because renders cannot delete cookies); Server Actions sign out and redirect to `/sign-in`
   directly, because an action can only soft-navigate to a page. Failed reads throw; they never become `[]` or `null`.
 - Parse responses with Zod in `server.ts` and return only the fields the UI needs (DTO).
@@ -153,7 +153,7 @@ always needs `<Suspense>`; `usePathname()` / `useParams()` need it under dynamic
 | Resource does not exist | `notFound()` (renders `not-found.tsx`) |
 | Unexpected failure (5xx, network, schema mismatch) | Let it throw: the nearest `error.tsx` renders, `retry()` re-fetches |
 | Failure scoped to one component | Wrap it with a `catchError` boundary (`next/error`) |
-| Session gone | `verifySession()` / `apiFetch` redirect to `/auth/expired` |
+| Session gone | `verifySession()` / `lib/data.ts` redirect to `/auth/expired` |
 
 Once streaming has started the status is already `200`: `notFound()` or `redirect()` inside a streamed boundary becomes a
 `noindex` meta tag or a client redirect. Run checks that must set a real status before any `<Suspense>`, or in `proxy.ts`.
@@ -358,7 +358,7 @@ export async function updateThingAction(_prev: State, formData: FormData): Promi
   try {
     await patchThing(session.accessToken, parsed.data)        // 3. write
   } catch (error) {
-    if (isExpectedApiError(error)) return { error: error.message }        // expected → value
+    if (isExpectedDataError(error)) return { error: error.message }        // expected → value
     throw error                                                // unexpected → error.tsx
   }
   updateTag(thingTag(session.userId))                          // 4. invalidate
@@ -427,7 +427,7 @@ Summary only; tuning is a separate task.
 - [ ] Every uncached / runtime read sits inside a `<Suspense>` with a sized fallback.
 - [ ] Every `"use cache"` has `cacheLife`; tagged if a mutation changes it; no tokens or PII in arguments or tags.
 - [ ] Per-user data uses `"use cache: private"` (or an unexported `use cache` keyed by `userId` when no token is needed).
-- [ ] Reads throw on failure; `apiFetch` responses are Zod-parsed into DTOs.
+- [ ] Reads throw on failure; `createDataClient` responses are Zod-parsed into DTOs.
 - [ ] Every action: `verifySession`, Zod, ownership check, minimal return, expected errors as values, others rethrown.
 - [ ] Every write invalidates what it changed (`updateTag` for the user's own change).
 - [ ] Clock and random values are cached (`"use cache: private"` when per request, like `getToday`) or behind `io()`.

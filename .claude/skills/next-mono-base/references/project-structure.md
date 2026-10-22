@@ -17,7 +17,7 @@ Use when creating new files, adding pages/features, structuring components, or d
 | **Cross-Feature UI (Domain)** | `features/<owner>/components/` | Owned by primary feature; compose in `app/` via props/slots (never cross-import). |
 | **App Shell / Layout** | `apps/web/components/layout/` | Global Header, Sidebar, Nav, Shell. |
 | **Global Providers** | `apps/web/components/providers/` | `ThemeProvider`, `Toaster`, client context providers. |
-| **App Infrastructure** | `apps/web/lib/` | `dal.ts`, `env.ts`, `http.ts`, `errors.ts`, `utils.ts`. |
+| **App Infrastructure** | `apps/web/lib/` | `dal.ts`, `auth.ts`, `data.ts`, `errors.ts`, `utils.ts`. |
 
 ---
 
@@ -25,10 +25,9 @@ Use when creating new files, adding pages/features, structuring components, or d
 
 Only create files that are needed:
 - `components/`: UI components for this domain. Receives data via props.
-- `server.ts`: `import "server-only"`. The only backend calls; parses DTOs with Zod. Spark: FastAPI via `apiFetch`.
-  A Supabase project calls `createDataClient(accessToken)` here. A repo that keeps both stacks makes `server.ts` pick
-  `server.api.ts` or `server.supabase.ts` by `AUTH_PROVIDER`, typed `typeof api` so both keep the same functions.
-  Never call a backend outside these files ([providers.md](../../../../docs/providers.md)).
+- `server.ts`: `import "server-only"`. The only data calls; parses DTOs with Zod. Spark: Supabase (PostgREST + RLS)
+  through `createDataClient(accessToken)` from `@/lib/data` (wraps `@workspace/db/server`). Never call the database
+  outside these files ([providers.md](../../../../docs/providers.md)).
 - `queries.ts`: Reads for Server Components. Calls `verifySession()` from DAL + `server.ts`. Manages `"use cache"`.
 - `actions.ts`: `"use server"`. Validates with Zod, checks auth via DAL, mutates via `server.ts`, calls `updateTag()`.
 - `schemas.ts`: Zod schemas & TypeScript types. Safe for client & server.
@@ -40,7 +39,7 @@ Only create files that are needed:
 
 - ❌ **Features never import `app/`**: Features are route-agnostic.
 - ❌ **No cross-feature imports**: `features/A` never imports `features/B`. Compose them together in `app/`.
-- ❌ **Client components never import server code**: `features/*/components/` and `components/` never import `server.ts`, `queries.ts`, `@/lib/dal`, `@/lib/http`, or `@/lib/auth`.
+- ❌ **Client components never import server code**: `features/*/components/` and `components/` never import `server.ts`, `queries.ts`, `@/lib/dal`, `@/lib/data`, or `@/lib/auth`.
 - ❌ **No barrel files (`index.ts`)**: Always deep-import (e.g. `@/features/auth/components/sign-in-form`).
 
 ---
@@ -58,7 +57,7 @@ Keep features in `apps/web/features/`. Extract to `packages/<name>` **ONLY** if:
 1. There are **2+ real apps** consuming the code (e.g. `web` and `mobile` or `admin`).
 2. Code runs on a **different runtime** (Cloudflare Worker, CLI binary, browser extension).
 3. Code is an **independent publishing unit** (public npm package / SDK).
-4. Code is **zero-business-logic infrastructure** (`@workspace/ui`, config packages).
+4. Code is **zero-business-logic infrastructure** (`@workspace/ui`, config packages). `@workspace/auth` and `@workspace/db` qualify this way: auth adapters, the Supabase client and migrations hold no Spark rules, and they are ready for a second app. They are Just-in-Time packages (TypeScript source behind `exports`, relative imports inside, no tsconfig `paths`).
 
 *Never extract packages for folder aesthetics, speculative future needs (YAGNI), or build speed.*
 

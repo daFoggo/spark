@@ -6,7 +6,8 @@ Use when checking user sessions, protecting endpoints, or making authorized back
 ## 2. Architecture & Call Paths
 - **`proxy.ts`**: Optimistic check & token refresh only. Writes refreshed cookies to request and response.
 - **`lib/dal.ts`**: System-of-record authorization. Exports `getSession()`, `verifySession()`, `verifySessionFresh()`.
-- **`lib/http.ts`**: Injects Bearer token from session; throws `ApiError` on non-2xx. A 401 ends the session.
+- **`lib/data.ts`**: `createDataClient(accessToken)` (wraps `@workspace/db/server`): PostgREST as the user, RLS applies; throws `DataError`. A 401 ends the session (`endRejectedSession`).
+- **`lib/auth.ts`** binds `@workspace/auth/{server,proxy}` to `config/auth.ts` (`AUTH_OPTIONS`). The adapters live in `packages/auth`.
 
 ## 3. Canonical Pattern
 
@@ -34,5 +35,5 @@ export async function getUserItems() {
 
 ## 6. Source of Truth (Deep Dive)
 - Complete provider design (`better-auth` vs `supabase`): [docs/authentication.md §1-2](../../../../docs/authentication.md#1-overview)
-- Stacks, the kept Supabase foundation, starting a project on Supabase, per-provider rules, latency: [docs/providers.md](../../../../docs/providers.md)
+- Providers, `packages/auth` / `packages/db`, per-provider rules, latency: [docs/providers.md](../../../../docs/providers.md)
 - Proxy token refresh flow: [docs/authentication.md §4](../../../../docs/authentication.md#4-provider-backend)

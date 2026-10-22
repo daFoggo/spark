@@ -15,7 +15,8 @@
 - Env files live in each app (`apps/web/.env*`), not the root. Env vars that affect
   builds must be declared in `turbo.json` (`env`/`globalEnv`); `NEXT_PUBLIC_*` is inferred for Next.js.
 - App code is feature-based: see `apps/web/features/README.md`. `app/` only composes features; feature boundaries are enforced by ESLint (warnings fail `pnpm lint` via `--max-warnings 0`).
-- Extract code into `packages/` only when a second consumer exists, it has a different deploy target, or it is published; otherwise keep it in the app.
+- Extract code into `packages/` only when a second consumer exists, it has a different deploy target, it is published, or it is infrastructure without business logic (`@workspace/auth`, `@workspace/db`: ready for a second app); otherwise keep it in the app. See `docs/project-structure.md` §6.
+- Database: migrations, pgTAP tests and seed live in `packages/db/supabase`; use `pnpm --filter @workspace/db db:push|db:types|db:test`.
 - Before pushing: `pnpm check`.
 
 ## Tests, commits, CI

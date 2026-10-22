@@ -40,11 +40,11 @@ done. Tick items in the PR that delivers them and reference rule IDs (`HB-3`) in
 - [x] Answer the open questions (spec §8 decisions log).
 - [x] Install the official skills (`shadcn`, `supabase`, `supabase-postgres-best-practices`) into `.claude/skills` and
       `.agents/skills`; pinned in `skills-lock.json`.
-- [x] Supabase CLI (devDependency of `apps/web`), project in `apps/web/supabase/`, local stack on Docker; local env in
+- [x] Supabase CLI (devDependency of `packages/db`), project in `packages/db/supabase/`, local stack on Docker; local env in
       `.env.development.local` (gitignored).
 - [x] Migration 1: `user_settings` (+ row created on sign-up by a trigger on `auth.users`), shared `updated_at` trigger,
       `private` schema helpers; RLS + pgTAP.
-- [x] `lib/supabase/data.ts` (`createDataClient(accessToken)`), generated `database.types.ts` (spec §6.1).
+- [x] `lib/data.ts` over `@workspace/db/server` (`createDataClient(accessToken)`), generated types in `@workspace/db/types` (spec §6.1).
 - [x] `lib/dates.ts` (+ `lib/clock.ts` for the request-time read): local today (`"use cache: private"` request-time read), week start, ranges (TM-1…TM-4) + unit tests.
 - [x] `lib/cache-tags.ts`: tag helpers (spec §7.3).
 - [x] `features/settings`: read/update settings; `timezone-sync.tsx` (timezone + locale week start, TM-2, TM-4) mounted in
@@ -91,18 +91,11 @@ heatmap update; reload keeps the data.
 
 Done when: every check-in or log raises treats, the pet changes stage/mood correctly, and deleting a log lowers it.
 
-## Phase 2.5: OpenAPI contract
+## Phase 2.5: OpenAPI contract (historical)
 
-Makes a later move to an external backend a change to `server.ts` only. Done after Phase 2 so the contract describes
-what actually runs; every later phase updates it with its own operations.
-
-- [x] `docs/goals-habits/openapi.yaml` (OpenAPI 3.1; 3.2 once `openapi-typescript` supports it): habits, check-ins,
-      activities, settings operations as the logical backend API.
-- [x] `openapi-typescript` (devDependency) generates `lib/api/schema.d.ts`; script `pnpm --filter web gen:api`.
-- [x] `server.ts` of habits, activities and settings return DTOs that match the generated types; `contract.test.ts` per
-      feature fails (type-level and runtime) when a Zod DTO drifts from `openapi.yaml`.
-- [ ] Record an ADR (`engineering:architecture`): contract-first at the `server.ts` seam, why not PostgREST's spec.
-- [ ] Definition of done for Phases 3-5: add the phase's operations to `openapi.yaml`.
+Built while a FastAPI backend was planned: an OpenAPI file, generated types and per-feature contract tests. Removed when
+FastAPI was dropped and Spark returned to Supabase (PostgREST + RLS); the schema of record is now
+`packages/db/supabase/migrations` and the generated `@workspace/db/types`.
 
 ## Phase 3: Tasks
 
@@ -112,7 +105,6 @@ what actually runs; every later phase updates it with its own operations.
 - [x] Carry-over age on read (TK-4); stale prompt at ≥ 5 days (unit-tested; not yet seen in the UI, needs a task older than 5 days).
 - [x] "Add to log?" offer → RPC `log_task` (TK-6). Wired, but only appears for goal-linked tasks, so it is first exercised in Phase 4.
 - [x] Routes: `/dashboard/tasks?tab=today|later|done`; Today shows today's tasks and the inspector lists "Up next".
-- [x] Tasks added to `openapi.yaml` and covered by `contract.test.ts`.
 
 Done when: tasks roll over, stale prompt works, and a linked task can be logged to its goal.
 
@@ -140,7 +132,6 @@ Done when: an open-ended goal works with logs and chapters only, and a goal with
 - [x] Three-step page; "due" badge in the sidebar until saved.
 
 - [x] `tasks.focus_from` (RV-4): focus tasks count as today tasks from next week start, or at once on the last day of the week.
-- [x] Added to `openapi.yaml` and covered by `contract.test.ts`.
 
 Done when: finishing a review pauses the chosen habits from next week and moves focus tasks to Today.
 
@@ -189,7 +180,7 @@ ticking a habit, and the sidebar repeated the goals Today already shows.
 
 - [x] No "Log progress" button or dialog anywhere (spec 5.2); extra effort is an extra tick or a counted task.
 - [x] Goal page reordered and trimmed.
-- [x] Chapters removed: UI, actions, queries, schema, OpenAPI (`/goals/{id}/chapters`, `getGoalActivity` returns `total`), seed and pgTAP. Migration `20261020210000_drop_chapters.sql` drops the table and RPC; it is written but not pushed to the hosted project yet.
+- [x] Chapters removed: UI, actions, queries, schema (`getGoalActivity` returns `total`), seed and pgTAP. Migration `20261020210000_drop_chapters.sql` drops the table and RPC; it is written but not pushed to the hosted project yet.
 - [x] Sidebar lists only the pages; goals live on Today and the Goals page (the inspector no longer repeats them).
 - [x] "Get started" has a button per step; Today no longer shows a second empty box next to it.
 

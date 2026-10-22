@@ -227,7 +227,7 @@ All metrics are computed from activities and schedules on local dates (TM-1).
 
 ## 4. Schema
 
-Supabase Postgres, schema `public`, written as migrations in `apps/web/supabase/migrations/` (§6). Every table has
+Supabase Postgres, schema `public`, written as migrations in `packages/db/supabase/migrations/` (§6). Every table has
 `user_id uuid not null default auth.uid() references auth.users on delete cascade`, `created_at` and `updated_at
 timestamptz`; omitted below. Access is limited to the owner by RLS (§6.2).
 
@@ -334,7 +334,7 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 
 There is no "Log progress" button. Extra effort is recorded the same way as everything else: tick the habit on a day it is
 not scheduled ("Not scheduled today" on Today, AC-4) or finish a task and count it for its goal (TK-6). `logActivityAction`
-and AC-7 stay in the backend and the OpenAPI contract for later clients, but no screen opens them. The goal page lists the
+and AC-7 stay in the backend for later clients, but no screen opens them. The goal page lists the
 recent evidence (habit check-ins and counted tasks).
 
 ### 5.3 Create habit
@@ -402,9 +402,9 @@ Sources: [Supabase RLS guide](https://supabase.com/docs/guides/database/postgres
 
 ### 6.1 Data client and boundaries
 
-- The repo already authenticates with Supabase (`lib/auth/supabase/*`): the proxy refreshes the session, and
+- The repo already authenticates with Supabase (`packages/auth/src/supabase/*`): the proxy refreshes the session, and
   `verifySession()` returns a verified `userId` plus the `accessToken` (claims checked with `getClaims()`).
-- **Data client:** `lib/supabase/data.ts` (`import "server-only"`) exports `createDataClient(accessToken)`, a
+- **Data client:** `lib/data.ts` (over `@workspace/db/server`) (`import "server-only"`) exports `createDataClient(accessToken)`, a
   `supabase-js` client with the publishable key and `global.headers.Authorization = Bearer <accessToken>`,
   `auth.persistSession = false`. Requests run as the `authenticated` role, so RLS applies.
 - Why a token client instead of the cookie client: `server.ts` must not read cookies or the DAL
@@ -413,7 +413,7 @@ Sources: [Supabase RLS guide](https://supabase.com/docs/guides/database/postgres
 - **No secret / service-role key** in `apps/web`. It bypasses RLS and is only for future admin jobs outside the app.
 - **No browser data access.** The browser client stays for auth UI only; all reads are Server Components, all writes
   Server Actions (data-fetching §3).
-- Types: `supabase gen types typescript --local > apps/web/lib/supabase/database.types.ts` after every migration;
+- Types: `supabase gen types typescript --linked > packages/db/src/database.types.ts` after every migration;
   `createDataClient` is typed with `Database`. `server.ts` still maps rows to camelCase DTOs through the feature's Zod
   schemas.
 - Errors: `server.ts` throws on any Supabase error. Actions map expected Postgres errors to `{ error }` values by code:
@@ -445,7 +445,7 @@ create index habits_user_id on public.habits (user_id);
   `security definer` helper in a private schema (`private.owns_goal(id)`, search_path pinned, execute granted to
   `authenticated` only).
 - Views, if any, use `with (security_invoker = true)`.
-- pgTAP tests per table in `apps/web/supabase/tests/`: allow and deny for each operation (`supabase test db`).
+- pgTAP tests per table in `packages/db/supabase/tests/`: allow and deny for each operation (`supabase test db`).
 
 ### 6.3 Rules enforced in the database
 
@@ -472,10 +472,10 @@ calls them, and pin `search_path = ''`.
 
 ### 6.5 Local development
 
-- Supabase CLI project in `apps/web/supabase/` (the only consumer; repo root holds only tooling). Commands run with
-  `--workdir apps/web` or from `apps/web`.
+- Supabase CLI project in `packages/db/supabase/` (`@workspace/db` package; repo root holds only tooling). Commands run from `packages/db`
+  (or via the `db:*` scripts).
 - Loop: `supabase migration new <name>` → edit SQL → `supabase db reset` (applies migrations + `seed.sql`) →
-  `supabase gen types typescript --local` → `supabase test db` → commit. Deploy with `supabase db push`.
+  `pnpm --filter @workspace/db db:types` → `db:test` → commit. Deploy with `supabase db push`.
 - `supabase/seed.sql` creates one demo user with the dataset of the HTML prototype (habits, a year of check-ins, goals, tasks).
 - Env: the existing `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`apps/web/.env.example`).
   Docker is required for the local stack.
@@ -507,7 +507,7 @@ Shared, non-domain pieces:
 | Heatmap grid, legend, mini strip | `components/shared/heatmap.tsx` | Used by habits, activities, goals; pure props |
 | Local-date helpers (today in tz, week start, ranges) | `lib/dates.ts` | Infrastructure, used by several features' server code |
 | Cache tag helpers (`checkinsTag(userId)` …) | `lib/cache-tags.ts` | One naming scheme for tags written by several features |
-| Supabase data client + generated types | `lib/supabase/data.ts`, `lib/supabase/database.types.ts` | Server-only infrastructure (§6.1) |
+| Supabase data client + generated types | `lib/data.ts` (over `@workspace/db/server`), `packages/db/src/database.types.ts` | Server-only infrastructure (§6.1) |
 
 `features/settings/components/timezone-sync.tsx` is mounted by `app/(dashboard)/layout.tsx`, not placed in
 `components/providers/`: `components/` may not import features (project-structure §4).
