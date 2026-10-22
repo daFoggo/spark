@@ -25,6 +25,9 @@ section when a case is not covered here.
    Both themes must work; dark is the default. Status: `text-diff-add` (ok) / `text-diff-del` (blocked); code:
    `text-syn-*`. Orange (`brand`, `brand-ink`) once per screen.
 5. `font-serif` exists but is opt-in; do not apply it unless asked.
+6. CSS that comes from `vercel-react-view-transitions` (`::view-transition-*`) or `web-design-guidelines`
+   (`content-visibility`, `transition`, etc.) must snap to the Tailwind scale and color tokens too; see
+   [docs/vercel-skills.md](../../../docs/vercel-skills.md) §1.5.
 
 ## Spacing tier lookup
 

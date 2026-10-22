@@ -130,7 +130,7 @@ export default function Page() {
 
 Notes on this shape:
 
-- `<Ctx value={...}>` and `use(Ctx)` are the React 19 forms used across this repo ([project-structure.md §3.2](project-structure.md#32-component-composition--scaling-rules-vercel-guidelines)); the Zustand pages use `Ctx.Provider` and `useContext`, which are equivalent.
+- `<Ctx value={...}>` and `use(Ctx)` are the React 19 forms used across this repo ([project-structure.md §3.2](project-structure.md#32-component-composition--scaling-rules)); the Zustand pages use `Ctx.Provider` and `useContext`, which are equivalent.
 - The official Next.js example has two slips not to copy: `CounterStore = CounterState | CounterActions` (a union; it must be `&`) and consumers that read the whole state with `(state) => state`. The `initialize-state-with-props` example action `set((state) => ({ bears: ++state.bears }))` mutates state; use `state.bears + 1`.
 - **Request-derived initial state** (cookie, header, session) works with Cache Components: resolve it in an async Server Component under `<Suspense>` and pass it down (verified: cookies `42` and `7` rendered in the server HTML; the route is partial-prerender):
 

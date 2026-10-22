@@ -24,7 +24,7 @@ import { Skeleton } from '@workspace/ui/components/skeleton'
 const CaseKanbanBoard = dynamic(
   () => import('@/features/cases/components/case-kanban-board'),
   {
-    loading: () => <Skeleton className="h-[500px] w-full" />,
+    loading: () => <Skeleton className="h-96 w-full" />,
   }
 )
 
@@ -34,7 +34,7 @@ const InteractiveChart = dynamic(
   () => import('@/components/shared/canvas-chart'),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-[300px] w-full" />,
+    loading: () => <Skeleton className="h-72 w-full" />,
   }
 )
 ```

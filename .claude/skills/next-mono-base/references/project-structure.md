@@ -44,9 +44,10 @@ Only create files that are needed:
 
 ---
 
-## 5. Composition Rules (Vercel Guidelines)
-- **No Boolean Prop Proliferation**: Avoid `isCompact`, `isAdmin`, `showExtra`. Use Compound Components (`Table.Row`) or Explicit Variants (`<CompactTable>`).
-- **Children over Render Props**: Use `children` for visual composition; reserve render props only for returning item-level data.
+## 5. Composition Rules
+Read the `vercel-composition-patterns` skill through [docs/vercel-skills.md](../../../../docs/vercel-skills.md) (Spark overrides apply).
+- **Flat prefixed exports**: compound components are `CasesTableFrame`, `CasesTableRow`, never `CasesTable.Frame` (RSC client references).
+- **`ReactNode` slots**: pass `children` or `ReactNode` props from Server to Client Components, not render props.
 - **React 19 Native**: `ref` is a standard prop (no `forwardRef`), use `use(Context)` instead of `useContext()`.
 
 ---

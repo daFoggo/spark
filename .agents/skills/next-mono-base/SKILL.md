@@ -36,6 +36,8 @@ All principles derive from and link back to the Single Source of Truth in `docs/
 | **Random, time, sync DB** | Today's date: `getToday()` (`lib/clock.ts`, `"use cache: private"`); other: `await io()` inside `<Suspense>` | [reads.md](references/reads.md) | [data-fetching.md §1](../../../docs/data-fetching.md#1-mental-model) |
 | **Client-only shared state (Zustand)** | Per-provider store factory in `features/<name>/store.ts` + provider in `components/`, mounted in `app/` (no global store, never read in Server Components) | [client-state.md](references/client-state.md) | [client-state.md](../../../docs/client-state.md) |
 | **Reset or keep client state across navigation** | Cache Components preserves state (`<Activity>`); reset via handler, data-derived key, or `bfcacheId` key | [client-state.md](references/client-state.md) | [client-state.md §5.3](../../../docs/client-state.md#53-state-outlives-navigation) |
+| **Re-render, bundle or async-waterfall work** | Spark docs first; then `vercel-react-best-practices` through its overrides (React Compiler is off, no client fetch libs) | [reads.md](references/reads.md) | [vercel-skills.md](../../../docs/vercel-skills.md) |
+| **Component composition (compound components, slots, context)** | Read `vercel-composition-patterns` via the overrides: flat prefixed exports, `ReactNode` slots | [project-structure.md](references/project-structure.md) | [vercel-skills.md §1.4](../../../docs/vercel-skills.md#14-composition-and-state) |
 | **Redis cache / SSE / Uploads** | Distributed CacheHandler, Presigned URLs, `connection()` | [reads.md](references/reads.md) | [advanced-patterns.md](../../../docs/advanced-patterns.md) |
 
 ---
@@ -60,3 +62,4 @@ When facing complex edge cases, always consult the full architecture docs:
 - [docs/authentication.md](../../../docs/authentication.md) — Session lifecycle, token refresh in proxy, Supabase provider, Better Auth kept as identity foundation ([providers.md](../../../docs/providers.md) to switch).
 - [docs/client-state.md](../../../docs/client-state.md) — Zustand: per-request store factory, provider placement in the feature layout, selectors, middleware notes.
 - [docs/advanced-patterns.md](../../../docs/advanced-patterns.md) — Distributed Redis cache, large uploads, SSE, OpenTelemetry & Playwright instant tests.
+- [docs/vercel-skills.md](../../../docs/vercel-skills.md) — Spark overrides for the vendored Vercel skills. Those skills are secondary: this skill and `docs/` win on any conflict. Read it before applying `vercel-react-best-practices`, `vercel-composition-patterns`, `vercel-react-view-transitions` or `web-design-guidelines`.

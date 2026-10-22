@@ -127,8 +127,11 @@ When Feature A needs to render a component owned by Feature B (for example, a `D
      const projects = await getProjects()
      return (
        <ProjectTable
-         list={projects}
-         renderUser={(user) => <UserAvatar name={user.name} image={user.avatarUrl} />}
+         rows={projects.map((project) => ({
+           ...project,
+           // Pre-rendered slot: a ReactNode crosses Server -> Client, a function prop does not
+           owner: <UserAvatar name={project.owner.name} image={project.owner.avatarUrl} />,
+         }))}
        />
      )
    }
@@ -139,33 +142,20 @@ When Feature A needs to render a component owned by Feature B (for example, a `D
 
 ---
 
-### 3.2 Component Composition & Scaling Rules (Vercel Guidelines)
+### 3.2 Component Composition & Scaling Rules
 
-When designing components across features and shared libraries, follow Vercel's official composition rules:
+Composition rules (avoid boolean props, compound components, explicit variants, state behind a context interface) come
+from the vendored `vercel-composition-patterns` skill. Read it through [vercel-skills.md](vercel-skills.md), which lists
+the Spark overrides. The two that matter here:
 
-#### 1. Avoid Boolean Prop Proliferation
-Never add multiple boolean props (`isCompact`, `isAdmin`, `hasHeader`, `isEditing`, `showUser`) to customize a single monolithic component. Each boolean doubles component states and creates unmaintainable branching.
-- **Fix**: Use **Compound Components** (e.g., `<CasesTable.Frame>`, `<CasesTable.Header>`, `<CasesTable.Row>`) or create **Explicit Variants** (`<AdminCasesTable>` vs `<UserCasesTable>`).
+- **Compound components use flat prefixed exports**, not object namespaces: `CasesTableFrame`, `CasesTableHeader`,
+  `CasesTableRow` (never `CasesTable.Frame`). A namespace object is not a valid client reference across the RSC boundary.
+- **Slots are `ReactNode` props or `children`, not render props**, whenever a Server Component passes UI into a Client
+  Component. A render prop is fine only inside one Client Component, or when the parent must hand item data back to the
+  child.
 
-#### 2. Prefer Composing Children Over Render Props
-- Use `children` for structural layout composition (`<Card><CardHeader /><CardBody /></Card>`).
-- Only use render props when the parent component must supply item-level data back to the child (e.g., `<List data={items} renderItem={({ item }) => <ItemRow item={item} />} />`).
-
-#### 3. Decouple State Management from UI
-Structure component context around a generic contract:
-```ts
-interface ComponentContextValue<TState, TActions> {
-  state: TState
-  actions: TActions
-  meta?: Record<string, unknown>
-}
-```
-UI components consume this interface via `use(Context)`. This allows swapping the provider implementation (e.g. Server-backed vs local client state) without changing a single line of UI.
-
-#### 4. React 19 Native Standards
-- **No `forwardRef`**: `ref` is a standard component prop in React 19 (`{ ref, ...props }: Props & { ref?: React.Ref<T> }`).
-- **`use()` instead of `useContext()`**: Use `use(Context)` for reading React contexts conditionally or at top level.
-- **Pass Promises directly**: Pass un-awaited promises from Server Components to Client Components and resolve via `use(promise)`.
+React 19 defaults apply as usual: `ref` is a plain prop (no `forwardRef`) and `use(Context)` replaces `useContext()`.
+Server data reaches Client Components as props or an un-awaited promise read with `use()`; context holds client state only.
 
 ---
 
