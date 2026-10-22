@@ -120,11 +120,6 @@ test.describe("End-to-End Smoke & Full Dashboard Route Verification", () => {
         path: "/dashboard/settings/account",
         heading: /account/i,
       },
-      {
-        linkText: /^members$/i,
-        path: "/dashboard/settings/members",
-        heading: /members/i,
-      },
       { linkText: /^today$/i, path: "/dashboard", heading: /today/i },
     ]
 

@@ -13,16 +13,14 @@ describe("parseRole", () => {
 })
 
 describe("hasPermission", () => {
-  it("grants members only the basics", () => {
+  it("grants members the basics", () => {
     expect(hasPermission("member", "dashboard:view")).toBe(true)
-    expect(hasPermission("member", "members:view")).toBe(false)
-    expect(hasPermission("member", "members:manage")).toBe(false)
+    expect(hasPermission("member", "settings:view")).toBe(true)
   })
 
   it("grants admins every permission a member has", () => {
     for (const permission of permissionsOf("member")) {
       expect(hasPermission("admin", permission)).toBe(true)
     }
-    expect(hasPermission("admin", "members:manage")).toBe(true)
   })
 })

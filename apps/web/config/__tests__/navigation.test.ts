@@ -30,13 +30,13 @@ const sections: NavSection[] = [
         permission: "settings:view",
       },
       {
-        title: "Admin",
+        title: "More",
         items: [
           {
-            title: "Members",
-            href: "/dashboard/settings/members",
-            icon: "members",
-            permission: "members:view",
+            title: "Preferences",
+            href: "/dashboard/settings/preferences",
+            icon: "preferences",
+            permission: "settings:view",
           },
         ],
       },
@@ -49,10 +49,14 @@ describe("filterNav", () => {
     const onlyDashboard = filterNav(sections, (p) => p === "dashboard:view")
     expect(onlyDashboard.map((s) => s.label)).toEqual(["Workspace"])
 
-    const noMembers = filterNav(sections, (p) => p !== "members:view")
-    expect(navLinks(noMembers).map((l) => l.title)).toEqual([
+    const noSettings = filterNav(sections, (p) => p !== "settings:view")
+    expect(navLinks(noSettings).map((l) => l.title)).toEqual(["Today"])
+
+    const all = filterNav(sections, () => true)
+    expect(navLinks(all).map((l) => l.title)).toEqual([
       "Today",
       "Account",
+      "Preferences",
     ])
   })
 })

@@ -5,7 +5,7 @@ export type Role = (typeof ROLES)[number]
 /** What each role may do. UI hides what a role lacks; pages and actions enforce it via the DAL, the database via RLS. */
 const PERMISSIONS = {
   member: ["dashboard:view", "settings:view"],
-  admin: ["dashboard:view", "settings:view", "members:view", "members:manage"],
+  admin: ["dashboard:view", "settings:view"],
 } as const satisfies Record<Role, readonly string[]>
 
 export type Permission = (typeof PERMISSIONS)[Role][number]

@@ -7,7 +7,6 @@ import {
   IconTarget,
   IconSunHigh,
   IconUser,
-  IconUsers,
   type Icon,
 } from "@tabler/icons-react"
 
@@ -23,7 +22,6 @@ const NAV_ICONS: Record<NavIconName, Icon> = {
   guide: IconBook2,
   account: IconUser,
   preferences: IconAdjustments,
-  members: IconUsers,
 }
 
 export function NavIcon({ name }: { name: NavIconName }) {

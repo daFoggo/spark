@@ -6,7 +6,6 @@ import {
   GOALS_PATH,
   GUIDE_PATH,
   HABITS_PATH,
-  MEMBERS_PATH,
   PREFERENCES_PATH,
   REVIEW_PATH,
   TASKS_PATH,
@@ -25,7 +24,6 @@ export type NavIconName =
   | "guide"
   | "account"
   | "preferences"
-  | "members"
 
 export type NavLink = {
   title: string
@@ -116,12 +114,6 @@ export const DASHBOARD_NAV: NavSection[] = [
         href: PREFERENCES_PATH,
         icon: "preferences",
         permission: "settings:view",
-      },
-      {
-        title: "Members",
-        href: MEMBERS_PATH,
-        icon: "members",
-        permission: "members:view",
       },
     ],
   },

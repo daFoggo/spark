@@ -13,7 +13,6 @@ export const REVIEW_PATH = "/dashboard/review"
 export const GUIDE_PATH = "/dashboard/guide"
 export const ACCOUNT_PATH = "/dashboard/settings/account"
 export const PREFERENCES_PATH = "/dashboard/settings/preferences"
-export const MEMBERS_PATH = "/dashboard/settings/members"
 export const OAUTH_CALLBACK_PATH = "/auth/callback"
 /**
  * Clears the session cookie, then goes to sign-in. Used when the backend rejects a token
