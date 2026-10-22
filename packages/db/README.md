@@ -8,6 +8,7 @@ Supabase client, errors, generated types and the `supabase/` CLI directory (migr
 | `db:test -- --dry`                       | Runs every pgTAP file with unpushed migrations prepended, inside one transaction that rolls back |
 | `db:push`                                | Applies new migrations to the linked project                                                     |
 | `db:test`                                | Runs the pgTAP files against the linked project (each rolls back)                                |
+| `db:clean-test-users`                    | Deletes the e2e users (`*@example.test`) and their data from the linked project                  |
 | `db:types`                               | Regenerates `src/database.types.ts`; run after every pushed migration                            |
 | `exec supabase db advisors --linked`     | Security and performance lints                                                                   |
 

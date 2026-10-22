@@ -48,6 +48,7 @@ round trip (§5).
    function is missing blocks every sign-in.
 4. `pnpm --filter @workspace/db db:types` regenerates `src/database.types.ts` (consumed through `@workspace/db/types`).
 5. `pnpm --filter @workspace/db db:test` runs pgTAP (`packages/db/supabase/tests`; runs against the linked project through the Management API, no Docker or local stack).
+   Playwright runs sign up a new `*@example.test` user each time; `pnpm --filter @workspace/db db:clean-test-users` removes them from the linked project.
 6. Auth settings: site URL and `<app>/auth/callback` as a redirect URL, in the dashboard or with `supabase config push`.
    `config push` writes **every** property `config.toml` declares, including local-only ones (email rate limit, MFA
    off): to push one block, run it with `--workdir <dir>` whose `supabase/config.toml` declares only that block, and
