@@ -327,7 +327,7 @@ validate with Zod, check ownership, write through `server.ts`, invalidate tags a
 3. `checkInAction(habitId, level, date?)` → RPC `toggle_check_in` (local today from the user's timezone, AC-3, AC-5,
    AC-6) → returns the resulting level.
 4. Invalidates `checkins:<userId>`, `activities:<userId>`.
-5. On create, the row expands an optional note field (AC-8); saving calls `updateActivityNoteAction(activityId, note)`.
+5. On create, the row expands an optional note field (AC-8); saving calls `checkInNoteAction`.
 6. Failure: optimistic state reverts; inline error on the row.
 
 ### 5.2 Extra effort (no free log form)

@@ -54,6 +54,7 @@ children. Separate with space first, `border-b` second, a bordered box only for 
 - List rows: `flex items-start gap-4 border-b py-4`, no gap between rows; hover `hover:bg-primary
   hover:text-primary-foreground`.
 - Anchor targets: `scroll-mt-24 max-sm:scroll-mt-18`.
+- `ItemGroup` whose children are not real list items must pass `role="none"` (upstream `ItemGroup` ships `role="list"`).
 
 ## Components
 

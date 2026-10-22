@@ -42,7 +42,7 @@ next-mono-base/
 │       ├── lib/                            # Application-level infrastructure (Server-only / DAL)
 │       │   ├── auth.ts                     # Binds @workspace/auth to config/auth.ts (AUTH_OPTIONS)
 │       │   ├── dal.ts                      # Data Access Layer (verifySession, getSession)
-│       │   ├── data.ts                     # createDataClient over @workspace/db/server (+ 401 hook)
+│       │   ├── data.ts                     # createDataClient over @workspace/db/server (+ ensureOk/unwrap end a rejected session)
 │       │   ├── errors.ts                   # DataError helpers
 │       │   └── utils.ts                    # General helpers
 │       ├── config/                         # Static site metadata, navigation items, constants
@@ -109,7 +109,7 @@ When creating a new component, choose its location based on **reusability scope*
 | **Page-Local** | `app/**/_components/` | Used on **only one page** or route. Next.js ignores `_` folders from routing. | `app/(dashboard)/<name>/_components/<name>-hero.tsx` |
 | **Feature-Domain** | `features/<name>/components/` | Used across **multiple pages within the same feature/domain**. | `features/auth/components/sign-in-form.tsx` |
 | **App-Wide Shell** | `components/layout/` | App shell, navigation, global header, sidebar. | `components/layout/sidebar.tsx` |
-| **App-Wide Shared** | `components/shared/` | Reusable across **multiple features**, but specific to `apps/web` (pure presentational UI). | `components/shared/empty-state.tsx`, `components/shared/confirm-dialog.tsx` |
+| **App-Wide Shared** | `components/shared/` | Reusable across **multiple features**, but specific to `apps/web` (pure presentational UI). | `components/shared/responsive-dialog.tsx`, `components/shared/info-hint.tsx` |
 | **Primitive UI** | `packages/ui/src/components/` | Generic, **zero-business-logic** primitives from shadcn/ui. | `@workspace/ui/components/button` |
 
 #### How to Share UI Across Features Without Violating ESLint (`features/A` cannot import `features/B`)

@@ -114,6 +114,8 @@ token (`getCalendar()`), and a not-found check can run alongside the reads it gu
 **Preload** when a known input is available before other blocking work: call the read without `await` (`void getItem(id)`)
 early, then call it again where it renders; the second call reuses the first because the read is deduplicated.
 
+A promise started before an `await` can reject before anything is attached to it, which logs a spurious `unhandledRejection`: give it `.catch(() => {})` and still await it later (`Promise.all`).
+
 ### 4.3 Deduplicating within a request
 
 - `fetch` `GET` calls with the same URL and options are memoized for one render pass (not in Route Handlers).

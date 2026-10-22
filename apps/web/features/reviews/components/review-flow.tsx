@@ -21,10 +21,11 @@ import {
   ToggleGroupItem,
 } from "@workspace/ui/components/toggle-group"
 
+import { HABITS_PATH } from "@/config/routes"
+
 import { completeReviewAction } from "../actions"
 import { toggleFocus } from "../rules"
 import { FOCUS_LIMIT, type HabitChoice } from "../schemas"
-import { HABITS_PATH } from "@/config/routes"
 
 export type ReviewHabit = {
   id: string

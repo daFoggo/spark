@@ -49,7 +49,7 @@ output unless marked "not verified".
   `docs/vercel-skills.md`; the earlier claim that no composition guidance existed was wrong (the rules were already in
   `docs/project-structure.md`).
 
-## 4. Audit after the skills (in progress when this report was written)
+## 4. Audit after the skills (finished)
 
 A read-only audit (Opus) found three must-fix items and a list of low-risk ones; false positives were listed and left alone.
 
@@ -62,6 +62,25 @@ A read-only audit (Opus) found three must-fix items and a list of low-risk ones;
 - The user interrupted the work ("stop and record"); two implementers were stopped with a partial diff
   (`goals/[goalId]`, `goals`, `habits`, `habits/[habitId]` pages, `packages/auth` config and a new `config.test.ts`),
   then resumed from the working tree.
+
+Outcome (plan `docs/superpowers/plans/2026-10-23-audit-fixes.md`, tasks 1-7, all on `main`):
+
+- `c3c5147` fix(web): return 404 for malformed goal and habit ids
+- `6edb1d0` fix(auth): fail loudly on a missing Better Auth secret outside the build
+- `f208829` fix(ui): restore the upstream item component and set roles in the app
+- `fc0492b` fix(web): keep caches fresh after partial writes and validate action input
+- `75811ae` fix(web): reject checkpoint positions beyond int4
+- `75b4154` perf(web): start habit page reads in parallel
+- `d609364` refactor(web): follow React 19, shadcn and route-constant conventions
+- Task 7 (dead code, stale copy, doc drift, import grouping): see the commit `chore: remove dead code and fix stale copy and docs`.
+
+Parked, not fixed:
+
+- The parity case "signing out ends the session" fails with the Next dev overlay. It failed before these tasks and is
+  still uninvestigated.
+- `next dev` prints a Next 16.4.0 notice to run `next upgrade --agent=security`; not acted on.
+- Not touched on purpose (judged low value): robots, sitemap and an expired-session page; the dither-meter style;
+  `activities/actions.ts`.
 
 ## 5. Commits on `main` (all pushed)
 

@@ -25,7 +25,7 @@ export async function getHabit(habitId: string): Promise<Habit | null> {
   return fetchHabit(accessToken, habitId)
 }
 
-/** Check-ins for the date range; `today` in the key keeps entries from outliving the day they were read. */
+/** Check-ins for the date range; the range is part of the cache key. */
 export async function getCheckIns(
   from: LocalDate,
   to: LocalDate,

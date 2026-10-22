@@ -22,7 +22,7 @@ Not supported on purpose (each would double the test matrix): switching at runti
 | :--- | :--- | :--- |
 | Auth adapters | `packages/auth` (`@workspace/auth/{config,permissions,types,server,proxy,better-auth-handler}`) | Zero Spark business rules; Just-in-Time TypeScript source behind `exports` |
 | Per-app binding | `apps/web/config/auth.ts` (`AUTH_OPTIONS`, cookie `spark-auth`), `apps/web/lib/auth.ts`, `lib/dal.ts`, `proxy.ts`, `app/api/auth/[...all]/route.ts` | The app picks the cookie name and calls the adapters |
-| Data client | `packages/db` (`@workspace/db/{env,server,errors,types}`), wrapped by `apps/web/lib/data.ts` | `createDataClient(accessToken)`: requests run as the user so RLS applies; `lib/data.ts` adds the 401 => `endRejectedSession` fetch hook; `unwrap` throws `DataError` |
+| Data client | `packages/db` (`@workspace/db/{env,server,errors,types}`), wrapped by `apps/web/lib/data.ts` | `createDataClient(accessToken)`: requests run as the user so RLS applies; `lib/data.ts` `unwrap`/`ensureOk` end the session via `endRejectedSession` on a rejected token (401, PGRST301/303) and otherwise throw `DataError` |
 | Schema, tests, seed | `packages/db/supabase/{migrations,tests,seed.sql,config.toml}` | Commands below |
 | Errors | `apps/web/lib/errors.ts` | `isExpectedDataError` covers rule/constraint codes; actions return rule errors as values |
 | OAuth callback | `app/auth/callback/route.ts` | `exchangeCodeForSession`; only Supabase uses it |

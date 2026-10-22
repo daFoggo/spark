@@ -16,10 +16,10 @@ import {
 } from "@workspace/ui/components/item"
 
 import { HeatStrip, type HeatCell } from "@/components/shared/heatmap"
+import { HABITS_PATH } from "@/config/routes"
 
 import { checkInAction, checkInNoteAction } from "../actions"
 import type { CheckInLevel } from "../schemas"
-import { HABITS_PATH } from "@/config/routes"
 
 export type HabitRowData = {
   id: string

@@ -44,8 +44,8 @@ Paths relative to `apps/web/` unless prefixed by `packages/`:
 - `lib/auth.ts`: binds `@workspace/auth/server` to `AUTH_OPTIONS`; re-exports the session types.
 - `proxy.ts`: calls `@workspace/auth/proxy` to refresh the session cookies; keeps the `/` redirect.
 - `lib/dal.ts`: `getSession`, `verifySession`, `verifySessionFresh`, `refreshSessionClaims`.
-- `lib/data.ts`: `createDataClient(accessToken)` wrapping `@workspace/db/server`; a `401` on a request that carried a
-  token calls `endRejectedSession` (renders redirect to `/auth/expired`, actions sign out).
+- `lib/data.ts`: `createDataClient(accessToken)` wrapping `@workspace/db/server`; `ensureOk`/`unwrap` call `endRejectedSession` when
+  PostgREST rejects the token (401, PGRST301/303; renders redirect to `/auth/expired`, actions sign out).
 - `app/api/auth/[...all]/route.ts`: Better Auth handler (`@workspace/auth/better-auth-handler`); 404 on the Supabase provider.
 - `app/auth/callback/route.ts`: finishes OAuth (`exchangeCodeForSession`) on Supabase.
 - `packages/auth/src/supabase/{server,proxy}.ts`: `supabaseProvider`; `getClaims()` verifies identity, `getUser()` backs

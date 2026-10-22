@@ -2,6 +2,7 @@ import { DitherMeter } from "@/components/shared/dither-meter"
 import { InfoHint } from "@/components/shared/info-hint"
 import { WeekStrip, type WeekDay } from "@/components/shared/week-strip"
 import type { HelpKey } from "@/config/help"
+import { DASHBOARD_PATH } from "@/config/routes"
 import { overallCells } from "@/features/habits/stats"
 import { PetCard } from "@/features/pet/components/pet-card"
 import { petState } from "@/features/pet/pet"
@@ -15,7 +16,6 @@ import {
 
 import { BACKDATE_DAYS } from "../dashboard/_components/day"
 import { loadDashboard } from "./dashboard-data"
-import { DASHBOARD_PATH } from "@/config/routes"
 
 const INITIALS = ["S", "M", "T", "W", "T", "F", "S"]
 

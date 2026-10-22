@@ -109,6 +109,8 @@ Horizontal: page gutter `px-9` (`max-sm:px-6`), 12-column grid with no column ga
 Component padding: list row `py-4`; featured row `py-4` with `gap-3` inside; media item (mod) `py-9`; figure `my-8 p-4`,
 caption `py-2.5 px-4`; terminal bar `h-7`, screen `px-4 pb-2.5`; footer `pt-11 pb-14`, links `gap-3`.
 
+- `ItemGroup` whose children are not real list items must pass `role="none"` (upstream `ItemGroup` ships `role="list"`).
+
 ---
 
 ## 5. Responsive

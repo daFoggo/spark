@@ -22,12 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
 
+import { HABITS_PATH } from "@/config/routes"
+
 import {
   archiveHabitAction,
   pauseHabitAction,
   resumeHabitAction,
 } from "../actions"
-import { HABITS_PATH } from "@/config/routes"
 
 /** Pause / resume / archive for the habit page (HB-5, HB-6). Archiving asks first. */
 export function HabitMenu({

@@ -1,9 +1,9 @@
 import Link from "next/link"
 
 import { AppLogo } from "@/components/shared/app-logo"
+import { DASHBOARD_PATH } from "@/config/routes"
 
 import { Burger } from "./burger"
-import { DASHBOARD_PATH } from "@/config/routes"
 
 /**
  * Left of the main header. Below md the sidebar is a Sheet, so the header carries the burger and

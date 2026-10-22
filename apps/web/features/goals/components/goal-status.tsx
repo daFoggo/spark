@@ -15,9 +15,10 @@ import {
 } from "@workspace/ui/components/alert-dialog"
 import { Button } from "@workspace/ui/components/button"
 
+import { GOALS_PATH } from "@/config/routes"
+
 import { setGoalStatusAction } from "../actions"
 import type { GoalStatus } from "../schemas"
-import { GOALS_PATH } from "@/config/routes"
 
 /**
  * Status buttons for a goal (GL-2…GL-5). The database refuses a 4th active goal (GL-3) and a

@@ -5,7 +5,6 @@ import { useActionState, useState } from "react"
 import { Button } from "@workspace/ui/components/button"
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -79,7 +78,6 @@ function GoalForm({ goal, onDone }: { goal: Goal; onDone: () => void }) {
             placeholder="an AI engineer"
             maxLength={60}
           />
-          <FieldDescription>Shows in the sidebar.</FieldDescription>
         </Field>
         <Field className="sm:col-span-2">
           <FieldLabel htmlFor="goal-why">Why it matters</FieldLabel>

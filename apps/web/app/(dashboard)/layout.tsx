@@ -22,12 +22,12 @@ import {
 import { MainHeaderStart } from "@/components/layout/main-header-start"
 import { Stagger } from "@/components/shared/stagger"
 import { AppLogo } from "@/components/shared/app-logo"
+import { DASHBOARD_PATH } from "@/config/routes"
 
 import { DashboardCrumbs } from "./_components/crumbs"
 import { InspectorContent } from "./_components/inspector-content"
 import { SessionAccount, SessionNav } from "./_components/session-nav"
 import { TimezoneGate } from "./_components/timezone-gate"
-import { DASHBOARD_PATH } from "@/config/routes"
 
 /**
  * Dashboard shell (design system §8): sidebar column + main column, each a ColumnHeader over a

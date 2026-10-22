@@ -12,6 +12,7 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { PageHead } from "@/components/layout/page-head"
+import { GOALS_PATH } from "@/config/routes"
 import { getActivities } from "@/features/activities/queries"
 import { GoalBoard } from "@/features/goals/components/goal-board"
 import { GoalNew } from "@/features/goals/components/goal-new"
@@ -26,7 +27,6 @@ import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
 import { addDays } from "@/lib/dates"
-import { GOALS_PATH } from "@/config/routes"
 
 export const metadata: Metadata = { title: "Goals" }
 

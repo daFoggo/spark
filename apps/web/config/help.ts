@@ -79,7 +79,7 @@ export const HELP = {
   treats: {
     group: "pet",
     title: "Treats",
-    body: "Every check-in, log or finished task is a treat for your cat. Treats grow it through five stages; deleting an activity takes its treat back.",
+    body: "Every check-in, log or finished task is a treat for your cat. Treats grow it through five stages.",
   },
   pet: {
     group: "pet",

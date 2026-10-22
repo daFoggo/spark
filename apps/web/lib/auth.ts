@@ -5,13 +5,7 @@ import type { AuthProvider } from "@workspace/auth/types"
 
 import { AUTH_OPTIONS } from "@/config/auth"
 
-export type {
-  Calendar,
-  Credentials,
-  Session,
-  SignUpInput,
-  SignUpResult,
-} from "@workspace/auth/types"
+export type { Calendar, Session, SignUpResult } from "@workspace/auth/types"
 
 /** The active provider (`AUTH_PROVIDER`, docs/providers.md) bound to Spark's cookie. */
 export function getAuthProvider(): Promise<AuthProvider> {

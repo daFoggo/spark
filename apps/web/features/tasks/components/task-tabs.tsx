@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
+
 import { TASKS_PATH } from "@/config/routes"
 
 const TABS = [

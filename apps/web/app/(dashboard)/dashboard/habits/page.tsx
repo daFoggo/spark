@@ -21,6 +21,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { PageHead } from "@/components/layout/page-head"
 import { HeatStrip } from "@/components/shared/heatmap"
+import { GOALS_PATH, HABITS_PATH } from "@/config/routes"
 import { HabitDialog } from "@/features/habits/components/habit-dialog"
 import { getGoals } from "@/features/goals/queries"
 import { getCheckIns, getHabits } from "@/features/habits/queries"
@@ -32,7 +33,6 @@ import {
 } from "@/features/habits/stats"
 import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
-import { GOALS_PATH, HABITS_PATH } from "@/config/routes"
 import { requirePermission } from "@/lib/dal"
 import { addDays } from "@/lib/dates"
 
@@ -44,7 +44,7 @@ async function HabitList() {
   await requirePermission("dashboard:view")
   const habitsPromise = getHabits()
   const goalsPromise = getGoals()
-  // If the calendar/today reads throw, these are never awaited; mark them handled.
+  // May reject before Promise.all attaches; marked handled, still awaited below.
   habitsPromise.catch(() => {})
   goalsPromise.catch(() => {})
   const { timezone } = await getCalendar()

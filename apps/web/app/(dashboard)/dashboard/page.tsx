@@ -5,9 +5,9 @@ import { Suspense } from "react"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { PageHead } from "@/components/layout/page-head"
+import { DASHBOARD_PATH } from "@/config/routes"
 import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
-import { DASHBOARD_PATH } from "@/config/routes"
 import { requirePermission } from "@/lib/dal"
 
 import { GetStarted } from "./_components/get-started"

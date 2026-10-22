@@ -11,8 +11,9 @@ import {
 } from "@workspace/ui/components/input-group"
 import { Spinner } from "@workspace/ui/components/spinner"
 
-import { createGoalAction, type GoalState } from "../actions"
 import { GOALS_PATH } from "@/config/routes"
+
+import { createGoalAction, type GoalState } from "../actions"
 
 /** A goal from just a name (GL-1). With 3 active goals it lands in Someday and says so (GL-3). */
 export function GoalNew() {

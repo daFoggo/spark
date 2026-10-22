@@ -38,7 +38,7 @@ export function timezoneOption(zone: string, now = new Date()): TimezoneOption {
 /**
  * The runtime's IANA zones grouped by region, with their current offset (TM-2). Uses the browser's list so the
  * picker offers the same names `Intl` reports for the user's own zone (e.g. `Asia/Saigon` in Chromium); the
- * backend validates every name with Python's `zoneinfo`. Call it in the browser only: offsets depend on "now".
+ * database validates every name against `pg_timezone_names`. Call it in the browser only: offsets depend on "now".
  */
 export function timezoneRegions(now = new Date()): TimezoneRegion[] {
   const grouped = new Map<string, TimezoneOption[]>()

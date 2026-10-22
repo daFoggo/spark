@@ -34,7 +34,7 @@ export type GoalState = {
   someday?: boolean
 }
 
-/** Database rules (GL-3, GL-4, CH-1…) carry their message after the rule ID. */
+/** Database rules (GL-3, GL-4…) carry their message after the rule ID. */
 function expected(error: unknown): string | null {
   if (isExpectedDataError(error)) {
     return error.message.replace(/^[A-Z]{2}-\d+:\s*/, "")

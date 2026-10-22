@@ -10,6 +10,7 @@ import type { HelpKey } from "@/config/help"
 import { PageHead } from "@/components/layout/page-head"
 import { Heatmap, HeatmapLegend } from "@/components/shared/heatmap"
 import { Metric, Metrics } from "@/components/shared/metrics"
+import { HABITS_PATH } from "@/config/routes"
 import { getGoalActivity } from "@/features/activities/queries"
 import { CheckpointList } from "@/features/goals/components/checkpoint-list"
 import { GoalDialog } from "@/features/goals/components/goal-dialog"
@@ -33,7 +34,6 @@ import { taskRowData } from "@/features/tasks/rows"
 import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
 import { addDays, formatDay } from "@/lib/dates"
-import { HABITS_PATH } from "@/config/routes"
 
 export const metadata: Metadata = { title: "Goal" }
 
@@ -64,8 +64,8 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
   const { timezone, weekStart } = await getCalendar()
   const today = await getToday(timezone)
 
-  // Started with the goal read, not after it. A missing goal is checked first: the API also refuses
-  // its activity, and that error must not replace the 404 (the catch only marks `reads` as handled).
+  // Started with the goal read, not after it. A missing goal is checked first: the database also
+  // refuses its activity, and that error must not replace the 404 (the catch only marks `reads` as handled).
   const from = addDays(today, -26 * 7)
   const reads = Promise.all([
     getGoalActivity(goalId, from),

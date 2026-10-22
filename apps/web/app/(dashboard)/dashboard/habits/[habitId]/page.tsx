@@ -52,7 +52,7 @@ async function HabitDetail({
   if (!z.uuid().safeParse(habitId).success) notFound()
   const habitPromise = getHabit(habitId)
   const goalsPromise = getGoals()
-  // If the calendar/today reads throw, these are never awaited; mark them handled.
+  // May reject before Promise.all attaches; marked handled, still awaited below.
   habitPromise.catch(() => {})
   goalsPromise.catch(() => {})
   const { timezone, weekStart } = await getCalendar()

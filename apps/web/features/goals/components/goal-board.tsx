@@ -19,8 +19,9 @@ import { useOptimistic, useState, useTransition } from "react"
 
 import { cn } from "@workspace/ui/lib/utils"
 
-import { setGoalStatusAction } from "../actions"
 import { GOALS_PATH } from "@/config/routes"
+
+import { setGoalStatusAction } from "../actions"
 
 export type BoardGoal = {
   id: string

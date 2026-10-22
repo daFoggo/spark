@@ -26,6 +26,7 @@ import {
   DialogActions,
   ResponsiveDialog,
 } from "@/components/shared/responsive-dialog"
+import { HABITS_PATH } from "@/config/routes"
 
 import {
   createHabitAction,
@@ -33,7 +34,6 @@ import {
   type ActionState,
 } from "../actions"
 import type { Habit, TimeOfDay } from "../schemas"
-import { HABITS_PATH } from "@/config/routes"
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const TIMES: { value: TimeOfDay; label: string }[] = [

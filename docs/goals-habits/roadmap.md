@@ -83,7 +83,7 @@ heatmap update; reload keeps the data.
 - [x] Migration: activity log trigger (AC-5 for logs), shipped with the Phase 1 migration for every source.
 - [x] `features/activities`: schemas, server, queries (range, by goal, week numbers), actions (log, edit note,
       delete) (AC-1, AC-5, AC-7, AC-9).
-- [x] Today: log form, "Done today" metric; overall heatmap 26 weeks comes from `features/habits` (MT-7).
+- [x] Today: "Done today" metric (no log form: see spec §5.2); overall heatmap 26 weeks comes from `features/habits` (MT-7).
 - [x] `features/pet`: `pet.ts` rules (PT-2…PT-4) + tests; sprite component (template, tail/eyes/tangerine overlays,
       reduced motion); pet card. Stats passed in as props from the page.
 - [x] Feeding feedback after check-in/log (PT-5).
