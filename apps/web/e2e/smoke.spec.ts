@@ -70,7 +70,7 @@ test.describe("End-to-End Smoke & Full Dashboard Route Verification", () => {
     expect(consoleErrors).toEqual([])
   })
 
-  test("sign in with admin@gmail.com and navigate across all dashboard routes with zero console/prerender errors", async ({
+  test("sign up a fresh user and navigate across all dashboard routes with zero console/prerender errors", async ({
     page,
   }) => {
     const consoleErrors: string[] = []
@@ -85,12 +85,14 @@ test.describe("End-to-End Smoke & Full Dashboard Route Verification", () => {
       pageErrors.push(`[${page.url()}] ${err.message}`)
     })
 
-    await page.goto("/sign-in")
+    // Fresh user per run: no seeded account needed, and the active-goals cap starts at zero.
+    await page.goto("/sign-up")
+    await page.getByLabel("Name").fill("Smoke")
     await page
-      .locator('input[type="email"], input[name="email"]')
-      .fill("admin@gmail.com")
-    await page.locator('input[type="password"]').fill("123456")
-    await page.getByRole("button", { name: /sign in/i }).click()
+      .getByLabel("Email")
+      .fill(`smoke-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`)
+    await page.getByRole("textbox", { name: "Password" }).fill("secret123")
+    await page.getByRole("button", { name: "Create account" }).click()
 
     await page.waitForURL("**/dashboard**", { timeout: 15000 })
     expect(page.url()).toContain("/dashboard")
@@ -162,7 +164,8 @@ test.describe("End-to-End Smoke & Full Dashboard Route Verification", () => {
 
     // Test creating a Habit from Goal detail page and loading dynamic route /dashboard/habits/[habitId]
     await page.getByRole("button", { name: /new habit/i }).click()
-    await page.getByLabel("Name").fill("Read 10 pages")
+    // Hidden routes stay mounted (Activity), so "Name" also matches the account settings field.
+    await page.locator("#habit-name").fill("Read 10 pages")
     await page.getByRole("button", { name: /create habit/i }).click()
     await page.waitForURL(/\/dashboard\/habits\/[0-9a-f-]+/i, {
       timeout: 10000,
