@@ -75,7 +75,7 @@ async function TaskList({
           </EmptyHeader>
         </Empty>
       ) : (
-        <ItemGroup className="max-w-3xl gap-2">
+        <ItemGroup role="none" className="max-w-3xl gap-2">
           {tasks.map((task) => (
             <TaskRow
               key={task.id}

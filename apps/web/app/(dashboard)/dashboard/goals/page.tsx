@@ -57,7 +57,7 @@ function GoalGroup({
           <p className="text-ink-2">{empty}</p>
         ) : null
       ) : (
-        <ItemGroup className="gap-2">
+        <ItemGroup role="none" className="gap-2">
           {goals.map((goal) => {
             const progress = checkpointProgress(goal.checkpoints)
             return (

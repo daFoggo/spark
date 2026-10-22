@@ -67,7 +67,7 @@ export async function TodayGoals({
   return (
     <section className="flex max-w-3xl flex-col gap-5">
       <SectionTitle hint="goal">Active goals</SectionTitle>
-      <ItemGroup className="gap-2">
+      <ItemGroup role="none" className="gap-2">
         {active.map((goal) => {
           const due = habits.filter(
             (habit) => habit.goalId === goal.id && isDue(habit, day)
@@ -141,7 +141,7 @@ export async function TodayHabits({
               <span className="font-mono text-xs tracking-wider text-ink-3 uppercase">
                 {label}
               </span>
-              <ItemGroup className="gap-2">
+              <ItemGroup role="none" className="gap-2">
                 {group.map((habit) => (
                   <HabitRow
                     key={`${habit.id}-${day}`}
@@ -161,7 +161,7 @@ export async function TodayHabits({
             )
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <ItemGroup className="gap-2">
+            <ItemGroup role="none" className="gap-2">
               {extra.map((habit) => (
                 <HabitRow
                   key={`${habit.id}-${day}`}
@@ -186,7 +186,7 @@ export async function TodayTasks() {
       <SectionTitle hint="carryOver">Tasks</SectionTitle>
       <TaskAdd goals={goals} placeholder="Add a task" />
       {tasks.length > 0 ? (
-        <ItemGroup className="gap-2">
+        <ItemGroup role="none" className="gap-2">
           {tasks.map((task) => (
             <TaskRow
               key={task.id}

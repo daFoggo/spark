@@ -104,7 +104,7 @@ async function HabitList() {
               )}
             </h2>
           ) : null}
-          <ItemGroup className="gap-2">
+          <ItemGroup role="none" className="gap-2">
             {section.habits.map((habit) => {
               const mine = grouped.get(habit.id) ?? []
               const row = habitRowData(habit, mine, today)

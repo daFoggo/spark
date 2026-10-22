@@ -162,7 +162,7 @@ export function ReviewFlow({ data }: { data: ReviewData }) {
               </div>
             ))}
           </dl>
-          <ItemGroup className="gap-2">
+          <ItemGroup role="none" className="gap-2">
             {data.habits.map((habit) => (
               <Item key={habit.id} variant="outline" size="sm">
                 <ItemContent>
@@ -209,7 +209,7 @@ export function ReviewFlow({ data }: { data: ReviewData }) {
           {data.habits.length === 0 ? (
             <p className="text-ink-2">You have no habits to tune yet.</p>
           ) : (
-            <ItemGroup className="gap-2">
+            <ItemGroup role="none" className="gap-2">
               {data.habits.map((habit) => (
                 <Item key={habit.id} variant="outline" size="sm">
                   <ItemContent>
@@ -266,7 +266,7 @@ export function ReviewFlow({ data }: { data: ReviewData }) {
           {data.tasks.length === 0 ? (
             <p className="text-ink-2">No open tasks. Nothing to pick.</p>
           ) : (
-            <ItemGroup className="gap-2">
+            <ItemGroup role="none" className="gap-2">
               {data.tasks.map((task) => {
                 const chosen = focus.includes(task.id)
                 return (
