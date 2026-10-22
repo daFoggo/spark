@@ -94,8 +94,16 @@ Measured on Supabase cloud (ap-south-1) from Vietnam, production build:
 - Timezone, week start and adoption date in the JWT (hook) + the goal read started alongside the rest: ~315 ms on all six
   dashboard pages. The floor is React's Suspense reveal, not data.
 
+Re-measured 2026-10-22 on the Spark project (ap-northeast-1, Tokyo), production build run locally from Vietnam:
+- TTFB 6-11 ms (the Partial Prerender shell); full streamed content 0.5-3.6 s. The wait is the Supabase round trips: the
+  link was unstable that day (single requests 0.15-9 s), so treat the absolute numbers as unreliable. The sequential
+  round-trip count is unchanged from the design above.
+- The Vercel project defaulted to `iad1` (US East) while the database is in Tokyo, which adds ~150-200 ms per round trip.
+  `apps/web/vercel.json` pins functions to `hnd1`. Re-measure on the deployed app after changing the region.
+
 Rules:
 1. Deploy Next in the database's region; choose the region by where Next runs. This alone turns 150 ms into a few ms.
+   `apps/web/vercel.json` (`regions: ["hnd1"]`) does this for the Tokyo database; change both together.
 2. Count sequential awaits that hit the network. Start every independent read before the first `await`
    ([data-fetching §4.2](data-fetching.md#42-parallel-and-sequential-reads)).
 3. A per-user value most pages need first and that rarely changes belongs in the token: a Custom Access Token Hook
