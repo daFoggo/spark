@@ -1,6 +1,6 @@
 # Project Structure and Monorepo Architecture
 
-Comprehensive architectural guide for **next-mono-base** running on **Next.js 16.4.0** and **Turborepo**.
+Comprehensive architectural guide for **next-mono-base** running on **Next.js 16.4.2** and **Turborepo**.
 This document defines how code is organized across the monorepo, the feature-based layout inside `apps/web`, boundary rules enforced by ESLint, and strict criteria for extracting shared packages.
 
 ---

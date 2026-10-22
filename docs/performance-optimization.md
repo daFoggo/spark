@@ -1,6 +1,6 @@
 # Frontend Performance, Bundle Optimization & Hydration UX
 
-Comprehensive performance optimization guide for `apps/web` on **Next.js 16.4.0** with React 19.
+Comprehensive performance optimization guide for `apps/web` on **Next.js 16.4.2** with React 19.
 Covers code splitting, bundle trimming, state preservation (`<Activity>`), hydration flash prevention, View Transitions, and Core Web Vitals.
 Sources are the docs shipped with the package (`apps/web/node_modules/next/dist/docs/01-app/`, written `DOCS/` below) and Vercel Engineering best practices (`vercel-react-best-practices`).
 For server data fetching waterfalls and cache directives, see [data-fetching.md](data-fetching.md).

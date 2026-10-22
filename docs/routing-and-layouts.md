@@ -1,7 +1,7 @@
 # Routing, Layouts & Route Segments
 
 How `apps/web` organizes routes, handles multi-panel layouts, modals, and segment boundaries.
-Written against **Next.js 16.4.0** with React 19, `cacheComponents: true`, and `partialPrefetching: true`.
+Written against **Next.js 16.4.2** with React 19, `cacheComponents: true`, and `partialPrefetching: true`.
 Sources are the docs shipped with the package (`apps/web/node_modules/next/dist/docs/01-app/`, written `DOCS/` below).
 For feature folder layout and component tiers, see [project-structure.md](project-structure.md).
 For data fetching and caching rules, see [data-fetching.md](data-fetching.md).

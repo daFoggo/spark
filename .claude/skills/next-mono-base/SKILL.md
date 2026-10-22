@@ -10,7 +10,7 @@ description: >
 
 # next-mono-base Conventions & Decision Router
 
-Fast decision guide for `apps/web` running on **Next.js 16.4.0** with `cacheComponents: true` and `partialPrefetching: true`.
+Fast decision guide for `apps/web` running on **Next.js 16.4.2** with `cacheComponents: true` and `partialPrefetching: true`.
 All principles derive from and link back to the Single Source of Truth in `docs/`.
 
 ---

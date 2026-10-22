@@ -1,6 +1,6 @@
 # Advanced Data Fetching, Caching & Production Patterns
 
-Production extensions for `apps/web` running on **Next.js 16.4.0** with `cacheComponents: true` and `partialPrefetching: true`.
+Production extensions for `apps/web` running on **Next.js 16.4.2** with `cacheComponents: true` and `partialPrefetching: true`.
 Complements [data-fetching.md](data-fetching.md) and [authentication.md](authentication.md).
 Sources resolve from `apps/web/node_modules/next/dist/docs/01-app/` (`DOCS/`).
 

@@ -1,6 +1,6 @@
 # Client state with Zustand
 
-How `apps/web` keeps client-only state that several client components share. Written against **Next.js 16.4.0**,
+How `apps/web` keeps client-only state that several client components share. Written against **Next.js 16.4.2**,
 React 19.3, `cacheComponents: true`, `partialPrefetching: true` and **Zustand v5** (checked against `zustand@5.0.15`).
 Sources are the Next.js docs shipped with the package (`apps/web/node_modules/next/dist/docs/01-app/`, written `DOCS/` below)
 and the official Zustand docs (`https://zustand.docs.pmnd.rs`, written `ZDOCS/` below, plus the docs source on GitHub).

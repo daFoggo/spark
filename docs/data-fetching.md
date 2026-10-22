@@ -1,6 +1,6 @@
 # Data fetching, caching and mutation
 
-How `apps/web` reads data, caches it and changes it. Written against **Next.js 16.4.0** with
+How `apps/web` reads data, caches it and changes it. Written against **Next.js 16.4.2** with
 `cacheComponents: true` and `partialPrefetching: true` ([next.config.ts](../apps/web/next.config.ts)).
 Sources are the docs shipped with the package (`apps/web/node_modules/next/dist/docs/01-app/`, written `DOCS/` below);
 re-read them after upgrading Next. Authentication details live in [authentication.md](authentication.md).
@@ -439,7 +439,7 @@ Summary only; tuning is a separate task.
 
 ## 11. Sources
 
-All under `DOCS/` (Next.js 16.4.0): `01-getting-started/` 05 server and client components, 06 fetching data, 07 mutating data,
+All under `DOCS/` (Next.js 16.4.2): `01-getting-started/` 05 server and client components, 06 fetching data, 07 mutating data,
 08 caching, 09 revalidating, 10 error handling, 15 route handlers; `02-guides/` client-side-data-fetching (index, swr,
 tanstack-query; read, not adopted), backend-for-frontend, server-actions, forms, interactive-apps, single-page-applications, data-security,
 streaming, authentication-with-cache-components, caching-without-cache-components, how-revalidation-works,
