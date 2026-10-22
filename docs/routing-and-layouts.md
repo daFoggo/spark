@@ -225,7 +225,7 @@ export async function generateStaticParams() {
 ## 6. Error Boundaries & Not-Found Conventions
 
 ### 6.1 Granular `error.tsx`
-`error.tsx` must always be a **Client Component** (`'use client'`). It receives the error object and a `reset()` function:
+`error.tsx` must always be a **Client Component** (`'use client'`). It receives the error object and a `retry()` function (the older `reset()` still exists, but Next 16.4 documents `retry()` as the default):
 
 ```tsx
 // app/(dashboard)/cases/error.tsx
@@ -243,7 +243,7 @@ export default function CasesError({
     <div className="p-6 text-center space-y-4">
       <h2 className="text-destructive font-semibold">Failed to load cases</h2>
       <p className="text-muted-foreground text-sm">{error.message}</p>
-      <Button variant="outline" onClick={() => reset()}>
+      <Button variant="outline" onClick={() => retry()}>
         Try again
       </Button>
     </div>
@@ -260,10 +260,10 @@ Root layout crashes require `app/global-error.tsx`, which must define its own `<
 'use client'
 export default function GlobalError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string }
-  reset: () => void
+  retry: () => void
 }) {
   return (
     <html>
