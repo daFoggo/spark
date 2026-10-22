@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
+import { z } from "zod"
 
 import { Progress } from "@workspace/ui/components/progress"
 import { Skeleton } from "@workspace/ui/components/skeleton"
@@ -47,6 +48,8 @@ async function HabitDetail({
 }) {
   await requirePermission("dashboard:view")
   const { habitId } = await params
+  // A malformed id is a 404, not a failed read that reaches error.tsx.
+  if (!z.uuid().safeParse(habitId).success) notFound()
   const { timezone, weekStart } = await getCalendar()
   const today = await getToday(timezone)
   const [habit, checkIns, goals] = await Promise.all([

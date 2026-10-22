@@ -15,6 +15,7 @@ import { CheckpointList } from "@/features/goals/components/checkpoint-list"
 import { GoalDialog } from "@/features/goals/components/goal-dialog"
 import { GoalStatusActions } from "@/features/goals/components/goal-status"
 import { getGoal } from "@/features/goals/queries"
+import { GoalIdSchema } from "@/features/goals/schemas"
 import { canMarkDone, goalCells } from "@/features/goals/rules"
 import { HabitDialog } from "@/features/habits/components/habit-dialog"
 import { getCheckIns, getHabits } from "@/features/habits/queries"
@@ -55,6 +56,8 @@ function SectionTitle({
 async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
   await requirePermission("dashboard:view")
   const { goalId } = await params
+  // A malformed id is a 404, not a failed read that reaches error.tsx.
+  if (!GoalIdSchema.safeParse(goalId).success) notFound()
   const goalPromise = getGoal(goalId)
   const habitsPromise = getHabits()
   const { timezone, weekStart } = await getCalendar()

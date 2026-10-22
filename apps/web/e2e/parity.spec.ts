@@ -241,6 +241,17 @@ test("another user cannot see the first user's data", async ({ page }) => {
   await expect(main(page)).not.toContainText("Plan route")
 })
 
+test("malformed ids show not-found", async ({ page }) => {
+  await signIn(page, userB)
+  await page.waitForURL(/\/dashboard$/)
+  for (const url of ["/dashboard/goals/abc", "/dashboard/habits/abc"]) {
+    await page.goto(url)
+    await settled(page)
+    await expect(main(page).getByText("Nothing here")).toBeVisible()
+    await expect(page.getByText("This page could not load")).toHaveCount(0)
+  }
+})
+
 test("signing out ends the session", async ({ page }) => {
   await signIn(page, userB)
   await page.waitForURL(/\/dashboard$/)
