@@ -128,6 +128,7 @@ export async function updateHabitAction(
   if (!parsed.success) {
     return fail(parsed.error.issues[0]?.message ?? "Invalid habit")
   }
+  let written = false
   try {
     await updateHabit(accessToken, habitId, {
       name: parsed.data.name,
@@ -137,8 +138,11 @@ export async function updateHabitAction(
       timeOfDay: parsed.data.timeOfDay,
       goalId: parsed.data.goalId,
     })
+    written = true
     await setHabitSchedule(accessToken, habitId, parsed.data)
   } catch (error) {
+    // The first write is saved even when the schedule step fails: the cache must not stay stale.
+    if (written) updateTag(habitsTag(userId))
     const message = expected(error)
     if (message) return fail(message)
     throw error

@@ -7,6 +7,8 @@ import { verifySession } from "@/lib/dal"
 import { isExpectedDataError } from "@/lib/errors"
 
 import {
+  CheckpointMoveSchema,
+  CheckpointPositionSchema,
   CheckpointTitleSchema,
   GOAL_STATUSES,
   GoalFormSchema,
@@ -129,14 +131,19 @@ export async function addCheckpointAction(input: {
 }): Promise<GoalState> {
   const { userId, accessToken } = await verifySession()
   const title = CheckpointTitleSchema.safeParse(input.title)
-  if (!GoalIdSchema.safeParse(input.goalId).success || !title.success) {
+  const position = CheckpointPositionSchema.safeParse(input.position)
+  if (
+    !GoalIdSchema.safeParse(input.goalId).success ||
+    !title.success ||
+    !position.success
+  ) {
     return { error: title.error?.issues[0]?.message ?? "Invalid checkpoint" }
   }
   const result = await guarded(() =>
     addCheckpoint(accessToken, {
       goalId: input.goalId,
       title: title.data,
-      position: input.position,
+      position: position.data,
     })
   )
   if ("error" in result) return result
@@ -191,8 +198,10 @@ export async function editCheckpointAction(input: {
       renameCheckpoint(accessToken, input.checkpointId, title.data)
     )
   } else if ("move" in change) {
+    const move = CheckpointMoveSchema.safeParse(change.move)
+    if (!move.success) return { error: "Invalid request" }
     result = await guarded(() =>
-      moveCheckpoint(accessToken, input.checkpointId, change.move)
+      moveCheckpoint(accessToken, input.checkpointId, move.data)
     )
   } else {
     result = await guarded(() =>

@@ -39,9 +39,10 @@ export async function syncLocaleAction(input: {
     }
     throw error
   }
+  // The save succeeded: invalidate first so a failing claims refresh cannot leave the cache stale.
+  updateTag(settingsTag(userId))
   // Timezone and week start also live in the token on some stacks (`Session.calendar`).
   await refreshSessionClaims()
-  updateTag(settingsTag(userId))
   return { saved: true }
 }
 
@@ -78,8 +79,9 @@ export async function updateSettingsAction(
     }
     throw error
   }
+  // The save succeeded: invalidate first so a failing claims refresh cannot leave the cache stale.
+  updateTag(settingsTag(userId))
   // Timezone and week start also live in the token on some stacks (`Session.calendar`).
   await refreshSessionClaims()
-  updateTag(settingsTag(userId))
   return { saved: true }
 }
