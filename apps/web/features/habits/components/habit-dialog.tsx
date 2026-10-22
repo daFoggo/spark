@@ -33,6 +33,7 @@ import {
   type ActionState,
 } from "../actions"
 import type { Habit, TimeOfDay } from "../schemas"
+import { HABITS_PATH } from "@/config/routes"
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const TIMES: { value: TimeOfDay; label: string }[] = [
@@ -117,7 +118,7 @@ function HabitForm({
       if (result.saved) {
         onDone()
         if (!habit && result.habitId) {
-          router.push(`/dashboard/habits/${result.habitId}`)
+          router.push(`${HABITS_PATH}/${result.habitId}`)
         }
       }
       return result
@@ -263,7 +264,7 @@ function HabitForm({
           Cancel
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? <Spinner /> : null}
+          {pending ? <Spinner data-icon="inline-start" /> : null}
           {habit ? "Save changes" : "Create habit"}
         </Button>
       </DialogActions>

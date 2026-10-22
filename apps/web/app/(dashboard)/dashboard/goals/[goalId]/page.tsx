@@ -33,6 +33,7 @@ import { taskRowData } from "@/features/tasks/rows"
 import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
 import { addDays, formatDay } from "@/lib/dates"
+import { HABITS_PATH } from "@/config/routes"
 
 export const metadata: Metadata = { title: "Goal" }
 
@@ -142,7 +143,7 @@ async function GoalDetail({ params }: { params: Promise<{ goalId: string }> }) {
               {linkedHabits.map((habit) => (
                 <li key={habit.id}>
                   <Link
-                    href={`/dashboard/habits/${habit.id}`}
+                    href={`${HABITS_PATH}/${habit.id}`}
                     prefetch
                     className="hover:underline"
                   >

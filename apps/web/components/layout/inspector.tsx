@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useCallback, useContext, useState } from "react"
+import { createContext, use, useCallback, useState } from "react"
 
 import {
   Sheet,
@@ -32,7 +32,7 @@ type InspectorState = {
 const InspectorContext = createContext<InspectorState | null>(null)
 
 function useInspector() {
-  const state = useContext(InspectorContext)
+  const state = use(InspectorContext)
   if (!state)
     throw new Error("Inspector parts must sit inside InspectorProvider")
   return state
@@ -54,9 +54,9 @@ export function InspectorProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <InspectorContext.Provider value={{ open, sheetOpen, wide, toggle, close }}>
+    <InspectorContext value={{ open, sheetOpen, wide, toggle, close }}>
       {children}
-    </InspectorContext.Provider>
+    </InspectorContext>
   )
 }
 

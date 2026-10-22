@@ -48,7 +48,7 @@ export function SignInForm() {
       >
         {pending ? (
           <>
-            <Spinner className="mr-2" />
+            <Spinner data-icon="inline-start" />
             Signing in…
           </>
         ) : (

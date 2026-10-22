@@ -32,7 +32,7 @@ import {
 } from "@/features/habits/stats"
 import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
-import { GOALS_PATH } from "@/config/routes"
+import { GOALS_PATH, HABITS_PATH } from "@/config/routes"
 import { requirePermission } from "@/lib/dal"
 import { addDays } from "@/lib/dates"
 
@@ -119,7 +119,7 @@ async function HabitList() {
                   variant="outline"
                   size="sm"
                   render={
-                    <Link href={`/dashboard/habits/${habit.id}`} prefetch />
+                    <Link href={`${HABITS_PATH}/${habit.id}`} prefetch />
                   }
                 >
                   <ItemContent>

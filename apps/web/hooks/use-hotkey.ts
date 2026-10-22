@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useEffectEvent } from "react"
 
 function isTypingTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false
@@ -14,6 +14,7 @@ function isTypingTarget(target: EventTarget | null) {
 
 /** Single-key shortcut (`[D]`, `[B]`), ignored while typing or with a modifier held. */
 export function useHotkey(key: string, onPress: () => void) {
+  const press = useEffectEvent(onPress)
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.repeat) return
@@ -21,9 +22,9 @@ export function useHotkey(key: string, onPress: () => void) {
       // Browser autofill dispatches keydown events without a `key`.
       if ((event.key as string | undefined)?.toLowerCase() !== key) return
       if (isTypingTarget(event.target)) return
-      onPress()
+      press()
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [key, onPress])
+  }, [key])
 }

@@ -20,6 +20,7 @@ import { useOptimistic, useState, useTransition } from "react"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { setGoalStatusAction } from "../actions"
+import { GOALS_PATH } from "@/config/routes"
 
 export type BoardGoal = {
   id: string
@@ -61,7 +62,7 @@ function Card({
         <IconGripVertical aria-hidden className="size-4" />
       </button>
       <Link
-        href={`/dashboard/goals/${goal.id}`}
+        href={`${GOALS_PATH}/${goal.id}`}
         prefetch
         className="flex min-w-0 flex-1 flex-col gap-0.5"
       >

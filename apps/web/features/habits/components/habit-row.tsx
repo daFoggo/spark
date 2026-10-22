@@ -19,6 +19,7 @@ import { HeatStrip, type HeatCell } from "@/components/shared/heatmap"
 
 import { checkInAction, checkInNoteAction } from "../actions"
 import type { CheckInLevel } from "../schemas"
+import { HABITS_PATH } from "@/config/routes"
 
 export type HabitRowData = {
   id: string
@@ -87,7 +88,7 @@ export function HabitRow({
       <ItemContent>
         <ItemTitle>
           <Link
-            href={`/dashboard/habits/${habit.id}`}
+            href={`${HABITS_PATH}/${habit.id}`}
             prefetch
             className="hover:underline"
           >

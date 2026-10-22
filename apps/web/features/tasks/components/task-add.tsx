@@ -102,7 +102,7 @@ export function TaskAdd({
         />
         <InputGroupAddon align="inline-end">
           <InputGroupButton type="submit" variant="default" disabled={pending}>
-            {pending ? <Spinner /> : null}
+            {pending ? <Spinner data-icon="inline-start" /> : null}
             Add
           </InputGroupButton>
         </InputGroupAddon>

@@ -126,7 +126,7 @@ function GoalForm({ goal, onDone }: { goal: Goal; onDone: () => void }) {
           Cancel
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? <Spinner /> : null}
+          {pending ? <Spinner data-icon="inline-start" /> : null}
           Save changes
         </Button>
       </DialogActions>

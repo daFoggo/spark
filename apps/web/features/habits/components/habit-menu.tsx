@@ -27,6 +27,7 @@ import {
   pauseHabitAction,
   resumeHabitAction,
 } from "../actions"
+import { HABITS_PATH } from "@/config/routes"
 
 /** Pause / resume / archive for the habit page (HB-5, HB-6). Archiving asks first. */
 export function HabitMenu({
@@ -106,7 +107,7 @@ export function HabitMenu({
               onClick={() =>
                 run(
                   () => archiveHabitAction(habitId),
-                  () => router.push("/dashboard/habits")
+                  () => router.push(HABITS_PATH)
                 )
               }
             >

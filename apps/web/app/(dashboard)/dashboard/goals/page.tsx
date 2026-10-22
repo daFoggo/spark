@@ -26,6 +26,7 @@ import { getCalendar } from "@/features/settings/queries"
 import { getToday } from "@/lib/clock"
 import { requirePermission } from "@/lib/dal"
 import { addDays } from "@/lib/dates"
+import { GOALS_PATH } from "@/config/routes"
 
 export const metadata: Metadata = { title: "Goals" }
 
@@ -65,7 +66,7 @@ function GoalGroup({
                 key={goal.id}
                 variant="outline"
                 size="sm"
-                render={<Link href={`/dashboard/goals/${goal.id}`} prefetch />}
+                render={<Link href={`${GOALS_PATH}/${goal.id}`} prefetch />}
               >
                 <ItemContent>
                   <ItemTitle>{goal.name}</ItemTitle>

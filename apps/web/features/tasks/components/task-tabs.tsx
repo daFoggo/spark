@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
+import { TASKS_PATH } from "@/config/routes"
 
 const TABS = [
   { value: "today", label: "Today" },
@@ -16,7 +17,7 @@ export function TaskTabs({ value }: { value: string }) {
   return (
     <Tabs
       value={value}
-      onValueChange={(next) => router.push(`/dashboard/tasks?tab=${next}`)}
+      onValueChange={(next) => router.push(`${TASKS_PATH}?tab=${next}`)}
     >
       <TabsList variant="line">
         {TABS.map((tab) => (

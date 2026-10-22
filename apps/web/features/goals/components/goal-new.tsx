@@ -12,6 +12,7 @@ import {
 import { Spinner } from "@workspace/ui/components/spinner"
 
 import { createGoalAction, type GoalState } from "../actions"
+import { GOALS_PATH } from "@/config/routes"
 
 /** A goal from just a name (GL-1). With 3 active goals it lands in Someday and says so (GL-3). */
 export function GoalNew() {
@@ -24,7 +25,7 @@ export function GoalNew() {
         formRef.current?.reset()
         // A goal that went to Someday stays on the list so the notice below is seen.
         if (result.goalId && !result.someday) {
-          router.push(`/dashboard/goals/${result.goalId}`)
+          router.push(`${GOALS_PATH}/${result.goalId}`)
         }
       }
       return result
@@ -48,7 +49,7 @@ export function GoalNew() {
         />
         <InputGroupAddon align="inline-end">
           <InputGroupButton type="submit" variant="default" disabled={pending}>
-            {pending ? <Spinner /> : null}
+            {pending ? <Spinner data-icon="inline-start" /> : null}
             Add
           </InputGroupButton>
         </InputGroupAddon>

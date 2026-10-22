@@ -93,7 +93,7 @@ export function CheckpointList({
             />
             <Input
               defaultValue={checkpoint.title}
-              aria-label="Checkpoint title"
+              aria-label={`Checkpoint title: ${checkpoint.title}`}
               maxLength={120}
               className="min-w-0 flex-1 border-transparent bg-transparent"
               onBlur={(event) => {

@@ -80,7 +80,7 @@ export function SignUpForm() {
       >
         {pending ? (
           <>
-            <Spinner className="mr-2" />
+            <Spinner data-icon="inline-start" />
             Creating account…
           </>
         ) : (

@@ -153,7 +153,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         </Alert>
       ) : null}
       <Button type="submit" className="self-start" disabled={pending}>
-        {pending ? <Spinner /> : null}
+        {pending ? <Spinner data-icon="inline-start" /> : null}
         Save
       </Button>
     </form>

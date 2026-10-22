@@ -24,6 +24,7 @@ import {
 import { completeReviewAction } from "../actions"
 import { toggleFocus } from "../rules"
 import { FOCUS_LIMIT, type HabitChoice } from "../schemas"
+import { HABITS_PATH } from "@/config/routes"
 
 export type ReviewHabit = {
   id: string
@@ -113,7 +114,7 @@ export function ReviewFlow({ data }: { data: ReviewData }) {
               {easier.map((habit) => (
                 <li key={habit.id}>
                   <Link
-                    href={`/dashboard/habits/${habit.id}`}
+                    href={`${HABITS_PATH}/${habit.id}`}
                     prefetch
                     className="underline-offset-4 hover:underline"
                   >

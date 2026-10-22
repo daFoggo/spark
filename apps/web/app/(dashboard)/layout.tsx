@@ -27,6 +27,7 @@ import { DashboardCrumbs } from "./_components/crumbs"
 import { InspectorContent } from "./_components/inspector-content"
 import { SessionAccount, SessionNav } from "./_components/session-nav"
 import { TimezoneGate } from "./_components/timezone-gate"
+import { DASHBOARD_PATH } from "@/config/routes"
 
 /**
  * Dashboard shell (design system §8): sidebar column + main column, each a ColumnHeader over a
@@ -43,7 +44,7 @@ export default function DashboardLayout({
       <InspectorProvider>
         <AppSidebar>
           <ColumnHeader className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-            <Link href="/">
+            <Link href={DASHBOARD_PATH}>
               <AppLogo textClassName="group-data-[collapsible=icon]:hidden" />
             </Link>
           </ColumnHeader>

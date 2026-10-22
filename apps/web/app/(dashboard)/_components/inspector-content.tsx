@@ -15,6 +15,7 @@ import {
 
 import { BACKDATE_DAYS } from "../dashboard/_components/day"
 import { loadDashboard } from "./dashboard-data"
+import { DASHBOARD_PATH } from "@/config/routes"
 
 const INITIALS = ["S", "M", "T", "W", "T", "F", "S"]
 
@@ -76,8 +77,8 @@ export async function InspectorContent() {
                 date > today || date < addDays(today, -BACKDATE_DAYS)
                   ? undefined
                   : date === today
-                    ? "/dashboard"
-                    : `/dashboard?day=${date}`,
+                    ? DASHBOARD_PATH
+                    : `${DASHBOARD_PATH}?day=${date}`,
             },
           ]
         : []
