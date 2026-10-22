@@ -105,4 +105,4 @@ xóa cookie → `/sign-in`. Session bị thu hồi (user còn) vẫn dùng đư�
 - `next start` trên `http://localhost` báo `ERR_SSL_PROTOCOL_ERROR` vì CSP `upgrade-insecure-requests` (chỉ bật ở production);
   hai test đầu của `e2e/smoke.spec.ts` fail vì vậy. Chạy smoke trên `next dev`, hoặc prod sau HTTPS.
 - `e2e/smoke.spec.ts` cần `admin@gmail.com` có role `admin` (link Members).
-- Postgres của `spark-backend` map ra host port `5433` (không phải 5432) để chạy song song DB của project khác; `DATABASE_URL` trong `.env` dùng `localhost:5433`.
+- Postgres của `spark-backend` map ra host port `2211` (không phải 5432) để chạy song song DB của project khác; `DATABASE_URL` trong `.env` dùng `localhost:2211`.

@@ -37,7 +37,7 @@ Paths relative to `apps/web/`.
 
 ### 2.1 Better Auth + FastAPI (Spark today)
 1. `apps/web/.env.local`: the `better-auth` block of `.env.example`.
-2. `docker compose up -d` in `spark-backend` (Postgres on host port 5433, API on 8000).
+2. `docker compose up -d` in `spark-backend` (Postgres on host port 2211, API on 2210).
 3. `pnpm --filter web dev`.
 
 ### 2.2 A new project on Supabase (from this base)

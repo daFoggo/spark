@@ -12,7 +12,7 @@ const authSchema = z.discriminatedUnion("AUTH_PROVIDER", [
     BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
     BETTER_AUTH_SECRET: z.string().min(32),
     DATABASE_URL: z.string().min(1),
-    API_AUDIENCE: z.string().min(1).default("http://localhost:8000"),
+    API_AUDIENCE: z.string().min(1).default("http://localhost:2210"),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
   }),
@@ -33,7 +33,7 @@ export const authConfig: AuthConfig = authSchema.parse({
     "placeholder-secret-at-least-32-characters-long",
   DATABASE_URL:
     process.env.DATABASE_URL ||
-    "postgresql://postgres:postgres@localhost:5433/spark",
+    "postgresql://postgres:postgres@localhost:2211/spark",
   API_AUDIENCE: process.env.API_AUDIENCE,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,

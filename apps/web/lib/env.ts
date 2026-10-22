@@ -10,7 +10,7 @@ import { z } from "zod"
  * otherwise Turborepo's strict env mode hides it from the task.
  */
 const serverSchema = z.object({
-  API_BASE_URL: z.url().default("http://localhost:8000"),
+  API_BASE_URL: z.url().default("http://localhost:2210"),
 })
 
 export const env = serverSchema.parse({

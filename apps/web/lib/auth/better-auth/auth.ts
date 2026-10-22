@@ -56,7 +56,7 @@ export const auth = betterAuth({
     jwt({
       jwt: {
         issuer: cfg?.BETTER_AUTH_URL ?? "http://localhost:3000",
-        audience: cfg?.API_AUDIENCE ?? "http://localhost:8000",
+        audience: cfg?.API_AUDIENCE ?? "http://localhost:2210",
         definePayload: ({ user }) => ({
           role: (user as { role?: string }).role ?? "member",
           name: user.name,

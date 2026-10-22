@@ -38,7 +38,7 @@ export async function apiFetch<T>(
   } catch (error) {
     throw new ApiError(
       503,
-      `Backend service unreachable (${env.API_BASE_URL}). Please verify that FastAPI backend is running on port 8000.`,
+      `Backend service unreachable (${env.API_BASE_URL}). Please verify that FastAPI backend is running on port 2210.`,
       error
     )
   }
