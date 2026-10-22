@@ -12,7 +12,7 @@ Supabase client, errors, generated types and the `supabase/` CLI directory (migr
 | `db:types`                               | Regenerates `src/database.types.ts`; run after every pushed migration                            |
 | `exec supabase db advisors --linked`     | Security and performance lints                                                                   |
 
-Exports: `./env` (validated public Supabase env), `./server` (`createDataClient(accessToken, { fetch? })`, `unwrap`;
+Exports: `./env` (validated public Supabase env), `./server` (`createDataClient(accessToken)`, `unwrap`;
 server-only), `./errors` (`DataError`, `unwrap`, helpers), `./types` (generated `Database`).
 
 `supabase test db --linked` needs Docker for `pg_prove`; `scripts/test-db.mjs` runs the same files through
