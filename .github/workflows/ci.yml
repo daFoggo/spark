@@ -10,10 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Build-time placeholders: the auth config is validated when routes are collected.
-      AUTH_PROVIDER: better-auth
-      API_BASE_URL: http://localhost:2210/v1
-      BETTER_AUTH_SECRET: ci-only-placeholder-secret-0123456789abcdef
-      DATABASE_URL: postgresql://postgres:postgres@localhost:2211/spark
+      AUTH_PROVIDER: supabase
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
     steps:
       - uses: actions/checkout@v4
         with:

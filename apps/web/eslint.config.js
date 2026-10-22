@@ -12,29 +12,19 @@ const layerRestrictions = [
   },
 ]
 
-const featureRestrictions = [
-  ...layerRestrictions,
-  {
-    group: ["**/server.api", "**/server.supabase"],
-    message:
-      "Import ./server: it picks the data path of the active stack (docs/providers.md).",
-  },
+const authRestrictedGroup = [
+  "@/lib/auth",
+  "@workspace/auth/server",
+  "@workspace/auth/config",
+  "@workspace/auth/better-auth-handler",
+  "@workspace/auth/proxy",
 ]
-
-const authRestrictedGroup = ["@/lib/auth", "@/lib/auth/**", "@/lib/env"]
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [
   ...nextJsConfig,
   {
     files: ["features/**/*.{ts,tsx}"],
-    rules: {
-      "no-restricted-imports": ["error", { patterns: featureRestrictions }],
-    },
-  },
-  {
-    // The selector is the one file that imports both data paths.
-    files: ["features/*/server.ts"],
     rules: {
       "no-restricted-imports": ["error", { patterns: layerRestrictions }],
     },
@@ -47,19 +37,19 @@ export default [
         "error",
         {
           patterns: [
-            ...featureRestrictions,
+            ...layerRestrictions,
             {
               group: [
                 "**/server",
                 "**/server.*",
                 "**/queries",
                 "@/lib/dal",
-                "@/lib/http",
-                "@/lib/supabase/data",
+                "@/lib/data",
+                "@workspace/db/server",
                 ...authRestrictedGroup,
               ],
               message:
-                "Feature components must not import server-only modules (server, queries, dal, http, auth).",
+                "Feature components must not import server-only modules (server, queries, dal, data, auth).",
             },
           ],
         },
@@ -77,12 +67,12 @@ export default [
             {
               group: [
                 "@/lib/dal",
-                "@/lib/http",
-                "@/lib/supabase/data",
+                "@/lib/data",
+                "@workspace/db/server",
                 ...authRestrictedGroup,
               ],
               message:
-                "Shared components must not import server-only modules (dal, http, auth).",
+                "Shared components must not import server-only modules (dal, data, auth).",
             },
           ],
         },

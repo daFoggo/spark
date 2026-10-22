@@ -1,3 +1,5 @@
+import type { Permission } from "@workspace/auth/permissions"
+
 import {
   ACCOUNT_PATH,
   DASHBOARD_PATH,
@@ -9,7 +11,6 @@ import {
   REVIEW_PATH,
   TASKS_PATH,
 } from "@/config/routes"
-import type { Permission } from "@/lib/auth/permissions"
 
 /**
  * Semantic icon names, resolved to Tabler icons in `components/layout/nav-icons.tsx`. Names (not

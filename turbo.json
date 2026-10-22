@@ -19,7 +19,6 @@
       ],
       "env": [
         "AUTH_PROVIDER",
-        "API_BASE_URL",
         "API_AUDIENCE",
         "DATABASE_URL",
         "BETTER_AUTH_URL",

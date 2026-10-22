@@ -4,10 +4,11 @@ import { cache } from "react"
 import { cacheLife } from "next/cache"
 import { forbidden, redirect } from "next/navigation"
 
+import { hasPermission, type Permission } from "@workspace/auth/permissions"
+
 import { SESSION_EXPIRED_PATH } from "@/config/routes"
 
 import { getAuthProvider, type Calendar, type Session } from "./auth"
-import { hasPermission, type Permission } from "./auth/permissions"
 
 export type { Calendar, Session }
 

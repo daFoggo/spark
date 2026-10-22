@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { hasPermission } from "@workspace/auth/permissions"
 import { DropdownMenuItem } from "@workspace/ui/components/dropdown-menu"
 
 import { AppSidebarSection } from "@/components/layout/app-sidebar"
@@ -8,7 +9,6 @@ import { UserMenu } from "@/components/layout/user-menu"
 import { DASHBOARD_NAV, filterNav } from "@/config/navigation"
 import { ACCOUNT_PATH, REVIEW_PATH } from "@/config/routes"
 import { SignOutMenuItem } from "@/features/auth/components/sign-out-menu-item"
-import { hasPermission } from "@/lib/auth/permissions"
 import { getReview } from "@/features/reviews/queries"
 import { isReviewDue } from "@/features/reviews/rules"
 import { getCalendar } from "@/features/settings/queries"

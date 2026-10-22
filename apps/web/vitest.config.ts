@@ -9,8 +9,9 @@ export default defineConfig({
     environment: "node",
     exclude: [...configDefaults.exclude, "e2e/**"],
     env: {
-      AUTH_PROVIDER: "better-auth",
-      API_BASE_URL: "http://localhost:8099/api/v1/",
+      AUTH_PROVIDER: "supabase",
+      NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
     },
   },
 })

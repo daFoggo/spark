@@ -234,7 +234,7 @@ test("another user cannot see the first user's data", async ({ page }) => {
   await signUp(page, userB)
   await expect(main(page)).not.toContainText("Run a 5k")
   await page.goto(goalUrl)
-  // RLS (Supabase) or the API's ownership check (FastAPI) hides it: the dashboard's not-found page.
+  // RLS (Supabase) hides it: the dashboard's not-found page.
   await expect(main(page).getByText("Nothing here")).toBeVisible()
   await page.goto("/dashboard/tasks?tab=later")
   await settled(page)

@@ -1,0 +1,36 @@
+{
+  "name": "@workspace/db",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --max-warnings 0",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:types": "supabase gen types typescript --linked > src/database.types.ts",
+    "db:push": "supabase db push",
+    "db:test": "node scripts/test-db.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "eslint": "^10",
+    "globals": "^17.13.0",
+    "supabase": "^2.121.0",
+    "typescript": "^5",
+    "vitest": "^5.0.4"
+  },
+  "exports": {
+    "./env": "./src/env.ts",
+    "./server": "./src/server.ts",
+    "./errors": "./src/errors.ts",
+    "./types": "./src/database.types.ts"
+  }
+}
