@@ -42,11 +42,15 @@ export const metadata: Metadata = { title: "Habits" }
 
 async function HabitList() {
   await requirePermission("dashboard:view")
+  const habitsPromise = getHabits()
   const goalsPromise = getGoals()
+  // If the calendar/today reads throw, these are never awaited; mark them handled.
+  habitsPromise.catch(() => {})
+  goalsPromise.catch(() => {})
   const { timezone } = await getCalendar()
   const today = await getToday(timezone)
   const [habits, checkIns, goals] = await Promise.all([
-    getHabits(),
+    habitsPromise,
     getCheckIns(addDays(today, -29), today),
     goalsPromise,
   ])

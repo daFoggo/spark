@@ -50,12 +50,17 @@ async function HabitDetail({
   const { habitId } = await params
   // A malformed id is a 404, not a failed read that reaches error.tsx.
   if (!z.uuid().safeParse(habitId).success) notFound()
+  const habitPromise = getHabit(habitId)
+  const goalsPromise = getGoals()
+  // If the calendar/today reads throw, these are never awaited; mark them handled.
+  habitPromise.catch(() => {})
+  goalsPromise.catch(() => {})
   const { timezone, weekStart } = await getCalendar()
   const today = await getToday(timezone)
   const [habit, checkIns, goals] = await Promise.all([
-    getHabit(habitId),
+    habitPromise,
     getCheckIns(addDays(today, -370), today, habitId),
-    getGoals(),
+    goalsPromise,
   ])
   if (!habit) notFound()
 
