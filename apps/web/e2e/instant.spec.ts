@@ -133,11 +133,21 @@ test("canary: a locked document load shows the shell without the goal list", asy
     { baseURL }
   )
 
-  // Releasing the lock sometimes (about 1 in 10 runs) leaves the locked shell on screen without
-  // streaming the rest in; one reload then proves the content is served once the lock is gone.
-  await expect(goalLink)
-    .toBeVisible({ timeout: 5_000 })
-    .catch(() => page.reload())
+  // Without a reload: the link should appear once the lock is released. In about 1 of 10 runs it
+  // does not (root cause unknown, possibly a Next / @next/playwright issue). That is recorded as an
+  // annotation, then the page is reloaded. The reload step only shows the page recovers on reload;
+  // it does NOT prove streaming after release.
+  const streamed = await goalLink
+    .waitFor({ state: "visible", timeout: 5_000 })
+    .then(() => true)
+    .catch(() => false)
+  if (!streamed) {
+    test.info().annotations.push({
+      type: "reload-after-release",
+      description: "goal link did not appear within 5 s of releasing the lock",
+    })
+    await page.reload()
+  }
   await expect(goalLink).toBeVisible()
 })
 
@@ -186,7 +196,7 @@ test("Habits -> habit detail", async ({ page }) => {
   })
 
   await instant(page, async () => {
-    await main(page).getByRole("link", { name: HABIT }).first().click()
+    await main(page).getByRole("link", { name: HABIT }).click()
     await page.waitForURL((url) => url.pathname === habitUrl)
     await probe(page)
     await expect(title).toBeVisible()
