@@ -15,38 +15,60 @@ A developer inadvertently calling `await cookies()`, `await searchParams`, or un
 Next.js provides the `@next/playwright` package with the `instant()` assertion to lock in this behavior during E2E tests (`DOCS/02-guides/instant-navigation.md`).
 
 ### 1.2 Setup
-Add Playwright dependencies to repo tooling:
-```bash
-pnpm --filter=web add -D @playwright/test @next/playwright
-```
+`@next/playwright` (exact `16.4.2`, same as `next`) and `@playwright/test` are devDependencies of `apps/web`. Specs live in `apps/web/e2e/`.
 
-### 1.3 Test Implementation Pattern
-Tests must assert that when a navigation link is clicked, the fallback/skeleton is **immediately visible** before the final streaming payload resolves:
+The testing API exists automatically in `next dev`, but prefetching does not run there, so prefetch behavior is only testable on a **production build**. A production build contains the testing API only when it is built with the flag below; never ship such a build.
 
 ```ts
-// apps/web/__tests__/e2e/feature-instant.spec.ts
-import { test, expect } from '@playwright/test'
-import { instant } from '@next/playwright'
+// apps/web/next.config.ts
+experimental: {
+  exposeTestingApiInProductionBuild: process.env.EXPOSE_TESTING_API === "1",
+}
+```
 
-test.describe('Instant Navigation: Feature Shell', () => {
-  test('navigating to /dashboard/settings reveals shell & skeleton immediately', async ({ page }) => {
-    // 1. Warm up session / start on dashboard
-    await page.goto('/dashboard')
+```bash
+EXPOSE_TESTING_API=1 pnpm build   # the variable must be set at build time
+pnpm --filter web start           # then run the specs against next start
+```
 
-    // 2. Wrap client navigation in instant()
-    await instant(async () => {
-      await page.click('a[href="/dashboard/settings"]')
-      // Assert that the static shell & fallback appear synchronously on click
-      await expect(page.locator('[data-slot="settings-skeleton"]')).toBeVisible()
-    })
+Setting `EXPOSE_TESTING_API` only for `next start` does not add the testing API to an existing build. A plain `pnpm build` (CI `build` job, deploys) has no testing API.
 
-    // 3. Assert streamed content settles afterwards
-    await expect(page.locator('[data-slot="settings-card"]')).toBeVisible()
+### 1.3 Test Implementation Pattern
+Signature: `instant(page, fn, { baseURL })`. `page` comes first; pass `baseURL` when `page.goto()` is the first navigation inside the callback. Inside `fn`, only the immediately available UI (static shell, or the destination's prefetched UI) renders; other dynamic content stays blocked until `fn` returns.
+
+For a client navigation, **wait for the destination URL before asserting**, otherwise a shared selector can match the source page. Then also assert that content which must wait is absent, and present after the scope ends.
+
+```ts
+// apps/web/e2e/feature-instant.spec.ts
+import { expect, test } from "@playwright/test"
+import { instant } from "@next/playwright"
+
+test("client navigation to /dashboard/settings is instant", async ({ page }) => {
+  await page.goto("/dashboard")
+
+  await instant(page, async () => {
+    await page.click('a[href="/dashboard/settings"]')
+    await page.waitForURL((url) => url.pathname === "/dashboard/settings")
+    await expect(page.locator("h1")).toContainText("Settings")
   })
+
+  // Streamed content settles after the instant() scope ends.
+  await expect(page.getByTestId("settings-card")).toBeVisible()
+})
+
+test("initial load shows the static shell", async ({ page, baseURL }) => {
+  await instant(
+    page,
+    async () => {
+      await page.goto("/dashboard/settings")
+      await expect(page.locator("h1")).toContainText("Settings")
+    },
+    { baseURL }
+  )
 })
 ```
 
-`instant()` fails if the client navigation transition stalls on a server render without painting the fallback UI, guaranteeing that regressions are blocked in CI.
+`instant()` fails if the navigation stalls on a server render without committing the prefetched UI, so regressions are blocked in CI. Source: `DOCS/02-guides/instant-navigation.md` ("Prevent regressions with e2e tests").
 
 ---
 

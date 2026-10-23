@@ -27,7 +27,8 @@
         "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
-        "NODE_ENV"
+        "NODE_ENV",
+        "EXPOSE_TESTING_API"
       ]
     },
     "lint": {

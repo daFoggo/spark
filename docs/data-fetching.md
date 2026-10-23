@@ -420,7 +420,8 @@ Summary only; tuning is a separate task.
   `ensureStatic = 'shell' | 'prefetch' | 'navigation'` enforces static output for a stage; `export const prefetch =
   'force-disabled'` skips a segment. `connection()` excludes work from every prefetch.
 - Dev validates every page load and client navigation for instant UI; `export const instant = false` opts a segment out.
-  Inspect with the Navigation Inspector; lock behavior with `@next/playwright` `instant()` tests.
+  Inspect with the Navigation Inspector; lock behavior with `@next/playwright` `instant()` tests
+  (setup and the test-build requirements: [advanced-patterns.md](advanced-patterns.md) §1).
 - Prefetches run layouts and pages: keep render pure (no analytics or writes during render).
 
 ## 10. Checklist

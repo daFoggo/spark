@@ -43,6 +43,8 @@ const nextConfig: NextConfig = {
   experimental: {
     authInterrupts: true,
     optimizePackageImports: ["@tabler/icons-react"],
+    // Test builds only (EXPOSE_TESTING_API=1 at `next build`): lets @next/playwright instant() run on `next start`.
+    exposeTestingApiInProductionBuild: process.env.EXPOSE_TESTING_API === "1",
   },
   async headers() {
     return [
