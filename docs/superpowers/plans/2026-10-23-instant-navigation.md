@@ -69,3 +69,12 @@ Each candidate is a separate sub-task and is done only if the evidence says so:
 
 ## Rollback
 Tasks 1-3 add only tests, one dev dependency and an env-gated flag: revert the commits. Task 4 changes are independent commits, each revertible alone.
+
+## Outcome
+- **Task 4:** no change. Every one of the six navigations is content-complete within about two frames with no skeleton; lists are
+  small and bounded, so intent-based prefetch, `navigation()` and further prefetch changes were not adopted (add only with a
+  failing `instant()` test or a measured cost). See the report.
+- **Task 5:** `instant.spec.ts` stays a documented local gate (it signs up real users on the Supabase cloud project and needs an
+  `EXPOSE_TESTING_API=1` build; CI has only placeholder env): `docs/advanced-patterns.md` §1.4. Adopted/not adopted recorded in
+  `docs/data-fetching.md` §9 and `docs/vercel-skills.md` §1.8 (optimizer skill evaluated, not installed; `"use cache: remote"` and
+  `ensureStatic` not used).

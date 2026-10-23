@@ -411,7 +411,21 @@ Tag naming: `<resource>` for lists, `<resource>:<id>` for one item, `<resource>:
 
 ## 9. Navigation and prefetching (optimization)
 
-Summary only; tuning is a separate task.
+Summary of the options, plus the measured baseline (`docs/superpowers/reports/2026-10-23-instant-navigation-report.md`).
+
+**Baseline (production build run locally, one machine):** the six main navigations (Today -> Goals, Goals -> goal detail,
+Habits -> habit detail, Today -> Tasks, sidebar -> Weekly review, sidebar -> Account) are content-complete about two
+frames (~30 ms) after the click, with no skeleton and no non-prefetch RSC request, for a small user and for the maximum
+data set (3 goals, 12 habits, 12 tasks). A full page load issues about 15-24 prefetch requests, 14-16 of them from the
+sidebar and user-menu links; the longest list (12 habits) costs 12 detail prefetches, bounded by what is on screen.
+The default prefetch is therefore enough and nothing was changed: intent-based prefetch, `navigation()` and further
+prefetch tuning were deliberately not adopted (no evidence of a problem, and they risk a cold first click).
+`"use cache: remote"` is not used (all data is per user).
+
+**Rule:** add intent-based prefetch or `navigation()` only with a failing `instant()` test or a measured cost (a long
+list that multiplies per-link prefetches, an expensive section that should wait), and use the existing specs
+(`apps/web/e2e/instant.spec.ts`, [advanced-patterns.md](advanced-patterns.md) §1.4) as the safety net: the change must keep
+them green and show the improvement in the same measurement.
 
 - With `partialPrefetching`, a default `<Link>` prefetches the route's **App Shell**: static + cached content + session data
   from `cookies()`/`headers()` (cached per session in the browser). Content that depends on `params`/`searchParams` streams
@@ -435,6 +449,7 @@ Summary only; tuning is a separate task.
 - [ ] Every write invalidates what it changed (`updateTag` for the user's own change).
 - [ ] Clock and random values are cached (`"use cache: private"` when per request, like `getToday`) or behind `io()`.
 - [ ] Links to pages that read `searchParams` / `params` use `prefetch`.
+- [ ] Changed routes, Suspense boundaries, cache directives or prefetch links: run the instant gate (advanced-patterns.md §1.4).
 - [ ] Filters and pagination live in URL search params and render on the server; no client data library (rule in 7.3).
 - [ ] Client data: promise + `use()`; instant feedback with `useOptimistic` / `useTransition` / `useActionState`.
 

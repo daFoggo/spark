@@ -97,3 +97,25 @@ These are hard-load numbers; the client navigation numbers above are new.
   by 1-2 between two runs of the script.
   The click timings do not include server time, because the data had already been prefetched; a navigation that misses its
   prefetch would show the Supabase round trips (see the previous numbers) and would be visible in this probe.
+
+## Outcome (Tasks 1-5)
+
+Commits: `118aec5` (Task 1: `@next/playwright`, env-gated testing API), `ab4d3df` (docs fix for the `instant()` example and
+the turbo env), `bcbae46` + `df65b21` + `898a507` (Task 2: `instant.spec.ts`, canary, tighter locators, reload annotation),
+`de72db3` (Task 3: this baseline), and the Task 5 docs commit `docs: record the instant navigation gate and baseline`.
+
+Rulings:
+- **Task 4 = no change.** All six navigations are content-complete within about two frames with no skeleton. Lists are small and
+  bounded (goals max 3, habits 12 rows = 12 detail prefetches). Intent-based prefetch, `navigation()` and further prefetch
+  changes were deliberately not adopted: no evidence of a problem, and they would risk a cold first click. Add them later only
+  with a failing `instant()` test or a measured cost, using the existing specs as the safety net.
+- **The gate is local, not CI.** `instant.spec.ts` signs up real users on the Supabase cloud project and needs a build made with
+  `EXPOSE_TESTING_API=1`; CI only has placeholder env. Documented in `docs/advanced-patterns.md` §1.4.
+- **Not adopted on purpose:** the `next-partial-prefetching-optimizer` skill (edits code autonomously; would need an override in
+  `docs/vercel-skills.md` and per-change before/after numbers), `"use cache: remote"` (all data is per user), `ensureStatic`.
+
+Not verified:
+- No CI run of the gate.
+- All numbers come from one machine (Vietnam to Supabase Tokyo), 5 samples per cell, frame-quantised timing.
+- The root cause of the occasional post-release stall (annotation `reload-after-release`, roughly 1 in 5-10 canary runs) is unknown.
+- Behaviour beyond 12 habits was not measured.

@@ -81,6 +81,38 @@ test("initial load shows the static shell", async ({ page, baseURL }) => {
 
 `instant()` fails if the navigation stalls on a server render without committing the prefetched UI, so regressions are blocked in CI. Source: `DOCS/02-guides/instant-navigation.md` ("Prevent regressions with e2e tests").
 
+### 1.4 The instant gate (local, not CI)
+`apps/web/e2e/instant.spec.ts` covers the six main navigations (Today -> Goals, Goals -> goal detail, Habits -> habit detail, Today -> Tasks, sidebar -> Weekly review, sidebar -> Account) plus a canary. It is a **documented local gate, not a CI job**: it signs up real users on the Supabase cloud project and needs a build made with `EXPOSE_TESTING_API=1`, while CI only has placeholder env. Run it when you change routes, `<Suspense>` boundaries, cache directives or prefetch links.
+
+```bash
+# 1. Build with the testing API (the variable must be set at build time)
+EXPOSE_TESTING_API=1 pnpm --filter web build
+# 2. Serve it on a free port (3100 here), in a separate terminal
+pnpm --filter web exec next start -p 3100
+# 3. Run the gate against that server
+BASE_URL=http://localhost:3100 pnpm --filter web test:e2e:instant
+# 4. Stop the server, then remove the *@example.test users the run created
+pnpm --filter @workspace/db db:clean-test-users
+```
+
+`test:e2e:instant` runs with `--workers=1` (see `apps/web/package.json`). Do not reuse a server from an older build.
+
+**Read the canary first.** It does a locked document load of `/dashboard/goals` and expects the shell with skeletons and no goal link until the scope ends. It is the only proof that the build has a working testing API: on a build without the flag the six navigation tests **pass vacuously** (nothing is locked), and only the canary fails. A green run whose canary was skipped or not read means nothing.
+
+Known annotation: in roughly 1 of 5-10 canary runs the page stays on the locked shell after the scope ends and never streams the content. The canary waits 5 s, records the annotation `reload-after-release` and reloads once. That step shows recovery on reload only, not streaming after release; the root cause is unknown (possibly Next or `@next/playwright`). The six navigation tests never showed it. Seeing the annotation occasionally is expected; seeing it on every run is not.
+
+Sensitivity (each mutation on a fresh flagged build, then reverted):
+
+| Mutation | Result |
+| :--- | :--- |
+| Build without `EXPOSE_TESTING_API` | canary fails; the six others pass vacuously |
+| `getGoals` without `"use cache: private"` | Today -> Goals fails, as do the pages that call `getGoals` (habit detail, Tasks, Weekly review); goal detail and Account pass |
+| `await connection()` at the top of Account | Account fails, all others pass |
+| `prefetch` removed from the goal link in `features/goals/components/goal-board.tsx` | Goals -> goal detail fails, all others pass |
+| `prefetch` removed from the Link in `goals/page.tsx` | no failure: that link only renders the Done group, which the test data does not exercise |
+
+Final state of the gate: 5 consecutive runs of the 7 tests green (`--workers=1`, clean flagged build).
+
 ---
 
 ## 2. Distributed Remote Cache (`cacheHandlers` + Redis / Upstash)

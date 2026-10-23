@@ -82,6 +82,13 @@ Related docs: [data-fetching.md](data-fetching.md), [design-system.md](design-sy
 15. **Deploy only through `git push`, when the user asks**, with Conventional Commits. Never run `vercel deploy` or
     `vercel link`, never use the unauthenticated fallback deploy script, never print tokens.
 
+### 1.8 Evaluated and not installed
+
+16. **`next-partial-prefetching-optimizer` is not installed.** It edits code autonomously. Using it would need an
+    override here and before/after numbers per change (see the baseline in
+    `docs/superpowers/reports/2026-10-23-instant-navigation-report.md`). The 2026-10-23 baseline showed no problem to
+    fix, so there is no reason to add it today.
+
 ---
 
 ## 2. Which override applies to which skill
