@@ -419,7 +419,7 @@ frames (~30 ms) after the click, with no skeleton and no non-prefetch RSC reques
 data set (3 goals, 12 habits, 12 tasks). A full page load issues about 15-24 prefetch requests, 14-16 of them from the
 sidebar and user-menu links; the longest list (12 habits) costs 12 detail prefetches, bounded by what is on screen.
 The default prefetch is therefore enough and nothing was changed: intent-based prefetch, `navigation()` and further
-prefetch tuning were deliberately not adopted (no evidence of a problem, and they risk a cold first click).
+prefetch tuning were deliberately not adopted (no evidence of a problem, and they may risk a cold first click, not measured).
 `"use cache: remote"` is not used (all data is per user).
 
 **Rule:** add intent-based prefetch or `navigation()` only with a failing `instant()` test or a measured cost (a long

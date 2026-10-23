@@ -72,7 +72,7 @@ Tasks 1-3 add only tests, one dev dependency and an env-gated flag: revert the c
 
 ## Outcome
 - **Task 4:** no change. Every one of the six navigations is content-complete within about two frames with no skeleton; lists are
-  small and bounded, so intent-based prefetch, `navigation()` and further prefetch changes were not adopted (add only with a
+  small and bounded (a cold first click may be at risk if prefetch changes, not measured), so intent-based prefetch, `navigation()` and further prefetch changes were not adopted (add only with a
   failing `instant()` test or a measured cost). See the report.
 - **Task 5:** `instant.spec.ts` stays a documented local gate (it signs up real users on the Supabase cloud project and needs an
   `EXPOSE_TESTING_API=1` build; CI has only placeholder env): `docs/advanced-patterns.md` §1.4. Adopted/not adopted recorded in

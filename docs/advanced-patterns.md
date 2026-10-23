@@ -38,48 +38,47 @@ Setting `EXPOSE_TESTING_API` only for `next start` does not add the testing API 
 ### 1.3 Test Implementation Pattern
 Signature: `instant(page, fn, { baseURL })`. `page` comes first; pass `baseURL` when `page.goto()` is the first navigation inside the callback. Inside `fn`, only the immediately available UI (static shell, or the destination's prefetched UI) renders; other dynamic content stays blocked until `fn` returns.
 
-For a client navigation, **wait for the destination URL before asserting**, otherwise a shared selector can match the source page. Then also assert that content which must wait is absent, and present after the scope ends.
+For a client navigation, **wait for the destination URL before asserting**, otherwise a shared selector can match the source page. Scope selectors to `main:visible` and use `getByRole("heading", { level: 1, ... })`: routes hidden by `<Activity>` stay mounted and would cause strict-mode hits.
 
-The example uses `/dashboard/settings/account`: the `h1` "Account" is in the shell, while the `dt` "Email" is rendered by the session-backed `<Account />` inside `<Suspense>`, so it is the content chosen to "wait". Whether it really is absent inside `instant()` depends on what the shell and prefetch cache; the test is what proves it. If the assertion on a given page fails, that tells you the section is (or is not) in the instant UI; adjust the page or the expectation deliberately.
+Whether content waits inside `instant()` depends on what the shell and the prefetch cache; the test is what proves it. In Spark a client navigation to `/dashboard/settings/account` is already complete (the `dt` "Email" is visible inside the scope, because the destination is prefetched with its data), while a **document load** only gets the shell: the `h1` is there and session-backed content is absent until the scope ends. Assert each case as it really behaves; if a client navigation starts to show a skeleton, that is a regression.
 
 ```ts
-// apps/web/e2e/settings-instant.spec.ts
+// illustrative; apps/web/e2e/instant.spec.ts is the real gate
 // The session must be signed in first (see e2e/parity.spec.ts signUp/signIn helpers).
 import { expect, test } from "@playwright/test"
 import { instant } from "@next/playwright"
 
 test("client navigation to the account page is instant", async ({ page }) => {
   await page.goto("/dashboard")
-  const email = page.locator("dt", { hasText: "Email" })
+  const main = page.locator("main:visible")
 
   await instant(page, async () => {
     await page.click('a[href="/dashboard/settings/account"]')
     await page.waitForURL((url) => url.pathname === "/dashboard/settings/account")
-    await expect(page.getByRole("heading", { name: "Account" })).toBeVisible()
-    await expect(email).toHaveCount(0) // must wait: absent inside the scope
+    await expect(main.getByRole("heading", { level: 1, name: "Account" })).toBeVisible()
+    await expect(main.locator("dt", { hasText: "Email" })).toBeVisible() // prefetched with its data
   })
-
-  await expect(email).toBeVisible() // present after the scope
 })
 
-test("initial load shows the static shell", async ({ page, baseURL }) => {
-  const email = page.locator("dt", { hasText: "Email" })
+test("document load shows the static shell", async ({ page, baseURL }) => {
+  const main = page.locator("main:visible")
+  const email = main.locator("dt", { hasText: "Email" })
 
   await instant(
     page,
     async () => {
       await page.goto("/dashboard/settings/account")
-      await expect(page.getByRole("heading", { name: "Account" })).toBeVisible()
-      await expect(email).toHaveCount(0)
+      await expect(main.getByRole("heading", { level: 1, name: "Account" })).toBeVisible()
+      await expect(email).toHaveCount(0) // must wait: absent inside the scope
     },
     { baseURL }
   )
 
-  await expect(email).toBeVisible()
+  await expect(email).toBeVisible() // present after the scope
 })
 ```
 
-`instant()` fails if the navigation stalls on a server render without committing the prefetched UI, so regressions are blocked in CI. Source: `DOCS/02-guides/instant-navigation.md` ("Prevent regressions with e2e tests").
+`instant()` fails if the navigation stalls on a server render without committing the prefetched UI. Spark runs these specs as a local gate (§1.4), not in CI. Source: `DOCS/02-guides/instant-navigation.md` ("Prevent regressions with e2e tests").
 
 ### 1.4 The instant gate (local, not CI)
 `apps/web/e2e/instant.spec.ts` covers the six main navigations (Today -> Goals, Goals -> goal detail, Habits -> habit detail, Today -> Tasks, sidebar -> Weekly review, sidebar -> Account) plus a canary. It is a **documented local gate, not a CI job**: it signs up real users on the Supabase cloud project and needs a build made with `EXPOSE_TESTING_API=1`, while CI only has placeholder env. Run it when you change routes, `<Suspense>` boundaries, cache directives or prefetch links.
@@ -89,13 +88,13 @@ test("initial load shows the static shell", async ({ page, baseURL }) => {
 EXPOSE_TESTING_API=1 pnpm --filter web build
 # 2. Serve it on a free port (3100 here), in a separate terminal
 pnpm --filter web exec next start -p 3100
-# 3. Run the gate against that server
-BASE_URL=http://localhost:3100 pnpm --filter web test:e2e:instant
+# 3. Run the gate against that server (the variable un-skips the spec; without it all 7 tests are skipped)
+EXPOSE_TESTING_API=1 BASE_URL=http://localhost:3100 pnpm --filter web test:e2e:instant
 # 4. Stop the server, then remove the *@example.test users the run created
 pnpm --filter @workspace/db db:clean-test-users
 ```
 
-`test:e2e:instant` runs with `--workers=1` (see `apps/web/package.json`). Do not reuse a server from an older build.
+The commands are POSIX / Git Bash; in PowerShell set the variables first (`$env:EXPOSE_TESTING_API="1"; $env:BASE_URL="http://localhost:3100"`). `test:e2e:instant` runs with `--workers=1` (see `apps/web/package.json`). Do not reuse a server from an older build.
 
 **Read the canary first.** It does a locked document load of `/dashboard/goals` and expects the shell with skeletons and no goal link until the scope ends. It is the only proof that the build has a working testing API: on a build without the flag the six navigation tests **pass vacuously** (nothing is locked), and only the canary fails. A green run whose canary was skipped or not read means nothing.
 

@@ -15,9 +15,9 @@ on port 3210. This is the "cannot get worse" yardstick for the later tasks of
 - Prefetch classification: a request is an RSC request when it carries the `RSC: 1` header or `_rsc`; it is a prefetch when
   it also carries `Next-Router-Prefetch` or `Next-Router-Segment-Prefetch`. Every RSC request seen was a prefetch;
   there were no non-prefetch RSC requests (those would be client navigations that missed the cache). All returned 200.
-- The measurement script lives outside the repo:
-  `C:\Users\Foggo\AppData\Local\Temp\claude\D--Dev-Projects-spark\5ad6927c-f3da-48e6-86d2-b491e700bfae\scratchpad\measure.mjs`
-  (raw numbers in `...\scratchpad\results.json` in the same folder).
+- The measurement script and the raw data were kept in the session scratchpad and are NOT in the repo. Method: Playwright
+  (Chromium) against `next start`, `page.on("request")` for the prefetch counts, and an in-page `click` listener plus
+  `requestAnimationFrame` for the click-to-content timings in section C.
 
 ## A. Prefetch requests while idle (full load, then 5 s idle)
 
@@ -107,7 +107,7 @@ the turbo env), `bcbae46` + `df65b21` + `898a507` (Task 2: `instant.spec.ts`, ca
 Rulings:
 - **Task 4 = no change.** All six navigations are content-complete within about two frames with no skeleton. Lists are small and
   bounded (goals max 3, habits 12 rows = 12 detail prefetches). Intent-based prefetch, `navigation()` and further prefetch
-  changes were deliberately not adopted: no evidence of a problem, and they would risk a cold first click. Add them later only
+  changes were deliberately not adopted: no evidence of a problem, and they may risk a cold first click (not measured). Add them later only
   with a failing `instant()` test or a measured cost, using the existing specs as the safety net.
 - **The gate is local, not CI.** `instant.spec.ts` signs up real users on the Supabase cloud project and needs a build made with
   `EXPOSE_TESTING_API=1`; CI only has placeholder env. Documented in `docs/advanced-patterns.md` §1.4.

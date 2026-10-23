@@ -6,14 +6,19 @@ import { expect, test, type Page } from "@playwright/test"
  * only the shell and the prefetched UI. Needs a production build with the testing API, because
  * automatic prefetching does not run in `next dev`:
  *   EXPOSE_TESTING_API=1 pnpm --filter web build
- *   pnpm --filter web start -- -p 3100      (then BASE_URL=http://localhost:3100)
- *   pnpm --filter web test:e2e:instant
+ *   pnpm --filter web exec next start -p 3100
+ *   EXPOSE_TESTING_API=1 BASE_URL=http://localhost:3100 pnpm --filter web test:e2e:instant
+ * (POSIX / Git Bash syntax; PowerShell: $env:EXPOSE_TESTING_API="1"; $env:BASE_URL=...). Without the variable the file is skipped.
  * Spark prefetches every destination with its data (private caches), so a click shows the full page
  * with no skeleton; nothing is expected to wait. If one of these starts to show a skeleton, a
  * navigation became blocking (a regression), not a test to relax.
  * Each test starts from a full page load of the source page, because hidden routes stay mounted
  * (`<Activity>`) and a route visited earlier would be trivially instant.
  */
+test.skip(
+  process.env.EXPOSE_TESTING_API !== "1",
+  "instant gate: run via test:e2e:instant against an EXPOSE_TESTING_API=1 build (docs/advanced-patterns.md §1.4)"
+)
 test.use({ timezoneId: "Asia/Ho_Chi_Minh" })
 
 const PASSWORD = "secret123"
