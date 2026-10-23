@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 
+import "@/lib/zod-config"
 import { useHotkey } from "@/hooks/use-hotkey"
 import { useThemeToggle } from "@/hooks/use-theme-toggle"
 
