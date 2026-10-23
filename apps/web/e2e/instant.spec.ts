@@ -17,7 +17,7 @@ import { expect, test, type Page } from "@playwright/test"
 test.use({ timezoneId: "Asia/Ho_Chi_Minh" })
 
 const PASSWORD = "secret123"
-const email = `instant-${Date.now()}@example.test`
+const email = `instant-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`
 const GOAL = "Run a 5k"
 const HABIT = "Jog"
 const TASK = "Buy shoes"
@@ -27,11 +27,11 @@ let habitUrl = ""
 const main = (page: Page) => page.locator("main:visible")
 const h1 = (page: Page, name: string) =>
   main(page).getByRole("heading", { name, level: 1 })
+/** The sidebar nav link to `href` (the desktop sidebar container, not the closed mobile sheet). */
 const link = (page: Page, href: string) =>
-  page.locator(`a[href="${href}"]:visible`).first()
+  page.locator(`[data-slot="sidebar-container"] a[href="${href}"]`)
 
-const skeletons = (page: Page) =>
-  main(page).locator('[data-slot="skeleton"]')
+const skeletons = (page: Page) => main(page).locator('[data-slot="skeleton"]')
 
 /** Waits until the visible page has no skeleton left (hidden routes stay mounted in `<Activity>`). */
 async function settled(page: Page) {
@@ -108,6 +108,39 @@ test.beforeAll(async ({ browser }, testInfo) => {
   await context.close()
 })
 
+// Canary: proves the instant lock is engaged. A document load inside the scope serves only the
+// static shell, so the goal (session data) is absent until the scope ends. If the build has no
+// testing API, instant() does not lock anything and this test fails instead of passing vacuously.
+test("canary: a locked document load shows the shell without the goal list", async ({
+  page,
+  baseURL,
+}) => {
+  await page.goto("/sign-in")
+  await page.getByLabel("Email").fill(email)
+  await page.getByRole("textbox", { name: "Password" }).fill(PASSWORD)
+  await page.getByRole("button", { name: "Sign in" }).click()
+  await page.waitForURL(/\/dashboard$/)
+  const goalLink = main(page).getByRole("link", { name: GOAL })
+
+  await instant(
+    page,
+    async () => {
+      await page.goto("/dashboard/goals")
+      await expect(h1(page, "Goals")).toBeVisible()
+      await expect(goalLink).toHaveCount(0)
+      await expect(skeletons(page).first()).toBeVisible()
+    },
+    { baseURL }
+  )
+
+  // Releasing the lock sometimes (about 1 in 10 runs) leaves the locked shell on screen without
+  // streaming the rest in; one reload then proves the content is served once the lock is gone.
+  await expect(goalLink)
+    .toBeVisible({ timeout: 5_000 })
+    .catch(() => page.reload())
+  await expect(goalLink).toBeVisible()
+})
+
 test("Today -> Goals", async ({ page }) => {
   await startAt(page, "/dashboard")
   const newGoal = main(page).getByRole("textbox", { name: "New goal" })
@@ -165,7 +198,9 @@ test("Habits -> habit detail", async ({ page }) => {
 test("Today -> Tasks", async ({ page }) => {
   await startAt(page, "/dashboard")
   const newTask = main(page).getByRole("textbox", { name: "New task" })
-  const task = main(page).getByText(TASK, { exact: true }).first()
+  const task = main(page)
+    .getByText(TASK, { exact: true })
+    .filter({ visible: true })
 
   await instant(page, async () => {
     await link(page, "/dashboard/tasks").click()
@@ -187,6 +222,7 @@ test("sidebar -> Weekly review", async ({ page }) => {
     await page.waitForURL((url) => url.pathname === "/dashboard/review")
     await probe(page)
     await expect(h1(page, "Weekly review")).toBeVisible()
+    await expect(main(page).getByText("0 of 1 scheduled days")).toBeVisible()
     await expect(next).toBeVisible()
     await expect(skeletons(page)).toHaveCount(0)
   })
