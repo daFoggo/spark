@@ -31,40 +31,51 @@ EXPOSE_TESTING_API=1 pnpm build   # the variable must be set at build time
 pnpm --filter web start           # then run the specs against next start
 ```
 
-Setting `EXPOSE_TESTING_API` only for `next start` does not add the testing API to an existing build. A plain `pnpm build` (CI `build` job, deploys) has no testing API.
+Setting `EXPOSE_TESTING_API` only for `next start` does not add the testing API to an existing build. A plain `pnpm build` (CI `build` job, deploys) has no testing API. **Never set `EXPOSE_TESTING_API` in Vercel or CI deploy environments.**
+
+`EXPOSE_TESTING_API` is declared in `turbo.json` `build.env` because Turbo's strict env mode strips undeclared variables (without it the flagged build silently has no testing API); do not remove it.
 
 ### 1.3 Test Implementation Pattern
 Signature: `instant(page, fn, { baseURL })`. `page` comes first; pass `baseURL` when `page.goto()` is the first navigation inside the callback. Inside `fn`, only the immediately available UI (static shell, or the destination's prefetched UI) renders; other dynamic content stays blocked until `fn` returns.
 
 For a client navigation, **wait for the destination URL before asserting**, otherwise a shared selector can match the source page. Then also assert that content which must wait is absent, and present after the scope ends.
 
+The example uses `/dashboard/settings/account`: the `h1` "Account" is in the shell, while the `dt` "Email" is rendered by the session-backed `<Account />` inside `<Suspense>`, so it is the content chosen to "wait". Whether it really is absent inside `instant()` depends on what the shell and prefetch cache; the test is what proves it. If the assertion on a given page fails, that tells you the section is (or is not) in the instant UI; adjust the page or the expectation deliberately.
+
 ```ts
-// apps/web/e2e/feature-instant.spec.ts
+// apps/web/e2e/settings-instant.spec.ts
+// The session must be signed in first (see e2e/parity.spec.ts signUp/signIn helpers).
 import { expect, test } from "@playwright/test"
 import { instant } from "@next/playwright"
 
-test("client navigation to /dashboard/settings is instant", async ({ page }) => {
+test("client navigation to the account page is instant", async ({ page }) => {
   await page.goto("/dashboard")
+  const email = page.locator("dt", { hasText: "Email" })
 
   await instant(page, async () => {
-    await page.click('a[href="/dashboard/settings"]')
-    await page.waitForURL((url) => url.pathname === "/dashboard/settings")
-    await expect(page.locator("h1")).toContainText("Settings")
+    await page.click('a[href="/dashboard/settings/account"]')
+    await page.waitForURL((url) => url.pathname === "/dashboard/settings/account")
+    await expect(page.getByRole("heading", { name: "Account" })).toBeVisible()
+    await expect(email).toHaveCount(0) // must wait: absent inside the scope
   })
 
-  // Streamed content settles after the instant() scope ends.
-  await expect(page.getByTestId("settings-card")).toBeVisible()
+  await expect(email).toBeVisible() // present after the scope
 })
 
 test("initial load shows the static shell", async ({ page, baseURL }) => {
+  const email = page.locator("dt", { hasText: "Email" })
+
   await instant(
     page,
     async () => {
-      await page.goto("/dashboard/settings")
-      await expect(page.locator("h1")).toContainText("Settings")
+      await page.goto("/dashboard/settings/account")
+      await expect(page.getByRole("heading", { name: "Account" })).toBeVisible()
+      await expect(email).toHaveCount(0)
     },
     { baseURL }
   )
+
+  await expect(email).toBeVisible()
 })
 ```
 
